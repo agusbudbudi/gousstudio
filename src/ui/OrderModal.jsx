@@ -97,18 +97,23 @@ const OrderModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[100] flex md:items-center md:justify-center items-end p-0 md:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div
-        className="neon-border border-white/10 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl animate-scaleIn relative"
+        className="neon-border border-white/10 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn relative flex flex-col max-h-screen md:max-h-[90vh]"
         style={{ backgroundColor: "var(--color-card)" }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Bottom Sheet Drag Handle (Mobile Only) */}
+        <div className="md:hidden flex justify-center pt-3 pb-2">
+          <div className="w-12 h-1 rounded-full bg-white/20"></div>
+        </div>
+
         <div
-          className="p-8 border-b border-white/10 flex items-center justify-between"
+          className="px-4 py-4 md:p-6 pt-0 border-b border-white/10 flex items-center justify-between"
           style={{ backgroundColor: "var(--color-glass-bg)" }}
         >
           <div>
-            <h3 className="text-2xl font-black text-white tracking-tight">
+            <h3 className="text-2xl font-bold text-white tracking-tight">
               Form Order Desain
             </h3>
             <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest font-bold">
@@ -124,8 +129,10 @@ const OrderModal = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          <div className="space-y-4">
+        <div
+          className="flex-1 px-4 py-4 md:p-8 overflow-y-auto"
+        >
+          <div className="space-y-4 md:space-y-6">
             {/* Nama */}
             <div className="relative">
               <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
@@ -147,7 +154,7 @@ const OrderModal = () => {
                     backgroundColor: "var(--color-border-adaptive)",
                     color: "var(--color-text)",
                   }}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
+                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
                 />
               </div>
             </div>
@@ -173,7 +180,7 @@ const OrderModal = () => {
                     backgroundColor: "var(--color-border-adaptive)",
                     color: "var(--color-text)",
                   }}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
+                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
                 />
               </div>
             </div>
@@ -196,7 +203,7 @@ const OrderModal = () => {
                     backgroundColor: "var(--color-border-adaptive)",
                     color: "var(--color-text)",
                   }}
-                  className="w-full pl-12 pr-10 py-4 rounded-2xl border border-white/10 appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer shadow-inner"
+                  className="w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-2xl border border-white/10 appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer shadow-inner"
                 >
                   {services.map((s) => (
                     <option
@@ -226,7 +233,7 @@ const OrderModal = () => {
               <textarea
                 required
                 name="brief"
-                rows="3"
+                rows="5"
                 placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
                 value={formData.brief}
                 onChange={handleChange}
@@ -234,7 +241,7 @@ const OrderModal = () => {
                   backgroundColor: "var(--color-border-adaptive)",
                   color: "var(--color-text)",
                 }}
-                className="w-full p-4 rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none shadow-inner"
+                className="w-full p-4 text-base md:text-sm rounded-2xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none shadow-inner"
               ></textarea>
             </div>
 
@@ -258,12 +265,15 @@ const OrderModal = () => {
                     backgroundColor: "var(--color-border-adaptive)",
                     color: "var(--color-text)",
                   }}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
+                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-2xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
                 />
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Fixed Footer Button */}
+        <form onSubmit={handleSubmit} className="px-4 py-6 md:p-6 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
           <button
             type="submit"
             className="w-full py-5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
