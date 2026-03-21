@@ -6,7 +6,6 @@ import {
   MapPin,
   Facebook,
   Instagram,
-  Twitter,
   Linkedin,
 } from "lucide-react";
 
@@ -44,13 +43,6 @@ const Footer = () => {
                 className="w-9 h-9 rounded-xl glass flex items-center justify-center text-slate-400 hover:text-white hover:bg-brand-500 transition-all"
               >
                 <Instagram size={18} />
-              </a>
-              <a
-                href="#"
-                aria-label="Twitter Profile"
-                className="w-9 h-9 rounded-xl glass flex items-center justify-center text-slate-400 hover:text-white hover:bg-brand-500 transition-all"
-              >
-                <Twitter size={18} />
               </a>
               <a
                 href="#"
