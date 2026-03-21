@@ -66,7 +66,7 @@ const FastworkPromo = () => {
         <div className="flex flex-col items-center text-center mb-10 reveal">
           <div className="mb-6 h-16 flex items-center justify-center">
             <img
-              src="img/fastwork-logo.png"
+              src="/img/fastwork-logo.png"
               alt="Fastwork"
               className="h-full w-auto object-contain"
             />

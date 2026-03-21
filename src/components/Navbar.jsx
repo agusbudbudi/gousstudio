@@ -40,7 +40,7 @@ const Navbar = () => {
         >
           <Link to="/" className="flex items-center gap-2">
             <img
-              src="img/gous-logo.png"
+              src="/img/gous-logo.png"
               alt="Gous Studio Icon"
               className="h-8 md:h-8 w-auto"
             />

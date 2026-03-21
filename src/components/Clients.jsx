@@ -2,17 +2,17 @@ import React from "react";
 
 const Clients = () => {
   const clients = [
-    { name: "Babygear", src: "img/clients/client-babygear.png" },
-    { name: "Katzenesia", src: "img/clients/client-katzenesia.png" },
-    { name: "My Indo Kitchen", src: "img/clients/client-myindo.png" },
-    { name: "HD Travel", src: "img/clients/client-hdtravel.png" },
-    { name: "Speakgurus", src: "img/clients/client-speakguru.png" },
-    { name: "Gajatech", src: "img/clients/client-gajatech.png" },
-    { name: "Republik Cikicow", src: "img/clients/client-cikicow.png" },
-    { name: "LB Glow", src: "img/clients/client-lbglow.png" },
-    { name: "Lakuna Korean", src: "img/clients/client-lakuna.png" },
-    { name: "Bekasi Cat House", src: "img/clients/client-bch.png" },
-    { name: "Annise Herbal", src: "img/clients/client-anniseherbal.png" },
+    { name: "Babygear", src: "/img/clients/client-babygear.png" },
+    { name: "Katzenesia", src: "/img/clients/client-katzenesia.png" },
+    { name: "My Indo Kitchen", src: "/img/clients/client-myindo.png" },
+    { name: "HD Travel", src: "/img/clients/client-hdtravel.png" },
+    { name: "Speakgurus", src: "/img/clients/client-speakguru.png" },
+    { name: "Gajatech", src: "/img/clients/client-gajatech.png" },
+    { name: "Republik Cikicow", src: "/img/clients/client-cikicow.png" },
+    { name: "LB Glow", src: "/img/clients/client-lbglow.png" },
+    { name: "Lakuna Korean", src: "/img/clients/client-lakuna.png" },
+    { name: "Bekasi Cat House", src: "/img/clients/client-bch.png" },
+    { name: "Annise Herbal", src: "/img/clients/client-anniseherbal.png" },
   ];
 
   return (

@@ -18,7 +18,7 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-6 w-fit">
               <img
-                src="img/gous-logo.png"
+                src="/img/gous-logo.png"
                 alt="Gous Studio Icon"
                 className="h-8 md:h-8 w-auto"
               />

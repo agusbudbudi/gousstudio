@@ -15,7 +15,7 @@ const About = () => {
             <div className="absolute -inset-4 bg-gradient-to-tr from-brand-500/20 via-pink-500/20 to-orange-500/20 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             <div className="relative rounded-[2rem] overflow-hidden glass neon-border p-2">
               <img
-                src="img/about.png"
+                src="/img/about.png"
                 alt="Agus Budiman"
                 className="w-full w-[500px] object-cover rounded-[1.5rem] grayscale group-hover:grayscale-0 transition-all duration-700"
               />
