@@ -99,7 +99,7 @@ const OrderModal = () => {
   return (
     <div className="fixed inset-0 z-[100] flex md:items-center md:justify-center items-end p-0 md:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div
-        className="neon-border border-white/10 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn relative flex flex-col max-h-screen md:max-h-[90vh]"
+        className="neon-border border-white/10 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn relative flex flex-col max-h-[80vh] md:max-h-[90vh]"
         style={{ backgroundColor: "var(--color-card)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -116,7 +116,7 @@ const OrderModal = () => {
             <h3 className="text-2xl font-bold text-white tracking-tight">
               Form Order Desain
             </h3>
-            <p className="text-slate-500 text-xs mt-1 uppercase tracking-widest font-bold">
+            <p className="text-slate-500 text-sm mt-1">
               Lengkapi detail project Anda
             </p>
           </div>
@@ -264,6 +264,8 @@ const OrderModal = () => {
                   style={{
                     backgroundColor: "var(--color-border-adaptive)",
                     color: "var(--color-text)",
+                    boxSizing: "border-box",
+                    maxWidth: "100%",
                   }}
                   className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-2xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
                 />
@@ -273,10 +275,10 @@ const OrderModal = () => {
         </div>
 
         {/* Fixed Footer Button */}
-        <form onSubmit={handleSubmit} className="px-4 py-6 md:p-6 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
+        <form onSubmit={handleSubmit} className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
           <button
             type="submit"
-            className="w-full py-5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <Send size={20} /> Kirim ke WhatsApp
           </button>
