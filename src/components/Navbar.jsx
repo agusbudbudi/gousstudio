@@ -29,16 +29,22 @@ const Navbar = () => {
     <>
       <nav
         id="navbar"
-        className={`fixed z-50 py-3 transition-all duration-500 ${
+        className={`fixed z-50 py-3 transition-all duration-700 ${
           isScrolled 
             ? "bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-[var(--color-border-adaptive)] px-0 scrolled" 
             : "glass neon-border px-3 rounded-2xl"
         }`}
+        style={{
+          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
       >
         <div
-          className={`flex items-center gap-4 transition-all duration-500 ${
-            isScrolled ? "max-w-[1400px] mx-auto px-6" : "w-full"
+          className={`flex items-center justify-between transition-all duration-700 ${
+            isScrolled ? "max-w-[1400px] mx-auto px-6" : "w-full px-4"
           }`}
+          style={{
+            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
         >
           <Link to="/" className="flex items-center gap-2">
             <img
@@ -77,32 +83,50 @@ const Navbar = () => {
             })}
           </ul>
 
-          <button
-            onClick={toggleTheme}
-            aria-label={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
-            className="hidden md:flex w-9 h-9 rounded-xl glass items-center justify-center text-brand-400 hover:scale-110 transition-all cursor-pointer ml-auto"
-          >
-            {theme === "light" ? (
-              <Sun className="w-5 h-5 theme-icon" />
-            ) : (
-              <Moon className="w-5 h-5 theme-icon" />
-            )}
-          </button>
+          {/* Desktop Controls */}
+          <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              className="w-9 h-9 rounded-xl glass flex items-center justify-center text-brand-400 hover:scale-110 transition-all cursor-pointer"
+            >
+              {theme === "light" ? (
+                <Sun className="w-5 h-5 theme-icon" />
+              ) : (
+                <Moon className="w-5 h-5 theme-icon" />
+              )}
+            </button>
 
-          <button
-            onClick={openOrderModal}
-            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold transition-all duration-300 neon-glow hover:scale-105 whitespace-nowrap cursor-pointer"
-          >
-            <MessageSquare size={16} /> Let's Talk
-          </button>
+            <button
+              onClick={openOrderModal}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold transition-all duration-300 neon-glow hover:scale-105 whitespace-nowrap cursor-pointer"
+            >
+              <MessageSquare size={16} /> Let's Talk
+            </button>
+          </div>
 
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
-            className="md:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-all ml-auto"
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          {/* Mobile Controls Group */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              className="w-9 h-9 rounded-xl glass flex items-center justify-center text-brand-400 hover:scale-110 transition-all cursor-pointer"
+            >
+              {theme === "light" ? (
+                <Sun className="w-5 h-5 theme-icon" />
+              ) : (
+                <Moon className="w-5 h-5 theme-icon" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -134,14 +158,7 @@ const Navbar = () => {
             </Link>
           );
         })}
-        <div className="flex items-center justify-between gap-4 mt-2 border-t border-white/5 pt-4 px-2">
-          <button
-            onClick={toggleTheme}
-            aria-label={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
-            className="w-10 h-10 rounded-xl glass flex items-center justify-center text-brand-400 hover:scale-110 transition-all cursor-pointer"
-          >
-            {theme === "light" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+        <div className="flex items-center justify-center gap-4 mt-2 border-t border-white/5 pt-4 px-2">
           <button
             onClick={() => {
               setIsMobileMenuOpen(false);
