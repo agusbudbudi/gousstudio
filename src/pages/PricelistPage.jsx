@@ -259,7 +259,7 @@ const PricelistPage = () => {
       </Helmet>
 
       {/* Hero */}
-      <section className="hero-grid-bg relative flex flex-col items-center justify-center px-4 text-center overflow-hidden pt-36 pb-16">
+      <section className="hero-grid-bg relative flex flex-col items-center justify-center px-4 text-center overflow-hidden pt-36 pb-12">
         <div
           className="blob w-80 h-80 bg-brand-500 top-0 -left-20"
           style={{ opacity: 0.4 }}
@@ -345,28 +345,28 @@ const PricelistPage = () => {
       </section>
 
       {/* Filter Tabs (Sticky) */}
-      <section className="py-4 px-3 sticky top-15 z-30 bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-white/5">
+      <section className="py-4 px-3 sticky top-15 z-30 bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-[var(--color-border-adaptive)]">
         <div className="max-w-[1400px] mx-auto md:px-6">
           <div className="flex md:justify-center overflow-x-auto scrollbar-hide">
-            <div className="inline-flex items-center gap-2 p-1.5 min-w-max mx-auto md:mx-0">
+            <div className="inline-flex items-center p-1.5 glass neon-border rounded-2xl gap-1 w-max mx-auto md:mx-0">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer whitespace-nowrap ${
+                  className={`tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer whitespace-nowrap ${
                     activeCategory === cat
-                      ? "bg-brand-500 text-white shadow-lg neon-glow scale-105"
-                      : "glass text-slate-400 hover:text-white hover:bg-white/10 border border-white/5"
+                      ? "bg-brand-500 text-white neon-glow"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-title)]"
                   }`}
                 >
                   {cat === "All" ? "Semua" : cat}
                   {cat === "All" ? (
-                    <span className="ml-1.5 text-[10px] opacity-70">
-                      ({pricelistData.length})
+                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-white/10">
+                      {pricelistData.length}
                     </span>
                   ) : (
-                    <span className="ml-1.5 text-[10px] opacity-70">
-                      ({pricelistData.filter((i) => i.category === cat).length})
+                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-white/10">
+                      {pricelistData.filter((i) => i.category === cat).length}
                     </span>
                   )}
                 </button>

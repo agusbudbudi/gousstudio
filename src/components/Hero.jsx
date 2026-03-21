@@ -73,7 +73,7 @@ const Hero = () => {
           </span>
           Available for new project
         </div>
-        <h1 className="text-7xl sm:text-8xl md:text-7xl font-black tracking-tight leading-tight mb-6">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight mb-6">
           <span className="text-white">Creative</span>
           <br />
           <span className="text-gradient">

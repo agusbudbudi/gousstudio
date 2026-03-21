@@ -104,7 +104,7 @@ const OrderModal = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Bottom Sheet Drag Handle (Mobile Only) */}
-        <div className="md:hidden flex justify-center pt-3 pb-2">
+        <div className="md:hidden flex justify-center pt-2 pb-2">
           <div className="w-12 h-1 rounded-full bg-white/20"></div>
         </div>
 
