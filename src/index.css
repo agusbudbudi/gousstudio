@@ -358,6 +358,15 @@ body.light #navbar.scrolled {
   box-shadow: 0 4px 40px rgba(99, 102, 241, 0.08);
 }
 
+/* ===== MOBILE NAV ===== */
+#mobile-nav {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+body.light #mobile-nav {
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+}
+
 /* ===== HERO ===== */
 .hero-grid-bg {
   background-image:

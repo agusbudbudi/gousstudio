@@ -109,7 +109,7 @@ const Navbar = () => {
       {/* Mobile Nav Dropdown */}
       <div
         id="mobile-nav"
-        className={`glass neon-border fixed top-16 left-4 right-4 z-40 rounded-2xl p-4 flex-col gap-2 md:hidden ${isMobileMenuOpen ? "open flex" : "hidden"}`}
+        className={`bg-[var(--color-bg)]/80 backdrop-blur-xl border border-[var(--color-border-adaptive)] fixed top-16 left-4 right-4 z-40 rounded-2xl p-4 flex-col gap-2 md:hidden ${isMobileMenuOpen ? "open flex" : "hidden"}`}
       >
         {navLinks.map((link) => {
           const isActive =
