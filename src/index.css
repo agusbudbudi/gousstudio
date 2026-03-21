@@ -352,24 +352,10 @@ body.light .mesh-gradient {
   width: 100%;
   border-radius: 0;
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.1);
-  background: rgba(15, 22, 41, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 body.light #navbar.scrolled {
-  background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 40px rgba(99, 102, 241, 0.08);
-}
-
-/* Fallback for scrolled navbar in browsers without backdrop-filter support */
-@supports not (backdrop-filter: blur(20px)) {
-  #navbar.scrolled {
-    background: rgba(15, 22, 41, 0.95);
-  }
-  body.light #navbar.scrolled {
-    background: rgba(255, 255, 255, 0.98);
-  }
 }
 
 /* ===== HERO ===== */

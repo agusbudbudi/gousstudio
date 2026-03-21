@@ -29,8 +29,10 @@ const Navbar = () => {
     <>
       <nav
         id="navbar"
-        className={`glass neon-border fixed z-50 py-3 transition-all duration-500 ${
-          isScrolled ? "scrolled px-0" : "px-3 rounded-2xl"
+        className={`fixed z-50 py-3 transition-all duration-500 ${
+          isScrolled 
+            ? "bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-[var(--color-border-adaptive)] px-0 scrolled" 
+            : "glass neon-border px-3 rounded-2xl"
         }`}
       >
         <div
