@@ -189,6 +189,16 @@ body.light .grain-overlay {
     box-shadow 0.3s ease;
 }
 
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(16px)) {
+  .glass {
+    background: rgba(15, 22, 41, 0.8);
+  }
+  body.light .glass {
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
+
 .glass-hover:hover {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -343,10 +353,22 @@ body.light .mesh-gradient {
   border-radius: 0;
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.1);
   background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 body.light #navbar.scrolled {
   box-shadow: 0 4px 40px rgba(99, 102, 241, 0.08);
+}
+
+/* Fallback for scrolled navbar in browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(16px)) {
+  #navbar.scrolled {
+    background: rgba(15, 22, 41, 0.9);
+  }
+  body.light #navbar.scrolled {
+    background: rgba(255, 255, 255, 0.95);
+  }
 }
 
 /* ===== HERO ===== */
