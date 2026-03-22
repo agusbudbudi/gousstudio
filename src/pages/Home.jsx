@@ -6,6 +6,7 @@ import Clients from '../components/Clients';
 import Services from '../components/Services';
 import Process from '../components/Process';
 import Portfolio from '../components/Portfolio';
+import PricelistPreview from '../components/PricelistPreview';
 import Testimonials from '../components/Testimonials';
 import FastworkPromo from '../components/FastworkPromo';
 import About from '../components/About';
@@ -21,7 +22,8 @@ const Home = () => (
     <Clients />
     <Services />
     <Process />
-    <Portfolio limit={9} />
+    <Portfolio limit={12} />
+    <PricelistPreview />
     <Testimonials />
     <FastworkPromo />
     <About />

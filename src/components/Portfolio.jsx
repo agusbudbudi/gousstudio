@@ -48,28 +48,30 @@ const Portfolio = ({
     return {
       "@context": "https://schema.org",
       "@type": "ItemList",
-      "name": "Gous Studio Portfolio",
-      "description": "Portfolio of creative design works by Gous Studio",
-      "numberOfItems": portfolioItems.length,
-      "itemListElement": portfolioItems.map((item, index) => ({
+      name: "Gous Studio Portfolio",
+      description: "Portfolio of creative design works by Gous Studio",
+      numberOfItems: portfolioItems.length,
+      itemListElement: portfolioItems.map((item, index) => ({
         "@type": "CreativeWork",
-        "position": index + 1,
-        "name": item.title,
-        "description": item.description,
-        "creator": {
+        position: index + 1,
+        name: item.title,
+        description: item.description,
+        creator: {
           "@type": "Organization",
-          "name": "Gous Studio"
+          name: "Gous Studio",
         },
-        "genre": item.tags,
-        "url": item.linkUrl || `https://gousstudio.com/portfolio#${item.title?.toLowerCase().replace(/\s+/g, '-')}`
-      }))
+        genre: item.tags,
+        url:
+          item.linkUrl ||
+          `https://gousstudio.com/portfolio#${item.title?.toLowerCase().replace(/\s+/g, "-")}`,
+      })),
     };
   };
 
   // Add structured data to head
   React.useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
     script.text = JSON.stringify(generateStructuredData());
     document.head.appendChild(script);
 
@@ -89,28 +91,42 @@ const Portfolio = ({
 
   const getTagColor = (i) => tagColors[i % tagColors.length];
 
-  const bannerCategories = activeTab === "ecommerce" ? ["All", ...new Set(portfolioData.ecommerce?.flatMap(item => item.tags) || [])] : [];
+  const bannerCategories =
+    activeTab === "ecommerce"
+      ? [
+          "All",
+          ...new Set(
+            portfolioData.ecommerce?.flatMap((item) => item.tags) || [],
+          ),
+        ]
+      : [];
 
   const allItems = portfolioData[activeTab] || [];
-  
+
   // Apply category filter
-  const categoryFilteredItems = activeTab === "ecommerce" && selectedCategory !== "All" 
-    ? allItems.filter(item => item.tags?.includes(selectedCategory))
-    : allItems;
-  
+  const categoryFilteredItems =
+    activeTab === "ecommerce" && selectedCategory !== "All"
+      ? allItems.filter((item) => item.tags?.includes(selectedCategory))
+      : allItems;
+
   // Apply search filter
-  const searchFilteredItems = categoryFilteredItems.filter(item => 
-    item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  const searchFilteredItems = categoryFilteredItems.filter(
+    (item) =>
+      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.tags?.some((tag) =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
   );
-  
+
   // Apply pagination
   const totalPages = Math.ceil(searchFilteredItems.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = limit ? searchFilteredItems.slice(0, limit) : searchFilteredItems.slice(startIndex, endIndex);
-  
+  const paginatedItems = limit
+    ? searchFilteredItems.slice(0, limit)
+    : searchFilteredItems.slice(startIndex, endIndex);
+
   const displayItems = paginatedItems;
   const hasMore = limit && searchFilteredItems.length > limit;
 
@@ -175,7 +191,7 @@ const Portfolio = ({
             </div>
             <input
               type="text"
-              placeholder={`Cari ${tabs.find(tab => tab.id === activeTab)?.name?.toLowerCase()}...`}
+              placeholder={`Cari ${tabs.find((tab) => tab.id === activeTab)?.name?.toLowerCase()}...`}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -192,7 +208,7 @@ const Portfolio = ({
         <div className="mb-6 reveal">
           <div className="max-w-[1400px] mx-auto px-3 md:px-6">
             <div className="flex flex-wrap justify-center gap-2">
-              {bannerCategories.map(category => (
+              {bannerCategories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -212,14 +228,26 @@ const Portfolio = ({
         </div>
       )}
 
-      <div className="max-w-[1400px] mx-auto px-3 md:px-6">
-        <div className="tab-content active columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-6">
+      <div className="max-w-[1400px] mx-auto px-3 md:px-6 relative">
+        <div
+          className={`tab-content active columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-6 ${hasMore ? "relative pb-0" : ""}`}
+          style={
+            hasMore
+              ? {
+                  maskImage:
+                    "linear-gradient(to top, transparent 0px, black 300px)",
+                  WebkitMaskImage:
+                    "linear-gradient(to top, transparent 0px, black 300px)",
+                }
+              : {}
+          }
+        >
           {displayItems.map((item, index) => (
             <article
-              key={`${item.title || 'item'}-${index}`}
+              key={`${item.title || "item"}-${index}`}
               onClick={() => setLightboxIndex(index)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   setLightboxIndex(index);
                 }
@@ -227,13 +255,19 @@ const Portfolio = ({
               className="glass neon-border rounded-xl overflow-hidden group relative cursor-pointer break-inside-avoid mb-4 md:mb-6 duration-400 hover:shadow-[0_16px_40px_var(--color-shadow-primary)] light:hover:shadow-[0_10px_30px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-brand-500 focus-within:ring-offset-2 focus-within:ring-offset-[var(--color-bg)]"
               tabIndex={0}
               role="button"
-              aria-label={`View ${item.title || 'portfolio item'} details`}
+              aria-label={`View ${item.title || "portfolio item"} details`}
             >
               <div className="relative">
                 <div className="overflow-hidden bg-[var(--color-bg)]">
-                  {item.linkUrl && item.linkUrl.includes("canva.com/design/") ? (
+                  {item.linkUrl &&
+                  item.linkUrl.includes("canva.com/design/") ? (
                     <div className="w-full aspect-video relative pointer-events-none">
-                      <iframe src={item.linkUrl} className="absolute inset-0 w-full h-full border-none pointer-events-none rounded-t-xl" title={item.title || "Canva Embed"} loading="lazy"></iframe>
+                      <iframe
+                        src={item.linkUrl}
+                        className="absolute inset-0 w-full h-full border-none pointer-events-none rounded-t-xl"
+                        title={item.title || "Canva Embed"}
+                        loading="lazy"
+                      ></iframe>
                     </div>
                   ) : resolveImageUrl(item) ? (
                     <LazyImage
@@ -297,14 +331,14 @@ const Portfolio = ({
         {!limit && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-12 mb-6 reveal">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Previous page"
             >
               ← Previous
             </button>
-            
+
             <div className="flex gap-1">
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                 const pageNum = i + 1;
@@ -324,9 +358,11 @@ const Portfolio = ({
                 );
               })}
             </div>
-            
+
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Next page"
@@ -337,15 +373,15 @@ const Portfolio = ({
         )}
 
         {hasMore && (
-          <div className="flex justify-center mt-12 mb-6 reveal">
+          <div className="relative z-20 flex justify-center -mt-24 mb-0 reveal">
             <Link
               to="/portfolio"
               state={{ activeTab }}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all duration-300 neon-border hover:scale-105 group"
+              className="group relative inline-flex items-center justify-center gap-3 w-full sm:w-auto px-12 py-5 rounded-2xl bg-brand-500 text-white font-black text-lg transition-all duration-300 shadow-[0_0_20px_rgba(255,119,57,0.3)] hover:shadow-[0_0_40px_rgba(255,119,57,0.4)] hover:scale-105 active:scale-[0.98]"
             >
               Lihat semua {allItems.length} Project
               <ArrowRight
-                size={20}
+                size={22}
                 className="group-hover:translate-x-1 transition-transform"
               />
             </Link>
