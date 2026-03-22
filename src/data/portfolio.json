@@ -1,6 +1,23 @@
 {
   "feed": [
     {
+      "title": "Social Media Feed - Dental Clinic",
+      "description": "Desain feed Instagram profesional untuk klinik gigi dengan estetika medis yang bersih.",
+      "tags": [
+        "Dental",
+        "Healthcare",
+        "Aesthetic"
+      ],
+      "imgAlt": "Dental Clinic Feed",
+      "linkUrl": "https://drive.google.com/file/d/1nMpLOmWvwmktscLGvix81fbUxlCR5hZ1/view?usp=sharing",
+      "image": null,
+      "role": "Visual Designer & Strategist",
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
+    },
+    {
       "title": "Illustrated Map - Jungle Track Barakah Edu Village",
       "description": "Ilustrasi peta interaktif bertema edukasi yang menampilkan rute perjalanan menuju destinasi wisata alam dengan elemen visual ramah anak dan storytelling yang kuat.",
       "tags": [
@@ -14,32 +31,36 @@
       "linkUrl": "https://www.canva.com/design/DAGfQ23CfUY/7S0RhfnxDWdtZn1IqIvBnw/view?embed",
       "image": null,
       "role": "Visual Designer & Illustrator",
-      "tools": ["Adobe Illustrator", "Photoshop"]
-    },
-    {
-      "title": "Social Media Feed - Dental Clinic",
-      "description": "Desain feed Instagram profesional untuk klinik gigi dengan estetika medis yang bersih.",
-      "tags": ["Dental", "Healthcare", "Aesthetic"],
-      "imgAlt": "Dental Clinic Feed",
-      "linkUrl": "https://drive.google.com/file/d/1nMpLOmWvwmktscLGvix81fbUxlCR5hZ1/view?usp=sharing",
-      "image": null,
-      "role": "Visual Designer & Strategist",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Adobe Illustrator",
+        "Photoshop"
+      ]
     },
     {
       "title": "Travel Content - Bandung-Cirebon Route",
       "description": "Materi visual rute perjalanan Bandung-Cirebon untuk meningkatkan brand awareness jasa travel.",
-      "tags": ["Travel", "Visual", "Branding"],
+      "tags": [
+        "Travel",
+        "Visual",
+        "Branding"
+      ],
       "imgAlt": "Bandung Cirebon Route Visual",
       "linkUrl": "https://drive.google.com/file/d/114v9GtyTn6o_RyKgwegOB0vnsDXkQWxW/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Canva", "Illustrator"]
+      "tools": [
+        "Canva",
+        "Illustrator"
+      ]
     },
     {
       "title": "Travel Route Content - Bandung & Cirebon",
       "description": "Desain konten informatif rute perjalanan Bandung-Cirebon dengan visual yang clear.",
-      "tags": ["Travel", "Route", "Information"],
+      "tags": [
+        "Travel",
+        "Route",
+        "Information"
+      ],
       "imgAlt": "Bandung Cirebon Route Content",
       "linkUrl": "https://drive.google.com/file/d/16z_DDX2hztWg83556rqR-ys1MYnVpC2F/view?usp=sharing",
       "image": null
@@ -47,7 +68,11 @@
     {
       "title": "Service Promotion - Door to Door",
       "description": "Konten promosi layanan door-to-door yang menonjolkan kenyamanan dan kemudahan.",
-      "tags": ["Service", "Promotion", "Convenience"],
+      "tags": [
+        "Service",
+        "Promotion",
+        "Convenience"
+      ],
       "imgAlt": "Door to Door Service Content",
       "linkUrl": "https://drive.google.com/file/d/1nw2Cxu-0OhKruafg_CIWtSwpWcQSNVNU/view?usp=sharing",
       "image": null
@@ -55,7 +80,11 @@
     {
       "title": "Travel Feed - HD Travel",
       "description": "Desain feed Instagram untuk agen perjalanan HD Travel dengan komposisi yang menarik.",
-      "tags": ["Travel", "Feed", "Instagram"],
+      "tags": [
+        "Travel",
+        "Feed",
+        "Instagram"
+      ],
       "imgAlt": "HD Travel Instagram Feed",
       "linkUrl": "https://drive.google.com/file/d/1e2YV_p6m3OAqD27Qfu4DcQXs2Cjvj5LX/view?usp=sharing",
       "image": null
@@ -63,7 +92,11 @@
     {
       "title": "Social Media Story - Portfolio",
       "description": "Template story Instagram kreatif untuk meningkatkan interaksi dengan pengikut.",
-      "tags": ["Story", "Social Media", "Engagement"],
+      "tags": [
+        "Story",
+        "Social Media",
+        "Engagement"
+      ],
       "imgAlt": "Instagram Story Design",
       "linkUrl": "https://drive.google.com/file/d/1fGuiu4UNSZJ9fIgXnGnwIqhL4BUqMoKE/view?usp=sharing",
       "image": null
@@ -73,94 +106,163 @@
     {
       "title": "E-commerce Product Banner - Fashion Store",
       "description": "Banner promosi produk fashion online dengan desain yang menarik dan call-to-action yang jelas untuk meningkatkan konversi penjualan.",
-      "tags": ["E-commerce", "Fashion", "Product Showcase"],
+      "tags": [
+        "E-commerce",
+        "Fashion",
+        "Product Showcase"
+      ],
       "imgAlt": "Fashion Store Product Banner",
       "linkUrl": "https://drive.google.com/file/d/1YAM47KXtwEjZHjK6NbH8bsjzm-u3QJkf/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "E-commerce Product Showcase - Beauty & Skincare",
       "description": "Desain showcase produk kecantikan dengan fokus pada tampilan visual yang elegan dan informasi produk yang jelas untuk meningkatkan konversi penjualan online.",
-      "tags": ["E-commerce", "Beauty", "Product Showcase", "Skincare"],
+      "tags": [
+        "E-commerce",
+        "Beauty",
+        "Product Showcase",
+        "Skincare"
+      ],
       "imgAlt": "Beauty Products E-commerce Showcase",
       "linkUrl": "https://drive.google.com/file/d/1Ojq9UAQoo-v-hh64ExVejQ_mGMisV_X4/view?usp=sharing",
       "image": null,
       "role": "Visual Designer & Product Photographer",
-      "tools": ["Photoshop", "Illustrator", "Lightroom"]
+      "tools": [
+        "Photoshop",
+        "Illustrator",
+        "Lightroom"
+      ]
     },
     {
       "title": "Online Store Banner - Fashion Collection",
       "description": "Banner promosi koleksi fashion terbaru dengan desain yang trendy dan call-to-action yang menarik untuk meningkatkan traffic ke toko online.",
-      "tags": ["E-commerce", "Fashion", "Collection", "Banner Online"],
+      "tags": [
+        "E-commerce",
+        "Fashion",
+        "Collection",
+        "Banner Online"
+      ],
       "imgAlt": "Fashion Collection Online Store Banner",
       "linkUrl": "https://drive.google.com/file/d/1XtXkpBPiC1RVySGrOHDJ007OZRwFFUwG/view?usp=sharing",
       "image": null,
       "role": "Digital Designer & Fashion Illustrator",
-      "tools": ["Canva Pro", "Photoshop", "Illustrator"]
+      "tools": [
+        "Canva Pro",
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "E-commerce Landing Page - Tech Gadgets",
       "description": "Desain landing page untuk produk gadget teknologi dengan fokus pada spesifikasi teknis dan testimonial pengguna untuk membangun kepercayaan konsumen.",
-      "tags": ["E-commerce", "Technology", "Gadgets", "Landing Page"],
+      "tags": [
+        "E-commerce",
+        "Technology",
+        "Gadgets",
+        "Landing Page"
+      ],
       "imgAlt": "Tech Gadgets E-commerce Landing Page",
       "linkUrl": "https://drive.google.com/file/d/1mKLAh8mAjrQNceVQnreIyI2o8AuWzzMo/view?usp=sharing",
       "image": null,
       "role": "UI/UX Designer & Technical Writer",
-      "tools": ["Figma", "Photoshop", "InDesign"]
+      "tools": [
+        "Figma",
+        "Photoshop",
+        "InDesign"
+      ]
     },
     {
       "title": "Digital Marketing Banner - SEO Services",
       "description": "Banner promosi layanan SEO profesional dengan visual yang meyakinkan dan data performa yang konkrit untuk menarik klien bisnis.",
-      "tags": ["Digital Marketing", "SEO", "Services", "Banner Online"],
+      "tags": [
+        "Digital Marketing",
+        "SEO",
+        "Services",
+        "Banner Online"
+      ],
       "imgAlt": "SEO Services Digital Marketing Banner",
       "linkUrl": "https://drive.google.com/file/d/1LB7HVd2eX3yQAqVnguT4B9icdiTUZFAh/view?usp=sharing",
       "image": null,
       "role": "Digital Marketing Designer",
-      "tools": ["Canva Pro", "Photoshop", "Google Analytics"]
+      "tools": [
+        "Canva Pro",
+        "Photoshop",
+        "Google Analytics"
+      ]
     },
     {
       "title": "Product Showcase - Medical Wear Apparel",
       "description": "Desain promosi produk pakaian medis dengan fokus pada fitur, kenyamanan bahan, dan variasi warna untuk meningkatkan daya tarik visual dan kepercayaan konsumen.",
-      "tags": ["E-commerce", "Banner Online"],
+      "tags": [
+        "E-commerce",
+        "Banner Online"
+      ],
       "imgAlt": "Medical Wear Product Showcase",
       "linkUrl": "https://drive.google.com/file/d/11vZ-c1F7V7Wd9inGWjutasAyToLiVDzv/view?usp=sharing",
       "image": null,
       "role": "Visual Designer & Brand Strategist",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "Social Media Ads - Flexible Fitness Program",
       "description": "Desain iklan media sosial untuk program fitness online dengan pendekatan lifestyle, menonjolkan fleksibilitas waktu dan kemudahan akses bagi target audience sibuk.",
-      "tags": ["Lifestyle", "Social Media Ads", "Health"],
+      "tags": [
+        "Lifestyle",
+        "Social Media Ads",
+        "Health"
+      ],
       "imgAlt": "Flexible Fitness Ads",
       "linkUrl": "https://drive.google.com/file/d/18yn0N0pIVw-5vVg_9d-3M_OAaCp1QNBZ/view?usp=sharing",
       "image": null,
       "role": "Visual Designer & Content Strategist",
-      "tools": ["Canva Pro", "Photoshop"]
+      "tools": [
+        "Canva Pro",
+        "Photoshop"
+      ]
     },
     {
       "title": "Outdoor Banner - Griya Regency",
       "description": "Desain banner outdoor (1.5x2m) untuk promosi unit properti Griya Regency.",
-      "tags": ["Property", "Real Estate", "Outdoor"],
+      "tags": [
+        "Property",
+        "Real Estate",
+        "Outdoor"
+      ],
       "imgAlt": "Griya Regency Outdoor Banner",
       "linkUrl": "https://drive.google.com/file/d/1nKcnnTYPdq_iZuo6y0BAaI6HMkOn4h83/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["CorelDraw", "Illustrator"]
+      "tools": [
+        "CorelDraw",
+        "Illustrator"
+      ]
     },
     {
       "title": "Event Banner - Tech Conference 2024",
       "description": "Banner digital untuk konferensi teknologi dengan desain modern dan elemen interaktif.",
-      "tags": ["Event", "Technology", "Digital"],
+      "tags": [
+        "Event",
+        "Technology",
+        "Digital"
+      ],
       "imgAlt": "Tech Conference Banner",
       "linkUrl": "https://drive.google.com/file/d/1DVX0de9za9ZTEiZidMxudCZXP2PLVwU8/view?usp=sharing",
       "image": null,
       "role": "Digital Designer",
-      "tools": ["Figma", "Photoshop"]
+      "tools": [
+        "Figma",
+        "Photoshop"
+      ]
     },
-
     {
       "title": "Digital Marketing Banner - Content Creation",
       "description": "Banner promosi layanan pembuatan konten digital dengan visual yang kreatif dan menunjukkan proses kerja yang profesional.",
@@ -174,7 +276,11 @@
       "linkUrl": "https://drive.google.com/file/d/1STH4mh8UC3hZ3eA4TtdNYlhtq3tuEYju/view?usp=sharing",
       "image": null,
       "role": "Content Marketing Designer",
-      "tools": ["Canva Pro", "Photoshop", "Figma"]
+      "tools": [
+        "Canva Pro",
+        "Photoshop",
+        "Figma"
+      ]
     },
     {
       "title": "",
@@ -189,235 +295,558 @@
     {
       "title": "Digital Marketing Banner - Service Promotion",
       "description": "Banner digital untuk promosi layanan marketing online dengan visual yang profesional dan engaging.",
-      "tags": ["Digital Marketing", "Service Promotion", "Banner Online"],
+      "tags": [
+        "Digital Marketing",
+        "Service Promotion",
+        "Banner Online"
+      ],
       "imgAlt": "Digital Marketing Service Banner",
       "linkUrl": "https://drive.google.com/file/d/1CFMafvhEOQyoHtbhQXKNv8QeQVkTag-s/view?usp=sharing",
       "image": null,
       "role": "Digital Designer",
-      "tools": ["Figma", "Illustrator"]
+      "tools": [
+        "Figma",
+        "Illustrator"
+      ]
     }
   ],
   "poster": [
     {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1z3XoqLf2t1MsaXyjZOFnC-BVMiobXTYv/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
       "title": "Illustrated Map - Jungle Track Barakah Edu Village",
       "description": "Peta ilustrasi area wisata dengan jalur track dan ikon lokasi yang jelas.",
-      "tags": ["Illustration", "Map", "Tourism"],
+      "tags": [
+        "Illustration",
+        "Map",
+        "Tourism"
+      ],
       "imgAlt": "Illustrated map with route and landmarks",
       "linkUrl": "https://drive.google.com/file/d/1SorR7pDeunJzIuZqZMnLDO_zEHQz_yYJ/view?usp=sharing",
       "image": null,
       "role": "Illustrator & Visual Designer",
-      "tools": ["Adobe Illustrator"]
+      "tools": [
+        "Adobe Illustrator"
+      ]
     },
-
     {
       "title": "Landing Banner - Data Analyst Certification ITB",
       "description": "Banner bootcamp dengan fokus harga, durasi, dan benefit utama.",
-      "tags": ["Education", "Banner", "Bootcamp"],
+      "tags": [
+        "Education",
+        "Banner",
+        "Bootcamp"
+      ],
       "imgAlt": "Bootcamp banner with pricing and benefits",
       "linkUrl": "https://drive.google.com/file/d/1xRpTM-TJGQIzRxGq67ClQZYIkHQc7A-2/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["Photoshop", "Canva"]
+      "tools": [
+        "Photoshop",
+        "Canva"
+      ]
     },
     {
       "title": "Business Opportunity Poster - Partner Bisnis",
       "description": "Poster peluang bisnis dengan informasi paket, harga, dan keuntungan.",
-      "tags": ["Business", "Promotion", "Opportunity"],
+      "tags": [
+        "Business",
+        "Promotion",
+        "Opportunity"
+      ],
       "imgAlt": "Business partner poster with pricing",
       "linkUrl": "https://drive.google.com/file/d/1sw3HOZwF6cv_l-0qCPcufU1UCaJnfs8h/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop", "Canva"]
+      "tools": [
+        "Photoshop",
+        "Canva"
+      ]
     },
     {
       "title": "Event Poster - Lomba Agustus Merah Putih",
       "description": "Poster lomba 17 Agustus dengan jadwal dan kategori kegiatan.",
-      "tags": ["Event", "Poster", "Independence"],
+      "tags": [
+        "Event",
+        "Poster",
+        "Independence"
+      ],
       "imgAlt": "Independence event poster",
       "linkUrl": "https://drive.google.com/file/d/180QSsHWqVhfsG2P4cJA_BJwGiLc_YDEo/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["Photoshop", "Canva"]
+      "tools": [
+        "Photoshop",
+        "Canva"
+      ]
     },
     {
       "title": "Poster - Putra Putri Pendidikan Jawa Barat",
       "description": "Poster profil peserta dengan fokus portrait dan visual gradasi.",
-      "tags": ["Poster", "Portrait", "Profile"],
+      "tags": [
+        "Poster",
+        "Portrait",
+        "Profile"
+      ],
       "imgAlt": "Education ambassador portrait poster",
       "linkUrl": "https://drive.google.com/file/d/1M41wPhbQSwvV1yd3VQMYITuaoa4Cf3y6/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Automotive Promo - Hyundai Lebaran",
       "description": "Banner promo mobil dengan harga dan skema cicilan.",
-      "tags": ["Automotive", "Promo", "Sales"],
+      "tags": [
+        "Automotive",
+        "Promo",
+        "Sales"
+      ],
       "imgAlt": "Car promo banner",
       "linkUrl": "https://drive.google.com/file/d/1LZTYSDDliJFPlI3a1sHxLVZLaCMbJ0Da/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Food Promo - Paket Kongsi",
       "description": "Poster paket makanan dengan menu dan harga yang jelas.",
-      "tags": ["Food", "Menu", "Promo"],
+      "tags": [
+        "Food",
+        "Menu",
+        "Promo"
+      ],
       "imgAlt": "Food package promo",
       "linkUrl": "https://drive.google.com/file/d/1u9BfLOoUSfTZ-o8OZpBZxQ8gzjJZBUBE/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Ramadhan Menu - Paket Buka Puasa",
       "description": "Poster menu Ramadhan dengan daftar makanan dan harga.",
-      "tags": ["Food", "Ramadhan", "Menu"],
+      "tags": [
+        "Food",
+        "Ramadhan",
+        "Menu"
+      ],
       "imgAlt": "Ramadhan food menu",
       "linkUrl": "https://drive.google.com/file/d/1cIs58SpCx0PDNLKMDCbOwmlTBcoEkAeN/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Visual Content - ITB Bootcamp Series",
       "description": "Konten visual promosi dengan layout clean dan konsisten.",
-      "tags": ["Education", "Content", "Branding"],
+      "tags": [
+        "Education",
+        "Content",
+        "Branding"
+      ],
       "imgAlt": "Bootcamp visual content",
       "linkUrl": "https://drive.google.com/file/d/1_wSGhD0bJ8C2YFljkNryoHgu-IYflt9J/view?usp=sharing",
       "image": null,
       "role": "Content Designer",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "Hotel Promo - Ramadhan Family Room",
       "description": "Poster promo hotel dengan fasilitas dan harga paket.",
-      "tags": ["Hotel", "Promo", "Ramadhan"],
+      "tags": [
+        "Hotel",
+        "Promo",
+        "Ramadhan"
+      ],
       "imgAlt": "Family room promo",
       "linkUrl": "https://drive.google.com/file/d/13xSk-Y1i-fEhGQuARjEjcLcj78s5YU7h/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop", "Canva"]
+      "tools": [
+        "Photoshop",
+        "Canva"
+      ]
     },
     {
       "title": "Hotel Promo - Ramadhan Large Room",
       "description": "Poster promo ruangan besar dengan kapasitas dan harga.",
-      "tags": ["Hotel", "Room", "Promo"],
+      "tags": [
+        "Hotel",
+        "Room",
+        "Promo"
+      ],
       "imgAlt": "Large room promo",
       "linkUrl": "https://drive.google.com/file/d/1Kac3DnKww4SsZHLY8IatS-QZqyPyXF9R/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Outdoor Banner - Griya Maleber Regency",
       "description": "Banner properti dengan visual rumah dan harga.",
-      "tags": ["Property", "Real Estate", "Banner"],
+      "tags": [
+        "Property",
+        "Real Estate",
+        "Banner"
+      ],
       "imgAlt": "Property banner",
       "linkUrl": "https://drive.google.com/file/d/1lgxxJXNj-1UgdoMwzJsCniOxJqSTFT5T/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["CorelDraw", "Illustrator"]
+      "tools": [
+        "CorelDraw",
+        "Illustrator"
+      ]
     },
-
     {
       "title": "Promo Poster - Chinese New Year Campaign",
       "description": "Poster promo jasa digital dengan diskon dan daftar layanan.",
-      "tags": ["Promotion", "Campaign", "Service"],
+      "tags": [
+        "Promotion",
+        "Campaign",
+        "Service"
+      ],
       "imgAlt": "Chinese new year promo poster with discount",
       "linkUrl": "https://drive.google.com/file/d/1DcbLA6SPDJyMcBVmQO0If5h94oOYhk8q/view",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "Property Promo - Sentosa Garden",
       "description": "Poster properti dengan visual rumah, harga, dan CTA pembelian.",
-      "tags": ["Property", "Real Estate", "Promo"],
+      "tags": [
+        "Property",
+        "Real Estate",
+        "Promo"
+      ],
       "imgAlt": "Real estate poster with house and pricing",
       "linkUrl": "https://drive.google.com/file/d/1rSUyrnjVKts-RbBsYMIqqTpH-lIl4_em/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1iXJMvvwmdUoWh0i1rqdbrEErlmOymCzV/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1Jtqqy_1C_bfAyYJGy0Xu1_2G5fAV8hbF/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
     }
   ],
   "logo": [
     {
-      "title": "Corporate Identity - Modern Minimalism",
-      "description": "Desain identitas visual (logo) untuk korporasi dengan filosofi 'less is more'.",
-      "tags": ["Logo", "Corporate", "Modern"],
-      "imgAlt": "Corporate Logo Design",
-      "linkUrl": null,
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1yZJQyOHuCDyNztiGpC7HkL8Icl2iAdZP/view?usp=sharing",
       "image": null,
-      "role": "Brand Designer",
-      "tools": ["Illustrator"]
+      "role": "",
+      "tools": []
     },
     {
-      "title": "Full Branding Suite - Tech & Retail",
-      "description": "Paket identitas brand lengkap mulai dari logo hingga brand guidelines untuk sektor teknologi.",
-      "tags": ["Branding", "Identity", "Package"],
-      "imgAlt": "Brand Identity Package",
-      "linkUrl": null,
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1m8jMxX3MWv_TOjt9P3eO6eYkx2PjzCHW/view?usp=sharing",
       "image": null,
-      "role": "Brand Specialist",
-      "tools": ["Illustrator", "InDesign"]
+      "role": "",
+      "tools": []
     },
     {
-      "title": "Adaptive Visual Identity",
-      "description": "Konsep logo adaptif yang dapat menyesuaikan diri dengan berbagai platform digital.",
-      "tags": ["Dynamic", "Versatile", "Creative"],
-      "imgAlt": "Dynamic Logo Design",
-      "linkUrl": null,
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1MHdpM3jqBMjngBK6FcUYdnUnLOKjqCd7/view?usp=sharing",
       "image": null,
-      "role": "UI/UX Designer",
-      "tools": ["Figma", "Illustrator"]
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1YvWYlpeTxwcQjW8gxq6u38T5mWrUGHSu/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1utG299-_6coRzBm9hri9JQNGv-epncL9/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1locDEdVfkVYgYOBOuR3VFaxArr4WRyUU/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/165nmRJ3TIsspZJSTOWutXhj5bSUzE5tv/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/19_gyAhH4SjUIu6Gdp5556Xfwmh-F5EM5/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/12MXkA3AJafHq2dfCZCBl4Rw9YBD5t1-S/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1r-HzOcqIkhsGvYPPKh5ybiM3v52X6lMH/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1HTzvv5BriAaYBE1V0Zr2AoLFs_urx2zK/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1EW6oAQxqOOP9d7VkSVYw_0tKEH7RwARe/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1nFN9qHXpi1q1rU1X_ObRxzqDaYt94MQ6/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1JUMeyxuniBHD7cUtSirAFDRLppDhWyiF/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1ACFyG73EFAG0_U4_yhlQEYBut5dPxsk7/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1hWlaIbNzObcL5UuH-jpxjp8nOS8s4uDi/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1JCdSABKrj_8-AgDPM7Uj6a5NUyyrGibP/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1vFNjqsq5-yGZAS9wetCuFtgV3XhMuJlR/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
     }
   ],
   "management": [
     {
       "title": "Strategic Content Ecosystem",
       "description": "Pengembangan ekosistem konten strategis untuk mengoptimalkan pertumbuhan brand di media sosial.",
-      "tags": ["Strategy", "Planning", "Analytics"],
+      "tags": [
+        "Strategy",
+        "Planning",
+        "Analytics"
+      ],
       "imgAlt": "Social Media Strategy",
       "linkUrl": null,
       "image": null,
       "emoji": "📊",
       "role": "Social Media Strategist",
-      "tools": ["Meta Business Suite", "Notion"]
+      "tools": [
+        "Meta Business Suite",
+        "Notion"
+      ]
     },
     {
       "title": "Structured Content Pipeline",
       "description": "Manajemen alur konten bulanan yang terstruktur dan terukur untuk konsistensi brand.",
-      "tags": ["Calendar", "Planning", "Scheduling"],
+      "tags": [
+        "Calendar",
+        "Planning",
+        "Scheduling"
+      ],
       "imgAlt": "Content Calendar",
       "linkUrl": null,
       "image": null,
       "emoji": "📅",
       "role": "Content Manager",
-      "tools": ["Trello", "Google Calendar"]
+      "tools": [
+        "Trello",
+        "Google Calendar"
+      ]
     },
     {
       "title": "Community-Driven Growth Lead",
       "description": "Strategi pertumbuhan berbasis komunitas untuk meningkatkan loyalitas konsumen secara organik.",
-      "tags": ["Growth", "Engagement", "Community"],
+      "tags": [
+        "Growth",
+        "Engagement",
+        "Community"
+      ],
       "imgAlt": "Growth Strategy",
       "linkUrl": null,
       "image": null,
       "emoji": "📈",
       "role": "Engagement Specialist",
-      "tools": ["Discord", "Telegram"]
+      "tools": [
+        "Discord",
+        "Telegram"
+      ]
     }
   ],
   "ads": [
     {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/17jgbp7p73GFqNP2CHma_GHWU7baG3S8a/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
+      "title": "",
+      "description": "",
+      "tags": [],
+      "imgAlt": "",
+      "linkUrl": "https://drive.google.com/file/d/1jwM-DkCD7b5zMu0jqpKLZyGcxgyfgQ7H/view?usp=sharing",
+      "image": null,
+      "role": "",
+      "tools": []
+    },
+    {
       "title": "Recruitment Poster - Creative Social Media Manager",
       "description": "Poster lowongan kerja dengan CTA kirim portfolio dan informasi deadline.",
-      "tags": ["Recruitment", "Poster", "Hiring"],
+      "tags": [
+        "Recruitment",
+        "Poster",
+        "Hiring"
+      ],
       "imgAlt": "Hiring poster for social media manager role",
       "linkUrl": "https://drive.google.com/file/d/1FPqRd-B3OLViDDxzWxVEQx4T1l05gj0h/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Photoshop"]
+      "tools": [
+        "Photoshop"
+      ]
     },
     {
       "title": "",
@@ -427,17 +856,26 @@
       "linkUrl": "https://drive.google.com/file/d/1zNs_prTEA_O7-qNnIZyGAH-9s4pU1sRs/view?usp=sharing",
       "image": null,
       "role": "",
-      "tools": [""]
+      "tools": [
+        ""
+      ]
     },
     {
       "title": "Digital Marketing Banner - Service Promotion",
       "description": "Banner digital untuk promosi layanan marketing online dengan visual yang profesional dan engaging.",
-      "tags": ["Digital Marketing", "Service Promotion", "Banner Online"],
+      "tags": [
+        "Digital Marketing",
+        "Service Promotion",
+        "Banner Online"
+      ],
       "imgAlt": "Digital Marketing Service Banner",
       "linkUrl": "https://drive.google.com/file/d/1k4Fayfn1k4V-Lg-78h_UP7ZQvYzElm7k/view?usp=sharing",
       "image": null,
       "role": "Digital Designer",
-      "tools": ["Figma", "Illustrator"]
+      "tools": [
+        "Figma",
+        "Illustrator"
+      ]
     },
     {
       "title": "Digital Campaign Banner - Business Consulting",
@@ -451,42 +889,73 @@
       "linkUrl": "https://drive.google.com/file/d/130MEwJWxllgnkAII11JRbMtgUYxIf2xD/view?usp=sharing",
       "image": null,
       "role": "Digital Campaign Designer",
-      "tools": ["Figma", "Photoshop", "Illustrator"]
+      "tools": [
+        "Figma",
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "E-commerce Product Banner - Home & Living",
       "description": "Banner produk untuk kategori rumah dan gaya hidup dengan desain yang hangat dan mengundang untuk meningkatkan engagement pelanggan.",
-      "tags": ["E-commerce", "Home & Living", "Product Banner", "Lifestyle"],
+      "tags": [
+        "E-commerce",
+        "Home & Living",
+        "Product Banner",
+        "Lifestyle"
+      ],
       "imgAlt": "Home Living E-commerce Product Banner",
       "linkUrl": "https://drive.google.com/file/d/1iB0k-MDNAsjsjPu8a5uujZa-LT1a7cI5/view?usp=sharing",
       "image": null,
       "role": "Product Designer & Lifestyle Photographer",
-      "tools": ["Photoshop", "Illustrator", "Lightroom"]
+      "tools": [
+        "Photoshop",
+        "Illustrator",
+        "Lightroom"
+      ]
     },
     {
       "title": "Promotional Banner - Summer Sale",
       "description": "Banner promosi diskon musim panas dengan visual yang menarik dan call-to-action yang jelas.",
-      "tags": ["Promotion", "Sale", "Seasonal"],
+      "tags": [
+        "Promotion",
+        "Sale",
+        "Seasonal"
+      ],
       "imgAlt": "Summer Sale Banner",
       "linkUrl": "https://drive.google.com/file/d/1MePjcWHHN62BlkZriJ_3hHctlwLu59lV/view?usp=sharing",
       "image": null,
       "role": "Graphic Designer",
-      "tools": ["Canva", "Illustrator"]
+      "tools": [
+        "Canva",
+        "Illustrator"
+      ]
     },
     {
       "title": "E-commerce Banner - Beauty Products",
       "description": "Banner online untuk produk kecantikan dengan desain elegan dan fokus pada manfaat produk.",
-      "tags": ["E-commerce", "Beauty", "Product Showcase"],
+      "tags": [
+        "E-commerce",
+        "Beauty",
+        "Product Showcase"
+      ],
       "imgAlt": "Beauty Products E-commerce Banner",
       "linkUrl": "https://drive.google.com/file/d/1epk0Qhy5omIgegyvpscgVFwt_Hs-u2Nv/view?usp=sharing",
       "image": null,
       "role": "Visual Designer",
-      "tools": ["Photoshop", "Illustrator"]
+      "tools": [
+        "Photoshop",
+        "Illustrator"
+      ]
     },
     {
       "title": "Digital Campaign - TechNova",
       "description": "Desain konten ads yang konversional dan A/B testing untuk startup teknologi.",
-      "tags": ["Digital Ads", "Campaign", "Tech"],
+      "tags": [
+        "Digital Ads",
+        "Campaign",
+        "Tech"
+      ],
       "imgAlt": "TechNova Ads Campaign",
       "linkUrl": null,
       "image": null,
@@ -495,7 +964,11 @@
     {
       "title": "Promo Ads - Babygear",
       "description": "Instagram & Facebook ads materi promo bulanan dengan CTR tinggi.",
-      "tags": ["Promo", "FB/IG Ads", "E-Commerce"],
+      "tags": [
+        "Promo",
+        "FB/IG Ads",
+        "E-Commerce"
+      ],
       "imgAlt": "Babygear Promo Ads",
       "linkUrl": null,
       "image": null,
@@ -504,7 +977,11 @@
     {
       "title": "Lead Generation Carousel - SpeakGuru",
       "description": "Carousel interaktif untuk Facebook Ads yang berfokus pada lead acquisition.",
-      "tags": ["Carousel", "Lead Gen", "Education"],
+      "tags": [
+        "Carousel",
+        "Lead Gen",
+        "Education"
+      ],
       "imgAlt": "SpeakGuru Carousel Ads",
       "linkUrl": null,
       "image": null,

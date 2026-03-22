@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ImageOff } from 'lucide-react';
 
-const LazyImage = ({ src, alt, className, style, fallbackSrc, ...props }) => {
+const LazyImage = ({ src, alt, className, style, ...props }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
@@ -20,15 +20,8 @@ const LazyImage = ({ src, alt, className, style, fallbackSrc, ...props }) => {
   };
 
   const handleError = () => {
-    if (currentSrc === src && fallbackSrc) {
-      // Try fallback image
-      setCurrentSrc(fallbackSrc);
-      setHasError(false);
-    } else {
-      // Both original and fallback failed
-      setHasError(true);
-      setIsLoaded(true);
-    }
+    setHasError(true);
+    setIsLoaded(true);
   };
 
   return (
@@ -48,10 +41,13 @@ const LazyImage = ({ src, alt, className, style, fallbackSrc, ...props }) => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-slate-800/60 flex flex-col items-center justify-center text-slate-400 z-20"
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-slate-300 z-20 p-4 border border-white/5 rounded-xl"
         >
-          <ImageOff size={32} className="mb-2" />
-          <span className="text-xs text-center px-2">Image unavailable</span>
+          <ImageOff size={24} className="mb-2 opacity-50 text-red-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-center leading-relaxed">
+            Preview failed to load<br/>
+            <span className="opacity-60 font-medium normal-case">Please refresh page</span>
+          </span>
         </motion.div>
       )}
 

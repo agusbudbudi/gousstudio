@@ -12,6 +12,7 @@ import { useAppStore } from './store/useAppStore';
 const Home = lazy(() => import('./pages/Home'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const PricelistPage = lazy(() => import('./pages/PricelistPage'));
+const CMS = lazy(() => import('./pages/CMS'));
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -109,13 +110,16 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/pricelist" element={<PricelistPage />} />
+        <Route path="/cms" element={<CMS />} />
       </Routes>
     </AnimatePresence>
   );
 };
 
-function App() {
+function AppContent() {
   const { theme } = useAppStore();
+  const location = useLocation();
+  const isCMS = location.pathname.startsWith('/cms');
 
   useEffect(() => {
     if (theme === 'light') {
@@ -141,6 +145,29 @@ function App() {
   }, []);
 
   return (
+    <div className={`mesh-gradient min-h-screen antialiased ${isCMS ? 'bg-black' : ''}`}>
+      {!isCMS && (
+        <div id="scroll-progress" className="fixed top-0 left-0 h-[3px] z-[200] transition-all duration-100" style={{ background: 'linear-gradient(to right, var(--color-brand), var(--color-neon-pink), var(--color-neon-orange))', width: '0%' }}></div>
+      )}
+      
+      {!isCMS && <Navbar />}
+      
+      <main>
+        <Suspense fallback={<PageLoader />}>
+          <AnimatedRoutes />
+        </Suspense>
+      </main>
+
+      {!isCMS && <Footer />}
+
+      {!isCMS && <OrderModal />}
+      {!isCMS && <FloatingWhatsApp />}
+    </div>
+  );
+}
+
+function App() {
+  return (
     <HelmetProvider>
       <Router>
         <Helmet>
@@ -165,22 +192,7 @@ function App() {
 
         <ScrollToTop />
         <ScrollReveal />
-        <div className="mesh-gradient min-h-screen antialiased">
-          <div id="scroll-progress" className="fixed top-0 left-0 h-[3px] z-[200] transition-all duration-100" style={{ background: 'linear-gradient(to right, var(--color-brand), var(--color-neon-pink), var(--color-neon-orange))', width: '0%' }}></div>
-          
-          <Navbar />
-          
-          <main>
-            <Suspense fallback={<PageLoader />}>
-              <AnimatedRoutes />
-            </Suspense>
-          </main>
-
-          <Footer />
-
-          <OrderModal />
-          <FloatingWhatsApp />
-        </div>
+        <AppContent />
       </Router>
     </HelmetProvider>
   );

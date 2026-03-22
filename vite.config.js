@@ -2,11 +2,39 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import fs from 'fs'
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    {
+      name: 'portfolio-save-api',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url === '/api/save-portfolio-local' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+              try {
+                const bodyJson = JSON.parse(body);
+                const portfolioData = bodyJson.data;
+                const filePath = resolve(__dirname, 'src/data/portfolio.json');
+                fs.writeFileSync(filePath, JSON.stringify(portfolioData, null, 2), 'utf-8');
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ success: true }));
+              } catch (err) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            });
+            return;
+          }
+          next();
+        });
+      }
+    }
   ],
   build: {
     rollupOptions: {

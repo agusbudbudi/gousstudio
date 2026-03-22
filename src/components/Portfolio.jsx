@@ -239,7 +239,6 @@ const Portfolio = ({
                     <LazyImage
                       src={resolveImageUrl(item)}
                       alt={item.imgAlt || item.title}
-                      fallbackSrc={getFallbackImageUrl(activeTab)}
                       className="w-full transition-transform duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
                     />
                   ) : item.emoji ? (
