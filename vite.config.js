@@ -14,26 +14,22 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       },
       output: {
-        manualChunks: {
-          // Split large libraries into separate chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react'],
-          'utils-vendor': ['zustand', 'react-helmet-async'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react') || id.includes('framer-motion')) {
+              return 'vendor-ui';
+            }
+            return 'vendor';
+          }
         }
       }
     },
-    // Optimize bundle size
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      }
-    },
-    // Generate source maps for production debugging
-    sourcemap: false,
-    // Optimize chunk size
-    chunkSizeWarningLimit: 600,
+    // Use default minifier for better compatibility with Vite 8
+    target: 'esnext',
+    chunkSizeWarningLimit: 1000,
   },
   // Optimize dependencies
   optimizeDeps: {
