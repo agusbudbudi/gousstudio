@@ -4,9 +4,12 @@ export default async function handler(req, res) {
   }
 
   const { data, password } = req.body;
-  const { GITHUB_TOKEN, REPO_OWNER, REPO_NAME, CMS_PASSWORD } = process.env;
+  const { GITHUB_TOKEN, REPO_OWNER, REPO_NAME, CMS_PASSWORD, VITE_CMS_PASSWORD } = process.env;
 
-  if (password !== CMS_PASSWORD) {
+  // Check both names for compatibility
+  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+
+  if (!effectivePassword || password !== effectivePassword) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
