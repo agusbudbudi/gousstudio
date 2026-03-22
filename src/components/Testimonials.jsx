@@ -9,7 +9,7 @@ const Testimonials = () => {
       author: "Budi Santoso",
       role: "Owner, Katzenesia",
       avatar: "/img/clients/testi-1.png",
-      bgColor: "brand",
+      gender: "male",
       delay: "0s",
     },
     {
@@ -18,7 +18,7 @@ const Testimonials = () => {
       author: "Sari Putri",
       role: "Marketing, SpeakGuru",
       avatar: "/img/clients/testi-2.png",
-      bgColor: "pink",
+      gender: "female",
       delay: "0.1s",
     },
     {
@@ -27,10 +27,44 @@ const Testimonials = () => {
       author: "Andi Wijaya",
       role: "Event Manager, Lakuna",
       avatar: "/img/clients/testi-3.png",
-      bgColor: "cyan",
+      gender: "male",
       delay: "0.2s",
     },
+    {
+      stars: 5,
+      text: '"Banner e-commerce yang dibuat sangat konversi tinggi. Penjualan produk kami naik 40% setelah menggunakan desain dari Gous Studio!"',
+      author: "Maya Sari",
+      role: "E-commerce Manager, BeautyStore",
+      avatar: "",
+      gender: "female",
+      delay: "0.3s",
+    },
+    {
+      stars: 5,
+      text: '"Management sosial media yang comprehensive. Dari content calendar sampai posting schedule, semua tertangani dengan baik. Terima kasih Gous!"',
+      author: "Rizky Pratama",
+      role: "CEO, TechStart Indonesia",
+      avatar: "",
+      gender: "male",
+      delay: "0.4s",
+    },
+    {
+      stars: 5,
+      text: '"Desain poster untuk bootcamp ITB sangat mengagumkan. Peserta yang mendaftar meningkat drastis berkat visual yang menarik dan informatif."',
+      author: "Dr. Ahmad Fauzi",
+      role: "Program Director, ITB Bootcamp",
+      avatar: "",
+      gender: "male",
+      delay: "0.5s",
+    },
   ];
+
+  const getAvatar = (testi) => {
+    if (testi.avatar && testi.avatar.trim() !== "") return testi.avatar;
+    return testi.gender === "female"
+      ? "/img/avatar-female.png"
+      : "/img/avatar-male.webp";
+  };
 
   return (
     <section id="testimonials" className="py-10 px-3">
@@ -47,7 +81,7 @@ const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {testimonials.map((testi, index) => (
             <div
               key={index}
@@ -64,9 +98,9 @@ const Testimonials = () => {
                 {testi.text}
               </p>
               <div className="flex items-center gap-3 relative z-10 pt-4">
-                <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-slate-500/10">
                   <img
-                    src={testi.avatar}
+                    src={getAvatar(testi)}
                     alt={testi.author}
                     className="w-full h-full object-cover"
                   />

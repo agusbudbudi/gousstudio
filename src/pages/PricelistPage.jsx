@@ -320,7 +320,7 @@ const PricelistPage = () => {
             </div>
 
             {/* Subtle Quick Search Chips */}
-            <div className="mt-4 flex flex-wrap justify-center items-center gap-2 text-xs font-semibold tracking-wide">
+            <div className="mt-4 flex flex-wrap justify-center items-center gap-1 text-xs font-semibold tracking-wide">
               <span className="text-[var(--color-text-muted)] opacity-60 mr-1 flex items-center gap-1.5">
                 <Zap size={14} className="text-[var(--color-brand)]" /> Quick
                 Search:
@@ -345,7 +345,7 @@ const PricelistPage = () => {
       </section>
 
       {/* Filter Tabs (Sticky) */}
-      <section className="py-4 px-3 sticky top-15 z-30 bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-[var(--color-border-adaptive)]">
+      <section className="py-2 px-3 sticky top-15 z-30 bg-[var(--color-bg)]/80 backdrop-blur-xl border-b border-[var(--color-border-adaptive)]">
         <div className="max-w-[1400px] mx-auto md:px-6">
           <div className="flex md:justify-center overflow-x-auto scrollbar-hide">
             <div className="inline-flex items-center p-1.5 glass neon-border rounded-2xl gap-1 w-max mx-auto md:mx-0">

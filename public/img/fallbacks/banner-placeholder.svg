@@ -1,0 +1,9 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#1e293b" rx="8"/>
+  <rect x="120" y="100" width="160" height="100" fill="#334155" rx="4"/>
+  <rect x="140" y="120" width="120" height="8" fill="#64748b" rx="4"/>
+  <rect x="140" y="140" width="80" height="8" fill="#64748b" rx="4"/>
+  <circle cx="180" cy="170" r="12" fill="#10b981"/>
+  <text x="200" y="210" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="14">🛒 E-commerce Banner</text>
+  <text x="200" y="230" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="12">Preview Coming Soon</text>
+</svg>

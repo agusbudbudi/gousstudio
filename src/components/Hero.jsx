@@ -85,7 +85,7 @@ const Hero = () => {
         <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
           Kreativitas modern untuk membuat brand kamu lebih{" "}
           <span className="text-white font-medium">standout</span> &{" "}
-          <span className="text-white font-medium">berkesan</span>. 5+ tahun
+          <span className="text-white font-medium">berkesan</span>. 7+ tahun
           membantu bisnis tumbuh dengan desain yang berbicara.
         </p>
 
