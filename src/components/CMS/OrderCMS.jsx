@@ -15,6 +15,9 @@ import {
   Filter,
   Image as ImageIcon,
   Maximize2,
+  Tag,
+  Package,
+  FileText,
 } from "lucide-react";
 
 const STATUSES = [
@@ -329,11 +332,11 @@ Gous Studio`;
           <div className="flex flex-col md:flex-row items-center gap-3">
             {/* Status Filter */}
             <div className="relative group min-w-[160px]">
-              <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all appearance-none cursor-pointer"
+                className="pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all appearance-none cursor-pointer"
               >
                 <option value="ALL">Semua Status</option>
                 {STATUSES.map((status) => (
@@ -342,18 +345,18 @@ Gous Studio`;
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
             </div>
 
             {/* Search */}
             <div className="relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none" />
               <input
                 type="text"
                 placeholder="Cari order, nama, atau no. WA..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-64 shadow-sm transition-all placeholder:text-slate-200"
+                className="pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-64 shadow-sm transition-all placeholder:text-slate-300"
               />
             </div>
           </div>
@@ -372,7 +375,7 @@ Gous Studio`;
           <p className="text-slate-500 text-sm">{error}</p>
         </div>
       ) : selectedOrder ? (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col relative h-[calc(100vh-[180px])] min-h-[500px]">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col relative h-[calc(100vh-[180px])] min-h-[500px]">
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Left Column (Main) */}
@@ -387,66 +390,77 @@ Gous Studio`;
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
                           Kategori
                         </label>
-                        <input
-                          type="text"
-                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-medium"
-                          value={selectedOrder.design_category || ""}
-                          onChange={(e) =>
-                            handleOrderChange("design_category", e.target.value)
-                          }
-                          placeholder="Contoh: Social Media Design"
-                        />
+                        <div className="relative group">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none">
+                            <Tag size={14} />
+                          </div>
+                          <input
+                            type="text"
+                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-medium"
+                            value={selectedOrder.design_category || ""}
+                            onChange={(e) =>
+                              handleOrderChange("design_category", e.target.value)
+                            }
+                            placeholder="Contoh: Social Media Design"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
                           Paket Terpilih
                         </label>
-                        <select
-                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold text-brand-600 cursor-pointer"
-                          value={selectedOrder.selected_package || ""}
-                          onChange={(e) => {
-                            const newPkg = e.target.value;
-                            const pkgInfo = pricelists.find(
-                              (p) => p.servicename === newPkg,
-                            );
-                            if (pkgInfo) {
-                              setSelectedOrder({
-                                ...selectedOrder,
-                                selected_package: newPkg,
-                                design_category: pkgInfo.category,
-                                price: pkgInfo.finalprice,
-                                final_price: calculateFinalPrice(
-                                  pkgInfo.finalprice,
-                                  selectedOrder.discount_value,
-                                  selectedOrder.discount_type || "fixed",
-                                ),
-                              });
-                            } else {
-                              handleOrderChange("selected_package", newPkg);
-                            }
-                          }}
-                        >
-                          <option value="">Pilih Paket...</option>
-                          {pricelists.map((p) => (
-                            <option key={p.servicename} value={p.servicename}>
-                              {p.servicename}
-                            </option>
-                          ))}
-                          <option value="Custom Package">Custom Package</option>
-                          <option value="Other">Other</option>
-                        </select>
+                        <div className="relative group">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none">
+                            <Package size={14} />
+                          </div>
+                          <select
+                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-9 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold text-brand-600 cursor-pointer appearance-none"
+                            value={selectedOrder.selected_package || ""}
+                            onChange={(e) => {
+                              const newPkg = e.target.value;
+                              const pkgInfo = pricelists.find(
+                                (p) => p.servicename === newPkg,
+                              );
+                              if (pkgInfo) {
+                                setSelectedOrder({
+                                  ...selectedOrder,
+                                  selected_package: newPkg,
+                                  design_category: pkgInfo.category,
+                                  price: pkgInfo.finalprice,
+                                  final_price: calculateFinalPrice(
+                                    pkgInfo.finalprice,
+                                    selectedOrder.discount_value,
+                                    selectedOrder.discount_type || "fixed",
+                                  ),
+                                });
+                              } else {
+                                handleOrderChange("selected_package", newPkg);
+                              }
+                            }}
+                          >
+                            <option value="">Pilih Paket...</option>
+                            {pricelists.map((p) => (
+                              <option key={p.servicename} value={p.servicename}>
+                                {p.servicename}
+                              </option>
+                            ))}
+                            <option value="Custom Package">Custom Package</option>
+                            <option value="Other">Other</option>
+                          </select>
+                          <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
                           Harga Base (Order)
                         </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">
+                        <div className="relative group">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold pointer-events-none group-focus-within:text-brand-500 transition-colors">
                             Rp
                           </span>
                           <input
                             type="number"
-                            className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
+                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
                             value={selectedOrder.price || ""}
                             onChange={(e) =>
                               handleOrderChange("price", e.target.value)
@@ -662,29 +676,33 @@ Gous Studio`;
                             >
                               {calculateDaysLeft(selectedOrder.deadline) > 0
                                 ? `${calculateDaysLeft(selectedOrder.deadline)} hari lagi`
-                                : calculateDaysLeft(selectedOrder.deadline) ===
-                                    0
+                                : calculateDaysLeft(selectedOrder.deadline) === 0
                                   ? `Hari ini`
                                   : `Terlewat ${Math.abs(calculateDaysLeft(selectedOrder.deadline))} hari`}
                             </span>
                           )}
                       </div>
-                      <input
-                        type="date"
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
-                        value={
-                          selectedOrder.deadline
-                            ? selectedOrder.deadline.split("T")[0]
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleOrderChange("deadline", e.target.value)
-                        }
-                      />
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none">
+                          <Clock size={14} />
+                        </div>
+                        <input
+                          type="date"
+                          className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
+                          value={
+                            selectedOrder.deadline
+                              ? selectedOrder.deadline.split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleOrderChange("deadline", e.target.value)
+                          }
+                        />
+                      </div>
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs text-slate-400 font-medium font-medium">
+                        <label className="block text-xs text-slate-400 font-medium">
                           Link Deliverables (Google Drive)
                         </label>
                         {selectedOrder.deliverables_url && (
@@ -699,15 +717,20 @@ Gous Studio`;
                           </a>
                         )}
                       </div>
-                      <input
-                        type="url"
-                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-brand-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold placeholder:font-normal placeholder:text-slate-300"
-                        value={selectedOrder.deliverables_url || ""}
-                        onChange={(e) =>
-                          handleOrderChange("deliverables_url", e.target.value)
-                        }
-                        placeholder="https://drive.google.com/..."
-                      />
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none">
+                          <FileText size={14} />
+                        </div>
+                        <input
+                          type="url"
+                          className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-brand-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold placeholder:font-normal placeholder:text-slate-300"
+                          value={selectedOrder.deliverables_url || ""}
+                          onChange={(e) =>
+                            handleOrderChange("deliverables_url", e.target.value)
+                          }
+                          placeholder="https://drive.google.com/..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -825,7 +848,7 @@ Gous Studio`;
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col flex-1 h-[calc(100vh-280px)] min-h-[400px]">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col flex-1 h-[calc(100vh-280px)] min-h-[400px]">
           <div className="flex-1 overflow-auto custom-scrollbar">
             <table className="w-full text-left text-sm whitespace-nowrap border-separate border-spacing-0">
               <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest sticky top-0 z-20 shadow-[0_1px_0_0_rgba(0,0,0,0.1)]">

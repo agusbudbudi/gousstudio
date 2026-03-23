@@ -130,6 +130,27 @@ const OrderModal = () => {
       const selectedRow = pricelistOptions.find(
         (p) => p.servicename === prev.selected_package,
       );
+
+      // Fallback for Custom Package if not found in database yet
+      if (!selectedRow && prev.selected_package === "Custom Package") {
+        const defaultCategory = "Other";
+        const defaultDeadline = !prev.deadline 
+          ? (() => {
+              const targetDate = new Date();
+              targetDate.setDate(targetDate.getDate() + 7); // Default 7 days for custom
+              return targetDate.toISOString().split("T")[0];
+            })()
+          : prev.deadline;
+
+        if (prev.design_category === defaultCategory && prev.deadline === defaultDeadline) return prev;
+
+        return {
+          ...prev,
+          design_category: prev.design_category || defaultCategory,
+          deadline: defaultDeadline
+        };
+      }
+
       if (!selectedRow) return prev;
 
       const durationDays = Number(selectedRow.duration ?? 0);
@@ -401,16 +422,16 @@ const OrderModal = () => {
                           ...prev,
                           selected_package: selected,
                           design_category:
-                            selectedRow?.category || prev.design_category,
+                            selectedRow?.category || (selected === "Custom Package" ? "Other" : prev.design_category),
                           // only auto-fill deadline if user hasn't selected one yet
                           deadline: prev.deadline
                             ? prev.deadline
-                            : selectedRow?.duration
+                            : (selectedRow?.duration || (selected === "Custom Package" ? 7 : 0))
                               ? (() => {
                                   const targetDate = new Date();
                                   targetDate.setDate(
                                     targetDate.getDate() +
-                                      Number(selectedRow.duration),
+                                      Number(selectedRow?.duration || (selected === "Custom Package" ? 7 : 0)),
                                   );
                                   return targetDate.toISOString().split("T")[0];
                                 })()
@@ -439,6 +460,14 @@ const OrderModal = () => {
                           >
                             Pilih Paket...
                           </option>
+                          
+                          {/* Fallback for Custom Package if not in database results */}
+                          {!pricelistOptions.some(p => p.servicename === "Custom Package") && (
+                            <option value="Custom Package" style={{ backgroundColor: "var(--color-card)" }}>
+                              Custom Package
+                            </option>
+                          )}
+
                           {pricelistOptions.map((p) => (
                             <option
                               key={p.servicename}

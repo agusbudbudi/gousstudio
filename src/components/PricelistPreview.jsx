@@ -236,7 +236,10 @@ const PricelistPreview = () => {
   }, []);
 
   const previewItems = useMemo(() => {
-    return [...pricelistItems].sort((a, b) => a.finalPrice - b.finalPrice).slice(0, 4);
+    return [...pricelistItems]
+      .filter((item) => item.serviceName !== "Custom Package")
+      .sort((a, b) => a.finalPrice - b.finalPrice)
+      .slice(0, 4);
   }, [pricelistItems]);
 
   return (
