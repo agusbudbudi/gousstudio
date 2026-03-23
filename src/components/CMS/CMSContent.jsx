@@ -193,13 +193,15 @@ const CMSContent = ({ onLogout }) => {
               {/* Orders Menu */}
               <button
                 onClick={() => setActivePage("orders")}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer ${
+                className={`group w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
                   activePage === "orders"
-                    ? "bg-brand-500 text-white shadow-md shadow-brand-500/10"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-white border-brand-500/50 text-brand-600 shadow-sm"
+                    : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart
+                  className={`w-4 h-4 transition-colors ${activePage === "orders" ? "text-brand-500" : "text-slate-400 group-hover:text-slate-500"}`}
+                />
                 Orders
               </button>
             </div>
@@ -214,52 +216,60 @@ const CMSContent = ({ onLogout }) => {
               {/* Portfolio Menu */}
               <button
                 onClick={() => setActivePage("portfolio")}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer ${
+                className={`group w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
                   activePage === "portfolio"
-                    ? "bg-brand-500 text-white shadow-md shadow-brand-500/10"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-white border-brand-500/50 text-brand-600 shadow-sm"
+                    : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <ImageIcon className="w-4 h-4" />
+                <ImageIcon
+                  className={`w-4 h-4 transition-colors ${activePage === "portfolio" ? "text-brand-500" : "text-slate-400 group-hover:text-slate-500"}`}
+                />
                 Portfolio
               </button>
 
               {/* Pricelist Menu */}
               <button
                 onClick={() => setActivePage("pricelist")}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer ${
+                className={`group w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
                   activePage === "pricelist"
-                    ? "bg-brand-500 text-white shadow-md shadow-brand-500/10"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-white border-brand-500/50 text-brand-600 shadow-sm"
+                    : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <DollarSign className="w-4 h-4" />
+                <DollarSign
+                  className={`w-4 h-4 transition-colors ${activePage === "pricelist" ? "text-brand-500" : "text-slate-400 group-hover:text-slate-500"}`}
+                />
                 Pricelist
               </button>
 
               {/* Services Menu */}
               <button
                 onClick={() => setActivePage("services")}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer ${
+                className={`group w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
                   activePage === "services"
-                    ? "bg-brand-500 text-white shadow-md shadow-brand-500/10"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-white border-brand-500/50 text-brand-600 shadow-sm"
+                    : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Shapes className="w-4 h-4" />
+                <Shapes
+                  className={`w-4 h-4 transition-colors ${activePage === "services" ? "text-brand-500" : "text-slate-400 group-hover:text-slate-500"}`}
+                />
                 Services
               </button>
 
               {/* Fastwork Menu */}
               <button
                 onClick={() => setActivePage("fastwork")}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer ${
+                className={`group w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
                   activePage === "fastwork"
-                    ? "bg-brand-500 text-white shadow-md shadow-brand-500/10"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-white border-brand-500/50 text-brand-600 shadow-sm"
+                    : "text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <Zap className="w-4 h-4" />
+                <Zap
+                  className={`w-4 h-4 transition-colors ${activePage === "fastwork" ? "text-brand-500" : "text-slate-400 group-hover:text-slate-500"}`}
+                />
                 Fastwork
               </button>
             </div>
@@ -339,7 +349,7 @@ const CMSContent = ({ onLogout }) => {
                   onClick={() => setActiveTab(cat.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeTab === cat.id
-                      ? "bg-brand-50 border-brand-500 text-brand-700 shadow-sm"
+                      ? "bg-brand-50 border-brand-500/50 text-brand-700 shadow-sm"
                       : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300"
                   }`}
                 >
