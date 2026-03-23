@@ -444,7 +444,9 @@ Gous Studio`;
                                 {p.servicename}
                               </option>
                             ))}
-                            <option value="Custom Package">Custom Package</option>
+                            {!pricelists.some(
+                              (p) => p.servicename === "Custom Package",
+                            ) && <option value="Custom Package">Custom Package</option>}
                             <option value="Other">Other</option>
                           </select>
                           <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />

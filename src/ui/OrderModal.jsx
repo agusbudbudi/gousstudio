@@ -56,7 +56,7 @@ const OrderModal = () => {
   // Fetch pricelists to build "Kebutuhan Desain" dropdown.
   useEffect(() => {
     if (!isOpen) return;
-    
+
     // Always start with form (reset if coming from a previous success state)
     setIsSubmitted(false);
     setSubmittedOrder(null);
@@ -134,7 +134,7 @@ const OrderModal = () => {
       // Fallback for Custom Package if not found in database yet
       if (!selectedRow && prev.selected_package === "Custom Package") {
         const defaultCategory = "Other";
-        const defaultDeadline = !prev.deadline 
+        const defaultDeadline = !prev.deadline
           ? (() => {
               const targetDate = new Date();
               targetDate.setDate(targetDate.getDate() + 7); // Default 7 days for custom
@@ -142,12 +142,16 @@ const OrderModal = () => {
             })()
           : prev.deadline;
 
-        if (prev.design_category === defaultCategory && prev.deadline === defaultDeadline) return prev;
+        if (
+          prev.design_category === defaultCategory &&
+          prev.deadline === defaultDeadline
+        )
+          return prev;
 
         return {
           ...prev,
           design_category: prev.design_category || defaultCategory,
-          deadline: defaultDeadline
+          deadline: defaultDeadline,
         };
       }
 
@@ -207,6 +211,12 @@ const OrderModal = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Manual validation for mandatory fields
+    if (!formData.name.trim() || !formData.whatsapp.trim()) {
+      alert("Nama Lengkap dan Nomor WhatsApp wajib diisi.");
+      return;
+    }
+
     try {
       // First, save to database
       const response = await fetch("/api/save-order", {
@@ -261,11 +271,11 @@ const OrderModal = () => {
         </div>
 
         <div
-          className="px-4 py-4 md:p-6 pt-0 border-b border-white/10 flex items-center justify-between"
+          className="px-4 py-4 md:px-6 md:py-4 pt-0 border-b border-white/10 flex items-center justify-between"
           style={{ backgroundColor: "var(--color-glass-bg)" }}
         >
           <div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">
+            <h3 className="text-xl font-bold text-white tracking-tight">
               {isSubmitted ? "Pesanan Diterima!" : "Form Order Desain"}
             </h3>
             <p className="text-slate-500 text-sm mt-1">
@@ -338,19 +348,22 @@ const OrderModal = () => {
 
             <button
               onClick={handleResetAndClose}
-              className="w-full py-4.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] text-sm cursor-pointer"
+              className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] text-sm cursor-pointer"
             >
               Selesai & Tutup
             </button>
           </div>
         ) : (
-          <>
-            <div className="flex-1 px-4 py-4 md:p-8 overflow-y-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="flex-1 flex flex-col overflow-hidden"
+          >
+            <div className="flex-1 px-4 py-4 md:p-6 overflow-y-auto">
               <div className="space-y-4 md:space-y-6">
                 {/* Nama */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Nama Lengkap
+                    Nama Lengkap <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
                     <User
@@ -376,7 +389,7 @@ const OrderModal = () => {
                 {/* WhatsApp */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Nomor WhatsApp
+                    Nomor WhatsApp <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
                     <Phone
@@ -402,7 +415,7 @@ const OrderModal = () => {
                 {/* Service Dropdown */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Kebutuhan Desain
+                    Kebutuhan Desain <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
                     <MessageSquare
@@ -422,16 +435,25 @@ const OrderModal = () => {
                           ...prev,
                           selected_package: selected,
                           design_category:
-                            selectedRow?.category || (selected === "Custom Package" ? "Other" : prev.design_category),
+                            selectedRow?.category ||
+                            (selected === "Custom Package"
+                              ? "Other"
+                              : prev.design_category),
                           // only auto-fill deadline if user hasn't selected one yet
                           deadline: prev.deadline
                             ? prev.deadline
-                            : (selectedRow?.duration || (selected === "Custom Package" ? 7 : 0))
+                            : selectedRow?.duration ||
+                                (selected === "Custom Package" ? 7 : 0)
                               ? (() => {
                                   const targetDate = new Date();
                                   targetDate.setDate(
                                     targetDate.getDate() +
-                                      Number(selectedRow?.duration || (selected === "Custom Package" ? 7 : 0)),
+                                      Number(
+                                        selectedRow?.duration ||
+                                          (selected === "Custom Package"
+                                            ? 7
+                                            : 0),
+                                      ),
                                   );
                                   return targetDate.toISOString().split("T")[0];
                                 })()
@@ -460,10 +482,15 @@ const OrderModal = () => {
                           >
                             Pilih Paket...
                           </option>
-                          
+
                           {/* Fallback for Custom Package if not in database results */}
-                          {!pricelistOptions.some(p => p.servicename === "Custom Package") && (
-                            <option value="Custom Package" style={{ backgroundColor: "var(--color-card)" }}>
+                          {!pricelistOptions.some(
+                            (p) => p.servicename === "Custom Package",
+                          ) && (
+                            <option
+                              value="Custom Package"
+                              style={{ backgroundColor: "var(--color-card)" }}
+                            >
                               Custom Package
                             </option>
                           )}
@@ -499,7 +526,7 @@ const OrderModal = () => {
                 {/* Brief */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Detail Brief
+                    Detail Brief <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     required
@@ -519,7 +546,7 @@ const OrderModal = () => {
                 {/* Deadline */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Desain Harus Ready Tanggal
+                    Desain Harus Ready Tanggal <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
                     <Calendar
@@ -546,18 +573,15 @@ const OrderModal = () => {
             </div>
 
             {/* Fixed Footer Button */}
-            <form
-              onSubmit={handleSubmit}
-              className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent"
-            >
+            <div className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
               <button
                 type="submit"
-                className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 <Send size={20} /> Kirim ke WhatsApp
               </button>
-            </form>
-          </>
+            </div>
+          </form>
         )}
       </div>
     </div>
