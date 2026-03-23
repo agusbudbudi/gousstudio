@@ -11,7 +11,7 @@ import {
   ShoppingCart,
   Search,
 } from "lucide-react";
-import pricelistData from "../data/pricelist.json";
+import { supabase } from "../utils/supabase";
 import { useAppStore } from "../store/useAppStore";
 import AnimatedPage from "../ui/AnimatedPage";
 
@@ -222,16 +222,59 @@ const PriceCard = ({ item }) => {
 
 const PricelistPage = () => {
   const { openOrderModal } = useAppStore();
-  const categories = useMemo(() => {
-    const cats = ["All", ...new Set(pricelistData.map((i) => i.category))];
-    return cats;
+  const [pricelistItems, setPricelistItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchPricelists = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data, error: fetchError } = await supabase
+          .from("pricelists")
+          .select("*")
+          .order("order_index", { ascending: true });
+        if (fetchError) throw fetchError;
+
+        const mapped = (data || []).map((row) => ({
+          id: row.slug || row.servicename,
+          category: row.category,
+          serviceName: row.servicename,
+          description: row.description,
+          retailPrice: Number(row.retailprice ?? 0),
+          finalPrice: Number(row.finalprice ?? 0),
+          duration: Number(row.duration ?? 1),
+          isRevisionUnlimited: Boolean(row.isrevisionunlimited),
+          totalRevision: Number(row.totalrevision ?? 0),
+          deliverables: row.deliverables || [],
+        }));
+
+        if (!cancelled) setPricelistItems(mapped);
+      } catch (err) {
+        if (!cancelled) setError(err?.message || "Failed to load pricelist");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchPricelists();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const categories = useMemo(() => {
+    const cats = ["All", ...new Set(pricelistItems.map((i) => i.category))];
+    return cats;
+  }, [pricelistItems]);
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
-    return pricelistData.filter((item) => {
+    return pricelistItems.filter((item) => {
       const matchesCategory =
         activeCategory === "All" || item.category === activeCategory;
       const matchesSearch =
@@ -241,7 +284,7 @@ const PricelistPage = () => {
 
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, pricelistItems]);
 
   return (
     <AnimatedPage>
@@ -362,11 +405,11 @@ const PricelistPage = () => {
                   {cat === "All" ? "Semua" : cat}
                   {cat === "All" ? (
                     <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-white/10">
-                      {pricelistData.length}
+                      {pricelistItems.length}
                     </span>
                   ) : (
                     <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-white/10">
-                      {pricelistData.filter((i) => i.category === cat).length}
+                      {pricelistItems.filter((i) => i.category === cat).length}
                     </span>
                   )}
                 </button>
@@ -381,7 +424,19 @@ const PricelistPage = () => {
         <div className="max-w-[1400px] mx-auto md:px-6">
           {/* Removed Count info as requested */}
 
-          {filtered.length > 0 ? (
+          {error ? (
+            <div className="py-12 flex flex-col items-center justify-center text-center">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-xl w-full">
+                <p className="text-red-400 font-bold mb-2">Gagal memuat paket</p>
+                <p className="text-slate-400 text-sm">{error}</p>
+              </div>
+            </div>
+          ) : loading ? (
+            <div className="py-20 flex flex-col items-center justify-center text-center opacity-100">
+              <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-slate-400 font-medium">Memuat paket layanan...</p>
+            </div>
+          ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map((item, index) => (
                 <div

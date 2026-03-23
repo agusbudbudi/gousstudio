@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import portfolioData from "../data/portfolio.json";
 import Lightbox from "../ui/Lightbox";
 import { resolveImageUrl, getFallbackImageUrl } from "../utils/imageResolver";
 import * as LucideIcons from "lucide-react";
 import { ImageOff, Search, ArrowRight } from "lucide-react";
 import LazyImage from "../ui/LazyImage";
+import { supabase } from "../utils/supabase";
 
 const Portfolio = ({
   showTitle = true,
@@ -18,6 +18,9 @@ const Portfolio = ({
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [portfolioData, setPortfolioData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const itemsPerPage = 24;
 
   useEffect(() => {
@@ -32,6 +35,55 @@ const Portfolio = ({
     setSearchTerm("");
     setCurrentPage(1); // Reset filter and pagination when active tab changes
   }, [activeTab]);
+
+  // Load portfolio items from Supabase (public side via anon key).
+  useEffect(() => {
+    let cancelled = false;
+    const fetchPortfolio = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data, error: fetchError } = await supabase
+          .from("portfolios")
+          .select("*")
+          .order("order_index", { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        const mapped = (data || []).map((row) => ({
+          // Normalize field names so existing UI keeps working.
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          category: row.category,
+          tags: row.tags || [],
+          imgAlt: row.imgalt || "",
+          linkUrl: row.linkurl || "",
+          image: row.image || null,
+          role: row.role || "",
+          tools: row.tools || [],
+          order_index: row.order_index,
+        }));
+
+        const grouped = mapped.reduce((acc, item) => {
+          if (!acc[item.category]) acc[item.category] = [];
+          acc[item.category].push(item);
+          return acc;
+        }, {});
+
+        if (!cancelled) setPortfolioData(grouped);
+      } catch (err) {
+        if (!cancelled) setError(err?.message || "Failed to load portfolio");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchPortfolio();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const tabs = [
     { id: "poster", icon: "Image", name: "Poster Design" },
@@ -69,16 +121,31 @@ const Portfolio = ({
   };
 
   // Add structured data to head
-  React.useEffect(() => {
+  const structuredDataScriptRef = React.useRef(null);
+  useEffect(() => {
+    // Avoid injecting SEO script until data available.
+    if (loading) return;
+    const allItems = Object.values(portfolioData).flat();
+    if (!allItems.length) return;
+
+    if (structuredDataScriptRef.current) {
+      document.head.removeChild(structuredDataScriptRef.current);
+      structuredDataScriptRef.current = null;
+    }
+
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.text = JSON.stringify(generateStructuredData());
     document.head.appendChild(script);
+    structuredDataScriptRef.current = script;
 
     return () => {
-      document.head.removeChild(script);
+      if (structuredDataScriptRef.current) {
+        document.head.removeChild(structuredDataScriptRef.current);
+        structuredDataScriptRef.current = null;
+      }
     };
-  }, []);
+  }, [loading, portfolioData]);
 
   const tagColors = [
     "border border-brand-500/40 text-[var(--color-brand)] bg-transparent",
@@ -95,9 +162,7 @@ const Portfolio = ({
     activeTab === "ecommerce"
       ? [
           "All",
-          ...new Set(
-            portfolioData.ecommerce?.flatMap((item) => item.tags) || [],
-          ),
+          ...new Set((portfolioData.ecommerce || []).flatMap((item) => item.tags || [])),
         ]
       : [];
 
@@ -129,6 +194,34 @@ const Portfolio = ({
 
   const displayItems = paginatedItems;
   const hasMore = limit && searchFilteredItems.length > limit;
+
+  if (loading) {
+    return (
+      <section id="portfolio" className={`${showTitle ? "py-10" : "pb-10"} px-0`}>
+        <div className="max-w-[1400px] mx-auto px-3 md:px-6">
+          <div className="py-20 flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-slate-400 text-sm font-medium">
+              Memuat portofolio...
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="portfolio" className={`${showTitle ? "py-10" : "pb-10"} px-0`}>
+        <div className="max-w-[1400px] mx-auto px-3 md:px-6">
+          <div className="py-20 flex flex-col items-center justify-center text-center gap-2">
+            <p className="text-rose-500 font-bold text-sm">Gagal memuat portfolio</p>
+            <p className="text-slate-400 text-sm">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="portfolio" className={`${showTitle ? "py-10" : "pb-10"} px-0`}>

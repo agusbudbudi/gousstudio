@@ -1,8 +1,10 @@
 export const resolveImageUrl = (item, size = "w800") => {
   if (item.image) return item.image;
-  if (!item.linkUrl) return null;
+  // Portfolio data dari JSON pakai `linkUrl`, sedangkan dari Supabase/CMS pakai `linkurl`.
+  const linkUrl = item.linkUrl || item.linkurl;
+  if (!linkUrl) return null;
 
-  const url = item.linkUrl;
+  const url = linkUrl;
   // Google Drive - optimized for better loading and multiple sizes
   if (url.includes("drive.google.com")) {
     const match =
@@ -32,12 +34,13 @@ export const getLightboxDisplayUrl = (item) => {
   const resolved = resolveImageUrl(item, "w1200");
   if (resolved) return resolved;
 
-  if (item.linkUrl) {
-    if (item.linkUrl.includes("canva.com/design/")) {
+  const linkUrl = item.linkUrl || item.linkurl;
+  if (linkUrl) {
+    if (linkUrl.includes("canva.com/design/")) {
       return null; // Fallback to iframe in UI
     }
     // Use a more reliable screenshot service
-    return `https://api.screenshotone.com/take?access_key=demo&url=${encodeURIComponent(item.linkUrl)}&viewport_width=1200&viewport_height=800&image_quality=80&format=webp&cache=true`;
+    return `https://api.screenshotone.com/take?access_key=demo&url=${encodeURIComponent(linkUrl)}&viewport_width=1200&viewport_height=800&image_quality=80&format=webp&cache=true`;
   }
   return null;
 };

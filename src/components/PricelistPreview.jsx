@@ -11,7 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import pricelistData from "../data/pricelist.json";
+import { supabase } from "../utils/supabase";
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("id-ID", {
@@ -192,11 +192,52 @@ const PreviewCard = ({ item }) => {
 
 const PricelistPreview = () => {
   const { openOrderModal } = useAppStore();
-  const previewItems = useMemo(() => {
-    return [...pricelistData]
-      .sort((a, b) => a.finalPrice - b.finalPrice)
-      .slice(0, 4);
+  const [pricelistItems, setPricelistItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const fetchPricelists = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data, error: fetchError } = await supabase
+          .from("pricelists")
+          .select("*")
+          .order("order_index", { ascending: true });
+        if (fetchError) throw fetchError;
+
+        const mapped = (data || []).map((row) => ({
+          id: row.slug || row.servicename,
+          category: row.category,
+          serviceName: row.servicename,
+          description: row.description,
+          retailPrice: Number(row.retailprice ?? 0),
+          finalPrice: Number(row.finalprice ?? 0),
+          duration: Number(row.duration ?? 1),
+          isRevisionUnlimited: Boolean(row.isrevisionunlimited),
+          totalRevision: Number(row.totalrevision ?? 0),
+          deliverables: row.deliverables || [],
+        }));
+
+        if (!cancelled) setPricelistItems(mapped);
+      } catch (err) {
+        if (!cancelled) setError(err?.message || "Failed to load pricelist");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchPricelists();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const previewItems = useMemo(() => {
+    return [...pricelistItems].sort((a, b) => a.finalPrice - b.finalPrice).slice(0, 4);
+  }, [pricelistItems]);
 
   return (
     <section className="py-10 px-4 relative overflow-hidden">
@@ -236,13 +277,30 @@ const PricelistPreview = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {previewItems.map((item, index) => (
-            <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
-              <PreviewCard item={item} />
-            </div>
-          ))}
-        </div>
+        {error ? (
+          <div className="mt-6 text-center bg-red-500/10 border border-red-500/20 rounded-2xl py-8">
+            <p className="text-red-400 font-bold">Gagal memuat pricelist</p>
+            <p className="text-slate-400 text-sm mt-1">{error}</p>
+          </div>
+        ) : loading ? (
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[420px] rounded-2xl glass border border-white/5 animate-pulse bg-white/5"
+                style={{ animationDelay: `${i * 0.05}s` }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {previewItems.map((item, index) => (
+              <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
+                <PreviewCard item={item} />
+              </div>
+            ))}
+          </div>
+        )}
 
         <div
           className="mt-10 overflow-hidden reveal"
@@ -275,7 +333,7 @@ const PricelistPreview = () => {
                 <button
                   onClick={() =>
                     openOrderModal({
-                      serviceName: "Custom Package (Diskusi Khusus)",
+                      serviceName: "Custom Package",
                       category: "Other",
                       deliverables: [
                         "Kebutuhan khusus di luar paket standar",

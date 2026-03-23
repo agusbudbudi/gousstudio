@@ -24,8 +24,8 @@ const PortfolioModal = ({
     title: "",
     description: "",
     tags: "",
-    imgAlt: "",
-    linkUrl: "",
+    imgalt: "",
+    linkurl: "",
     image: null,
     role: "",
     tools: "",
@@ -45,8 +45,8 @@ const PortfolioModal = ({
         title: "",
         description: "",
         tags: "",
-        imgAlt: "",
-        linkUrl: "",
+        imgalt: "",
+        linkurl: "",
         image: null,
         role: "",
         tools: "",
@@ -219,8 +219,8 @@ const PortfolioModal = ({
                   <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
                     type="url"
-                    name="linkUrl"
-                    value={formData.linkUrl}
+                    name="linkurl"
+                    value={formData.linkurl}
                     onChange={handleChange}
                     placeholder="https://drive.google.com/..."
                     className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
@@ -253,8 +253,8 @@ const PortfolioModal = ({
                 <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
                   type="text"
-                  name="imgAlt"
-                  value={formData.imgAlt}
+                  name="imgalt"
+                  value={formData.imgalt}
                   onChange={handleChange}
                   placeholder="e.g. Modern logo design showcase"
                   className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"

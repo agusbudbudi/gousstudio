@@ -1,61 +1,64 @@
+import { createClient } from "@supabase/supabase-js";
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   const { data, password } = req.body;
-  const { GITHUB_TOKEN, REPO_OWNER, REPO_NAME, CMS_PASSWORD, VITE_CMS_PASSWORD } = process.env;
+  const { 
+    SUPABASE_URL, 
+    VITE_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY, 
+    CMS_PASSWORD, 
+    VITE_CMS_PASSWORD 
+  } = process.env;
 
-  // Check both names for compatibility
+  const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
   const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
 
   if (!effectivePassword || password !== effectivePassword) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  if (!GITHUB_TOKEN || !REPO_OWNER || !REPO_NAME) {
-    return res.status(500).json({ message: 'Server configuration missing (GitHub credentials)' });
+  if (!effectiveUrl || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ message: 'Server configuration missing (Supabase credentials)' });
   }
 
+  const supabase = createClient(effectiveUrl, SUPABASE_SERVICE_ROLE_KEY);
+
   try {
-    const path = 'src/data/portfolio.json';
-    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+    // 1. Flatten the data from { category: [items] } to [items]
+    const flatData = Object.entries(data).flatMap(([category, items]) => 
+      items.map((item, index) => ({ 
+        title: item.title,
+        description: item.description,
+        category: category,
+        tags: item.tags || [],
+        imgalt: item.imgalt || item.imgAlt || '',
+        linkurl: item.linkurl || item.linkUrl || '',
+        image: item.image,
+        role: item.role,
+        tools: item.tools || [],
+        order_index: index
+      }))
+    );
 
-    // 1. Get current SHA
-    const getRes = await fetch(url, {
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-      },
-    });
+    // 2. Clear existing portfolios (since we are doing a full sync)
+    // In a more robust system, we would do a diff or use a 'sync' table
+    const { error: deleteError } = await supabase
+      .from('portfolios')
+      .delete()
+      .not('id', 'is', null); // Delete all
 
-    if (!getRes.ok) {
-      const errorText = await getRes.text();
-      throw new Error(`Failed to get file metadata: ${getRes.status} ${errorText}`);
-    }
+    if (deleteError) throw deleteError;
 
-    const fileData = await getRes.json();
-    const sha = fileData.sha;
+    // 3. Insert new items
+    const { error: insertError } = await supabase
+      .from('portfolios')
+      .insert(flatData);
 
-    // 2. Put updated content
-    const putRes = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'Update portfolio from CMS',
-        content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
-        sha,
-      }),
-    });
-
-    if (!putRes.ok) {
-      const errorText = await putRes.text();
-      throw new Error(`Failed to update file: ${putRes.status} ${errorText}`);
-    }
+    if (insertError) throw insertError;
 
     return res.status(200).json({ success: true });
   } catch (error) {

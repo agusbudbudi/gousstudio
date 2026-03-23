@@ -18,7 +18,19 @@ export const useAppStore = create((set) => ({
   openOrderModal: (data = null) => {
     // Prevent React synthetic event object from being used as prefillData
     const actualData = (data && data.nativeEvent) ? null : data;
-    set({ isOrderModalOpen: true, prefillData: actualData });
+
+    // Default behavior for header/CTA buttons that don't pass a pricelist item:
+    // auto set order "Kebutuhan Desain" to the single custom package.
+    const defaultCustomPackage = {
+      serviceName: "Custom Package",
+      category: "Other",
+      deliverables: ["Sesuai diskusi"],
+    };
+
+    set({
+      isOrderModalOpen: true,
+      prefillData: actualData ?? defaultCustomPackage,
+    });
   },
   
   closeOrderModal: () => set({ isOrderModalOpen: false, prefillData: null }),

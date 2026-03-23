@@ -13,6 +13,7 @@ const Home = lazy(() => import('./pages/Home'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const PricelistPage = lazy(() => import('./pages/PricelistPage'));
 const CMS = lazy(() => import('./pages/CMS'));
+const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -111,6 +112,7 @@ const AnimatedRoutes = () => {
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/pricelist" element={<PricelistPage />} />
         <Route path="/cms" element={<CMS />} />
+        <Route path="/order/:orderNumber" element={<OrderDetail />} />
       </Routes>
     </AnimatePresence>
   );

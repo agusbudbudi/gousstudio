@@ -1,9 +1,35 @@
 import React from "react";
-import fastworkData from "../data/fastwork.json";
+import { supabase } from "../utils/supabase";
 import { ArrowRight, Star, StarHalf, ThumbsUp } from "lucide-react";
 import LazyImage from "../ui/LazyImage";
 
 const FastworkPromo = () => {
+  const [fastworkData, setFastworkData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchFastwork = async () => {
+      try {
+        setLoading(true);
+        const { data, error: fetchError } = await supabase
+          .from("fastwork_items")
+          .select("*")
+          .order("id");
+
+        if (fetchError) throw fetchError;
+        setFastworkData(data || []);
+      } catch (err) {
+        console.error("Error fetching fastwork items:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFastwork();
+  }, []);
+
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -81,11 +107,25 @@ const FastworkPromo = () => {
           </p>
         </div>
 
+        {error && (
+          <div className="text-center py-10 bg-red-500/10 border border-red-500/20 rounded-2xl mb-12">
+            <p className="text-red-400 font-bold">Gagal memuat promo Fastwork</p>
+            <p className="text-slate-400 text-sm">{error}</p>
+          </div>
+        )}
+
         <div
           id="fastwork-container"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal"
         >
-          {fastworkData.map((item, index) => (
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[350px] rounded-xl glass border border-white/5 animate-pulse bg-white/5"
+                />
+              ))
+            : fastworkData.map((item, index) => (
             <a
               key={index}
               href={item.url}
