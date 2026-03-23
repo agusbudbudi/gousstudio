@@ -36,7 +36,7 @@ const FastworkList = ({ items, searchQuery, onEdit, onDelete, onReorder }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-xl p-3 transition-colors hover:shadow-sm"
+              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors hover:shadow-sm"
             >
               {/* Reorder */}
               {!isSearching && (

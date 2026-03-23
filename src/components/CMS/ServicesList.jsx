@@ -75,7 +75,7 @@ const ServicesList = ({ items, searchQuery, onEdit, onDelete, onReorder }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-xl p-3 transition-colors hover:shadow-sm"
+              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors hover:shadow-sm"
             >
               {/* Reorder */}
               {!isSearching && (
@@ -101,7 +101,7 @@ const ServicesList = ({ items, searchQuery, onEdit, onDelete, onReorder }) => {
               )}
 
               {/* Color dot + Icon */}
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${colorClass}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${colorClass}`}>
                 <IconComponent className="w-4 h-4" />
               </div>
 

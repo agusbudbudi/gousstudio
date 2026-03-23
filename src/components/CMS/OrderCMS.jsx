@@ -11,6 +11,10 @@ import {
   ExternalLink,
   CheckCircle2,
   MessageCircle,
+  ChevronDown,
+  Filter,
+  Image as ImageIcon,
+  Maximize2,
 } from "lucide-react";
 
 const STATUSES = [
@@ -27,6 +31,7 @@ const OrderCMS = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [updatingId, setUpdatingId] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [savingDetails, setSavingDetails] = useState(false);
@@ -92,6 +97,11 @@ const OrderCMS = () => {
           order.id === id ? { ...order, status: newStatus } : order,
         ),
       );
+
+      // Also update selectedOrder if it's the one being updated
+      if (selectedOrder && selectedOrder.id === id) {
+        setSelectedOrder((prev) => ({ ...prev, status: newStatus }));
+      }
     } catch (err) {
       alert(`Gagal update status: ${err.message}`);
     } finally {
@@ -191,19 +201,18 @@ const OrderCMS = () => {
     }
   };
 
-  const filteredOrders = orders.filter(
-    (o) =>
-      (o.order_number || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      (o.full_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (o.phone_number || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      (o.selected_package || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
-  );
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.phone_number?.includes(searchQuery) ||
+      order.selected_package?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "ALL" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleSendWhatsApp = () => {
     if (!selectedOrder) return;
@@ -259,12 +268,12 @@ Gous Studio`;
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
         <div className="flex items-start gap-4">
           {selectedOrder && (
             <button
               onClick={() => setSelectedOrder(null)}
-              className="mt-1 p-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-brand-500 hover:border-brand-200 hover:bg-brand-50 transition-all cursor-pointer shadow-sm"
+              className="mt-1 p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-brand-500 hover:border-brand-200 hover:bg-brand-50 transition-all cursor-pointer"
               title="Kembali ke List Order"
             >
               <ArrowLeft size={20} />
@@ -300,16 +309,43 @@ Gous Studio`;
                 "Data Orders"
               )}
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[10px] text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
               {selectedOrder
-                ? "Detail lengkap pesanan"
+                ? `Dibuat pada: ${new Date(
+                    selectedOrder.created_at,
+                  ).toLocaleString("id-ID", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}`
                 : `${orders.length} order terdaftar`}
             </p>
           </div>
         </div>
 
         {!selectedOrder && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col md:flex-row items-center gap-3">
+            {/* Status Filter */}
+            <div className="relative group min-w-[160px]">
+              <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all appearance-none cursor-pointer"
+              >
+                <option value="ALL">Semua Status</option>
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
+            </div>
+
+            {/* Search */}
             <div className="relative group">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
               <input
@@ -485,7 +521,7 @@ Gous Studio`;
 
                     {/* Compact Package Overview Card for Freelancers - Full Width */}
                     {selectedPricelist && (
-                      <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3">
+                      <div className="mt-3 bg-white border border-slate-200 rounded-lg p-3">
                         <div className="flex flex-col gap-2 mb-2 pb-2 border-b border-slate-100">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
@@ -700,16 +736,66 @@ Gous Studio`;
 
                     <button
                       onClick={handleSendWhatsApp}
-                      className="mt-4 w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-[11px] transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98] cursor-pointer group"
+                      className="mt-4 w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white !text-white py-2.5 rounded-lg font-bold text-[11px] transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98] cursor-pointer group"
                     >
                       <MessageCircle
                         size={14}
-                        className="transition-transform group-hover:scale-110"
+                        className="transition-transform group-hover:scale-110 !text-white"
                       />
-                      Kirim Update ke WA
+                      <span className="!text-white">Kirim Update ke WA</span>
                     </button>
                   </div>
                 </div>
+
+                {/* Payment Proof Section - Sidebar Link */}
+                {selectedOrder.payment_proof_url && (
+                  <div className="pt-6 border-t border-slate-100">
+                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 pb-2 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <ImageIcon size={12} className="text-emerald-500" />
+                        Bukti Pembayaran
+                      </span>
+                    </h3>
+                    <div className="space-y-3">
+                      <div
+                        className="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-50 cursor-zoom-in aspect-video transition-all duration-300"
+                        onClick={() =>
+                          window.open(selectedOrder.payment_proof_url, "_blank")
+                        }
+                      >
+                        <img
+                          src={selectedOrder.payment_proof_url}
+                          alt="Bukti Pembayaran"
+                          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                          <Maximize2
+                            size={24}
+                            className="text-white transform scale-90 group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                      </div>
+                      {selectedOrder.status === "WAITING FOR PAYMENT" && (
+                        <button
+                          onClick={() =>
+                            updateOrderStatus(selectedOrder.id, "IN PROGRESS")
+                          }
+                          disabled={updatingId === selectedOrder.id}
+                          className="w-full mt-1 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-[11px] font-bold rounded-lg transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {updatingId === selectedOrder.id ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 size={14} className="animate-spin" />
+                              <span>Sedang Verifikasi...</span>
+                            </div>
+                          ) : (
+                            "Konfirmasi & Kerjakan"
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -718,14 +804,14 @@ Gous Studio`;
           <div className="p-3 md:px-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0 z-10">
             <button
               onClick={() => setSelectedOrder(null)}
-              className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all text-slate-600 font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm cursor-pointer"
+              className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all text-slate-600 font-bold text-xs rounded-lg flex items-center gap-2 shadow-sm cursor-pointer"
             >
               Batal
             </button>
             <button
               onClick={saveOrderDetails}
               disabled={savingDetails}
-              className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] transition-all text-white font-bold text-xs rounded-xl flex items-center gap-2 disabled:opacity-70 disabled:pointer-events-none shadow-md shadow-brand-500/20 cursor-pointer"
+              className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] transition-all text-white font-bold text-xs rounded-lg flex items-center gap-2 disabled:opacity-70 disabled:pointer-events-none shadow-md shadow-brand-500/20 cursor-pointer"
             >
               {savingDetails ? (
                 <>
@@ -739,15 +825,15 @@ Gous Studio`;
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex-1">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col flex-1 h-[calc(100vh-280px)] min-h-[400px]">
+          <div className="flex-1 overflow-auto custom-scrollbar">
+            <table className="w-full text-left text-sm whitespace-nowrap border-separate border-spacing-0">
+              <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-widest sticky top-0 z-20 shadow-[0_1px_0_0_rgba(0,0,0,0.1)]">
                 <tr>
                   <th className="px-6 py-4">Order ID & Tanggal</th>
                   <th className="px-6 py-4">Pelanggan</th>
                   <th className="px-6 py-4">Paket / Kategori</th>
-                  <th className="px-6 py-4">Brief</th>
+                  <th className="px-6 py-4 text-right">Final Price</th>
                   <th className="px-6 py-4">Deadline</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
@@ -789,8 +875,18 @@ Gous Studio`;
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-slate-700">
-                          {order.full_name}
+                        <div className="flex items-center gap-2">
+                          <div className="font-bold text-slate-700">
+                            {order.full_name}
+                          </div>
+                          {order.payment_proof_url && (
+                            <div
+                              className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[8px] font-black uppercase tracking-tighter flex items-center gap-1"
+                              title="Bukti Bayar Tersedia"
+                            >
+                              <ImageIcon size={8} /> BUKTI
+                            </div>
+                          )}
                         </div>
                         <div className="text-xs text-slate-500 mt-0.5">
                           {order.phone_number}
@@ -804,12 +900,15 @@ Gous Studio`;
                           {order.design_category}
                         </div>
                       </td>
-                      <td
-                        className="px-6 py-4 max-w-[200px] truncate"
-                        title={order.brief_detail}
-                      >
-                        <span className="text-slate-500 text-xs">
-                          {order.brief_detail || "-"}
+                      <td className="px-6 py-4 text-right">
+                        <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded">
+                          {Number(order.final_price || 0) === 0
+                            ? "GRATIS"
+                            : new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR",
+                                minimumFractionDigits: 0,
+                              }).format(order.final_price || 0)}
                         </span>
                       </td>
                       <td className="px-6 py-4">

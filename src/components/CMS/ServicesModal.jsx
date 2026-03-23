@@ -80,7 +80,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
-          className="relative w-full max-w-xl bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-xl bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -116,7 +116,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.slug}
                   onChange={handleChange}
                   placeholder="e.g. logo"
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                 />
               </div>
               <div className="space-y-1.5">
@@ -132,7 +132,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                     value={formData.category}
                     onChange={handleChange}
                     placeholder="e.g. Brand Identity"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
               </div>
@@ -150,7 +150,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="e.g. Logo Design"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
               />
             </div>
 
@@ -166,7 +166,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Deskripsi singkat layanan ini..."
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-xs"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-xs"
               />
             </div>
 
@@ -182,7 +182,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                     name="icon"
                     value={formData.icon}
                     onChange={handleChange}
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
                   >
                     {ICON_OPTIONS.map((ic) => (
                       <option key={ic} value={ic}>{ic}</option>
@@ -200,7 +200,7 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                     name="color"
                     value={formData.color}
                     onChange={handleChange}
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
                   >
                     {COLOR_OPTIONS.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
@@ -226,13 +226,13 @@ const ServicesModal = ({ isOpen, onClose, onSave, initialData }) => {
                     onChange={(e) => setNewIncluded(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addIncluded(); } }}
                     placeholder="Tambah fitur..."
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={addIncluded}
-                  className="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-all cursor-pointer"
+                  className="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                 </button>

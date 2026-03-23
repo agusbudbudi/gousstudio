@@ -20,6 +20,9 @@ import {
   Infinity,
   RefreshCw,
   Tag,
+  Upload,
+  Check,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const formatPrice = (price) =>
@@ -35,6 +38,8 @@ const OrderDetail = () => {
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -89,6 +94,64 @@ const OrderDetail = () => {
       fetchOrder();
     }
   }, [orderNumber]);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "application/pdf",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Hanya file gambar (JPG/PNG) atau PDF yang diperbolehkan.");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran file maksimal 5MB.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${orderNumber}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${orderNumber}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("payment-proofs")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("payment-proofs").getPublicUrl(filePath);
+
+      // Update order in database
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ payment_proof_url: publicUrl })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      setOrder((prev) => ({ ...prev, payment_proof_url: publicUrl }));
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 5000);
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(`Gagal upload bukti bayar: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const calculateProjectDuration = (createdDateStr, deadlineDateStr) => {
     if (!createdDateStr || !deadlineDateStr) return null;
@@ -234,6 +297,12 @@ const OrderDetail = () => {
     <div className="min-h-screen pt-24 pb-10 px-4 transition-colors duration-500 bg-[var(--color-bg)] selection:bg-brand-500/30">
       <Helmet>
         <title>Status Order #{orderNumber} | Gous Studio</title>
+        <meta name="description" content={`Pantau progres pesanan desain ${order.selected_package} Anda secara real-time di Gous Studio.`} />
+        <meta property="og:title" content={`Order #${orderNumber} - ${order.selected_package}`} />
+        <meta property="og:description" content={`Status: ${statusInfo.label}. Lacak detail pengerjaan desain Anda mulai dari pembayaran hingga file final.`} />
+        <meta property="og:type" content="website" />
+        <meta name="theme-color" content="#6366f1" />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       {/* Decorative Background Elements - Subtler */}
@@ -297,7 +366,7 @@ const OrderDetail = () => {
               {/* Subtle background glow */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-brand-500/10 rounded-full blur-[80px] -z-10"></div>
 
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
                 <div className="text-center md:text-left">
                   <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center justify-center md:justify-start gap-2 tracking-tight">
                     <Package className="text-brand-500" /> Deliverables Project
@@ -323,9 +392,9 @@ const OrderDetail = () => {
             </div>
           )}
 
-          {/* Info Details Section - Ultra Compact */}
+          {/* Info Details Section */}
           <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-white/5">
-            {/* Left Panel: Brief Detail */}
+            {/* Left Panel: Brief & Payment Proof */}
             <div className="p-4 md:col-span-3">
               <h3 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 mb-3 flex items-center gap-2">
                 <FileText size={14} className="text-brand-500" /> Detail Brief
@@ -336,6 +405,97 @@ const OrderDetail = () => {
                     "Tidak ada detail brief khusus untuk pesanan ini."}
                 </p>
               </div>
+
+              {/* Compact Payment Proof Upload */}
+              {(order.status === "WAITING FOR PAYMENT" ||
+                order.payment_proof_url) && (
+                <div className={`mt-4 bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group transition-all ${order.status !== "WAITING FOR PAYMENT" ? "hover:border-emerald-500/30" : "hover:border-brand-500/30"}`}>
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto text-left">
+                      <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                        order.status !== "WAITING FOR PAYMENT" 
+                        ? "bg-emerald-500/10 border-emerald-500/10 group-hover:border-emerald-500/30" 
+                        : "bg-brand-500/10 border-brand-500/10 group-hover:border-brand-500/30"
+                      }`}>
+                        {order.status !== "WAITING FOR PAYMENT" ? (
+                          <CheckCircle2
+                            size={22}
+                            className="text-emerald-500"
+                          />
+                        ) : order.payment_proof_url ? (
+                          <Clock
+                            size={22}
+                            className="text-brand-500 animate-pulse"
+                          />
+                        ) : (
+                          <Upload size={22} className="text-brand-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-white font-bold text-[13px] md:text-base tracking-tight mb-0.5">
+                          {order.status !== "WAITING FOR PAYMENT"
+                            ? "Pembayaran Terverifikasi"
+                            : order.payment_proof_url
+                              ? "Bukti Terupload"
+                              : "Upload Bukti Bayar"}
+                        </h4>
+                        <p className="text-slate-400 text-[10px] md:text-[11px] leading-tight max-w-[240px]">
+                          {order.status !== "WAITING FOR PAYMENT"
+                            ? "Terima kasih, pembayaran Anda telah diverifikasi."
+                            : order.payment_proof_url
+                              ? "Pengerjaan segera dimulai setelah verifikasi."
+                              : "Lampirkan bukti transfer Anda di sini."}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="w-full md:w-auto">
+                      {order.status === "WAITING FOR PAYMENT" ? (
+                        !order.payment_proof_url ? (
+                          <label className="inline-flex items-center justify-center w-full px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98] cursor-pointer whitespace-nowrap">
+                            {uploading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                            ) : (
+                              <Upload size={14} className="mr-2" />
+                            )}
+                            {uploading ? "Uploading..." : "Pilih File Proof"}
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*,.pdf"
+                              onChange={handleFileUpload}
+                              disabled={uploading}
+                            />
+                          </label>
+                        ) : (
+                          <div className="flex flex-col items-center md:items-end gap-2 w-full">
+                            <div className="flex items-center justify-center gap-2 w-full md:w-auto px-4 py-1.5 bg-brand-500/10 border border-brand-500/20 text-brand-500 rounded-lg font-bold text-[10px] uppercase tracking-wide">
+                              <Loader2 size={12} className="animate-spin" />{" "}
+                              Menunggu Verifikasi
+                            </div>
+                            <button
+                              onClick={() => {
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.accept = "image/*,.pdf";
+                                input.onchange = handleFileUpload;
+                                input.click();
+                              }}
+                              className="text-[10px] text-slate-500 hover:text-white transition-colors cursor-pointer underline underline-offset-2 font-medium"
+                            >
+                              Ganti File
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 w-full md:w-auto px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-lg font-bold text-[10px] uppercase tracking-widest">
+                          <Check size={14} /> Terverifikasi
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Panel: Pelanggan, Paket, Deadline */}
@@ -415,7 +575,8 @@ const OrderDetail = () => {
                           <span className="text-slate-400">Diskon</span>
                           {Number(packageData.discount_value) > 0 ? (
                             <span className="text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded border border-rose-400/20">
-                              -{packageData.discount_type === "percentage"
+                              -
+                              {packageData.discount_type === "percentage"
                                 ? `${packageData.discount_value}%`
                                 : formatPrice(packageData.discount_value)}
                             </span>
@@ -470,7 +631,7 @@ const OrderDetail = () => {
             </div>
           </div>
 
-          {/* CTA Full Width Bottom */}
+          {/* CTA Bottom bar */}
           <div className="p-6 md:p-8 text-center bg-gradient-to-b from-transparent to-brand-500/[0.05] border-t border-white/5">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

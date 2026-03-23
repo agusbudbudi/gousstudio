@@ -93,7 +93,7 @@ const PortfolioModal = ({
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
-          className="relative w-full max-w-xl bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]"
+          className="relative w-full max-w-xl bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[85vh]"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -131,7 +131,7 @@ const PortfolioModal = ({
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all cursor-pointer text-xs"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all cursor-pointer text-xs"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id} className="bg-white">
@@ -155,7 +155,7 @@ const PortfolioModal = ({
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="e.g. Logo Design for Tech Co"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                 />
               </div>
             </div>
@@ -171,7 +171,7 @@ const PortfolioModal = ({
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Jelaskan tentang project ini secara ringkas..."
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-400 leading-relaxed text-xs"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-400 leading-relaxed text-xs"
               ></textarea>
             </div>
 
@@ -188,7 +188,7 @@ const PortfolioModal = ({
                     value={formData.tags}
                     onChange={handleChange}
                     placeholder="Branding, Minimalist"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                   />
                 </div>
               </div>
@@ -204,7 +204,7 @@ const PortfolioModal = ({
                     value={formData.role}
                     onChange={handleChange}
                     placeholder="Visual Designer"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                   />
                 </div>
               </div>
@@ -223,7 +223,7 @@ const PortfolioModal = ({
                     value={formData.linkurl}
                     onChange={handleChange}
                     placeholder="https://drive.google.com/..."
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                   />
                 </div>
               </div>
@@ -239,7 +239,7 @@ const PortfolioModal = ({
                     value={formData.tools}
                     onChange={handleChange}
                     placeholder="Photoshop, Illustrator"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                   />
                 </div>
               </div>
@@ -257,7 +257,7 @@ const PortfolioModal = ({
                   value={formData.imgalt}
                   onChange={handleChange}
                   placeholder="e.g. Modern logo design showcase"
-                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
+                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-400 text-xs"
                 />
               </div>
             </div>

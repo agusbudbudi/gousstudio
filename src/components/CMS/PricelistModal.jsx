@@ -83,7 +83,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
-          className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -114,7 +114,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.slug}
                   onChange={handleChange}
                   placeholder="e.g. logo-basic"
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                 />
               </div>
               <div className="space-y-1.5">
@@ -124,7 +124,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold appearance-none focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs cursor-pointer"
                   >
                     {PRICE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -143,7 +143,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.servicename}
                 onChange={handleChange}
                 placeholder="e.g. Logo Design – Professional"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
               />
             </div>
 
@@ -157,7 +157,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Deskripsi singkat layanan ini..."
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-xs"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-medium focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-xs"
               />
             </div>
 
@@ -174,7 +174,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     value={formData.retailprice}
                     onChange={handleChange}
                     placeholder="500000"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
               </div>
@@ -189,7 +189,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     value={formData.finalprice}
                     onChange={handleChange}
                     placeholder="349000"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
               </div>
@@ -209,7 +209,7 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     onChange={handleChange}
                     placeholder="3"
                     min="1"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
               </div>
@@ -225,13 +225,13 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     placeholder="2"
                     min="0"
                     disabled={formData.isrevisionunlimited}
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs disabled:opacity-40"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs disabled:opacity-40"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Revisi Unlimited?</label>
-                <label className="flex items-center gap-3 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all">
+                <label className="flex items-center gap-3 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all">
                   <input
                     type="checkbox"
                     name="isrevisionunlimited"
@@ -256,13 +256,13 @@ const PricelistModal = ({ isOpen, onClose, onSave, initialData }) => {
                     onChange={(e) => setNewDeliverable(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDeliverable(); } }}
                     placeholder="Tambah item deliverable..."
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={addDeliverable}
-                  className="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-all cursor-pointer"
+                  className="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                 </button>

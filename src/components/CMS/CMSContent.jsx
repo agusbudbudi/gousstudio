@@ -159,23 +159,28 @@ const CMSContent = ({ onLogout }) => {
     <div className="flex flex-1 overflow-hidden bg-[#F8FAFC]">
       {/* Sidebar */}
       {/* Sidebar */}
-      <aside className="w-56 border-r border-slate-200 bg-white flex flex-col shadow-[1px_0_0_rgba(0,0,0,0.02)]">
+      <aside className="w-48 border-r border-slate-200 bg-white flex flex-col shadow-[1px_0_0_rgba(0,0,0,0.02)]">
         <div className="p-6 border-b border-slate-100">
-          <div className="flex items-center gap-3">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer group"
+          >
             <img
               src="/img/gous-logo.png"
               alt="Gous Studio"
-              className="w-8 h-8 object-contain"
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
             />
             <div>
-              <h2 className="font-extrabold text-slate-900 leading-tight text-sm">
+              <h2 className="font-extrabold text-slate-900 leading-tight text-sm group-hover:text-brand-500 transition-colors">
                 Gous Studio
               </h2>
               <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">
                 CMS PANEL
               </p>
             </div>
-          </div>
+          </a>
         </div>
 
         <nav className="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
@@ -264,9 +269,9 @@ const CMSContent = ({ onLogout }) => {
         <div className="p-5 border-t border-slate-100 space-y-3">
           <button
             onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-500 transition-colors text-[9px] font-bold cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-lg font-bold transition-all text-[11px] cursor-pointer text-slate-400 hover:text-red-500 hover:bg-red-50/50"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </div>
@@ -332,7 +337,7 @@ const CMSContent = ({ onLogout }) => {
                 <button
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeTab === cat.id
                       ? "bg-brand-50 border-brand-500 text-brand-700 shadow-sm"
                       : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300"

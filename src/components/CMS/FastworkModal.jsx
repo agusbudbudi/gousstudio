@@ -59,7 +59,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
-          className="relative w-full max-w-lg bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-lg bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -93,7 +93,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="e.g. Feed Sosial Media Paket Murah"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
               />
             </div>
 
@@ -111,7 +111,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.url}
                   onChange={handleChange}
                   placeholder="https://fastwork.id/user/..."
-                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                 />
               </div>
             </div>
@@ -129,7 +129,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.image}
                   onChange={handleChange}
                   placeholder="https://storage.googleapis.com/fastwork-static/..."
-                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                 />
               </div>
               {formData.image && (
@@ -163,7 +163,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                     min="0"
                     max="5"
                     step="0.1"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs"
+                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs"
                   />
                 </div>
               </div>
@@ -177,14 +177,14 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.delay}
                   onChange={handleChange}
                   placeholder="0 / 0.1s / 0.2s"
-                  className="px-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="px-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
                 />
               </div>
             </div>
 
             {/* Toggles */}
             <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all">
+              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all">
                 <input
                   type="checkbox"
                   name="rehire"
@@ -201,7 +201,7 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   </p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all">
+              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all">
                 <input
                   type="checkbox"
                   name="installment"

@@ -7,6 +7,8 @@ import {
   User,
   Phone,
   ChevronDown,
+  CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { CONFIG } from "../config/constants";
@@ -29,6 +31,24 @@ const OrderModal = () => {
     deadline: "",
   });
 
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedOrder, setSubmittedOrder] = useState(null);
+
+  // Reset function
+  const handleResetAndClose = () => {
+    setFormData({
+      name: "",
+      whatsapp: "",
+      selected_package: "",
+      design_category: "",
+      brief: "",
+      deadline: "",
+    });
+    setIsSubmitted(false);
+    setSubmittedOrder(null);
+    onClose();
+  };
+
   const [pricelistOptions, setPricelistOptions] = useState([]);
   const [loadingPricelists, setLoadingPricelists] = useState(false);
   const [pricelistsError, setPricelistsError] = useState(null);
@@ -36,6 +56,10 @@ const OrderModal = () => {
   // Fetch pricelists to build "Kebutuhan Desain" dropdown.
   useEffect(() => {
     if (!isOpen) return;
+    
+    // Always start with form (reset if coming from a previous success state)
+    setIsSubmitted(false);
+    setSubmittedOrder(null);
 
     let cancelled = false;
     const fetchPricelists = async () => {
@@ -52,7 +76,8 @@ const OrderModal = () => {
         if (cancelled) return;
         setPricelistOptions(data || []);
       } catch (err) {
-        if (!cancelled) setPricelistsError(err?.message || "Failed to load pricelists");
+        if (!cancelled)
+          setPricelistsError(err?.message || "Failed to load pricelists");
       } finally {
         if (!cancelled) setLoadingPricelists(false);
       }
@@ -130,7 +155,11 @@ const OrderModal = () => {
         autoDesignCategory !== prev.design_category;
 
       return changed
-        ? { ...prev, deadline: autoDeadline, design_category: autoDesignCategory }
+        ? {
+            ...prev,
+            deadline: autoDeadline,
+            design_category: autoDesignCategory,
+          }
         : prev;
     });
   }, [isOpen, pricelistOptions]);
@@ -138,7 +167,7 @@ const OrderModal = () => {
   // Handle ESC key to close
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleResetAndClose();
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
@@ -159,22 +188,22 @@ const OrderModal = () => {
 
     try {
       // First, save to database
-      const response = await fetch('/api/save-order', {
-        method: 'POST',
+      const response = await fetch("/api/save-order", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderData: formData
+          orderData: formData,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save order');
+        throw new Error("Failed to save order");
       }
 
       const result = await response.json();
-      console.log('Order saved:', result);
+      const savedOrder = result.order;
 
       // Then send WhatsApp message
       const message = `Halo Gous Studio, saya ingin order desain!
@@ -184,14 +213,17 @@ const OrderModal = () => {
 *Kebutuhan:* ${formData.selected_package}
 *Detail Brief:* ${formData.brief}
 *Deadline:* ${formData.deadline}
-*Order Number:* ${result.order.order_number}`;
+*Order Number:* ${savedOrder.order_number}`;
 
       const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodeURIComponent(message)}`;
       window.open(waUrl, "_blank");
-      onClose();
+
+      // Set Success State instead of closing
+      setSubmittedOrder(savedOrder);
+      setIsSubmitted(true);
     } catch (error) {
-      console.error('Error submitting order:', error);
-      alert('Terjadi kesalahan saat menyimpan order. Silakan coba lagi.');
+      console.error("Error submitting order:", error);
+      alert("Terjadi kesalahan saat menyimpan order. Silakan coba lagi.");
     }
   };
 
@@ -213,14 +245,16 @@ const OrderModal = () => {
         >
           <div>
             <h3 className="text-2xl font-bold text-white tracking-tight">
-              Form Order Desain
+              {isSubmitted ? "Pesanan Diterima!" : "Form Order Desain"}
             </h3>
             <p className="text-slate-500 text-sm mt-1">
-              Lengkapi detail project Anda
+              {isSubmitted
+                ? "Terima kasih telah memilih Gous Studio"
+                : "Lengkapi detail project Anda"}
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleResetAndClose}
             aria-label="Close Modal"
             className="p-3 rounded-2xl hover:bg-white/10 text-slate-400 hover:text-white transition-all border border-transparent hover:border-white/10 cursor-pointer"
           >
@@ -228,198 +262,274 @@ const OrderModal = () => {
           </button>
         </div>
 
-        <div className="flex-1 px-4 py-4 md:p-8 overflow-y-auto">
-          <div className="space-y-4 md:space-y-6">
-            {/* Nama */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                Nama Lengkap
-              </label>
-              <div className="relative group">
-                <User
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                  size={18}
-                />
-                <input
-                  required
-                  type="text"
-                  name="name"
-                  placeholder="Masukkan nama Anda"
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={{
-                    backgroundColor: "var(--color-border-adaptive)",
-                    color: "var(--color-text)",
-                  }}
-                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
-                />
-              </div>
+        {isSubmitted ? (
+          <div className="flex-1 px-6 py-10 md:p-10 flex flex-col items-center justify-center text-center animate-fadeIn scroll-smooth overflow-y-auto">
+            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 neon-glow shadow-emerald-500/20 shadow-lg border border-emerald-500/20">
+              <CheckCircle2 size={40} className="text-emerald-500" />
             </div>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Order Berhasil Dibuat!
+            </h3>
+            <p className="text-slate-400 text-sm mb-8 max-w-[320px] leading-relaxed">
+              Pesanan Anda telah tercatat dalam sistem kami. WhatsApp konfirmasi
+              juga telah dibuka di tab baru.
+            </p>
 
-            {/* WhatsApp */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                Nomor WhatsApp
-              </label>
-              <div className="relative group">
-                <Phone
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                  size={18}
-                />
-                <input
-                  required
-                  type="tel"
-                  name="whatsapp"
-                  placeholder="Contoh: 08123456789"
-                  value={formData.whatsapp}
-                  onChange={handleChange}
-                  style={{
-                    backgroundColor: "var(--color-border-adaptive)",
-                    color: "var(--color-text)",
-                  }}
-                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all shadow-inner"
-                />
+            <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 text-left backdrop-blur-md">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">
+                    Order ID
+                  </span>
+                  <span className="text-brand-400 font-mono font-bold text-lg">
+                    #{submittedOrder?.order_number}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">
+                    Status
+                  </span>
+                  <span className="text-emerald-500 font-bold text-[10px] px-2 py-0.5 bg-emerald-500/10 rounded-md border border-emerald-500/20">
+                    DIKIRIM
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Service Dropdown */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                Kebutuhan Desain
-              </label>
-              <div className="relative group">
-                <MessageSquare
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                  size={18}
-                />
-                <select
-                  name="selected_package"
-                  value={formData.selected_package}
-                  onChange={(e) => {
-                    const selected = e.target.value;
-                    const selectedRow = pricelistOptions.find((p) => p.servicename === selected);
-
-                    setFormData((prev) => ({
-                      ...prev,
-                      selected_package: selected,
-                      design_category: selectedRow?.category || prev.design_category,
-                      // only auto-fill deadline if user hasn't selected one yet
-                      deadline: prev.deadline
-                        ? prev.deadline
-                        : selectedRow?.duration
-                          ? (() => {
-                              const targetDate = new Date();
-                              targetDate.setDate(targetDate.getDate() + Number(selectedRow.duration));
-                              return targetDate.toISOString().split("T")[0];
-                            })()
-                          : prev.deadline,
-                    }));
-                  }}
-                  required
-                  style={{
-                    backgroundColor: "var(--color-border-adaptive)",
-                    color: "var(--color-text)",
-                  }}
-                  className="w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-xl border border-white/10 appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer shadow-inner"
+              <div className="pt-6 border-t border-white/10">
+                <p className="text-xs text-slate-400 mb-4 font-medium italic">
+                  Gunakan link di bawah ini untuk memantau progres desain Anda
+                  secara real-time:
+                </p>
+                <a
+                  href={`/order/${submittedOrder?.order_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2.5 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs transition-all border border-white/5 hover:border-white/20 group w-full"
                 >
-                  {loadingPricelists ? (
-                    <option value="" style={{ backgroundColor: "var(--color-card)" }}>
-                      Memuat...
-                    </option>
-                  ) : (
-                    <>
-                      <option value="" style={{ backgroundColor: "var(--color-card)" }}>
-                        Pilih Paket...
-                      </option>
-                      {pricelistOptions.map((p) => (
-                        <option
-                          key={p.servicename}
-                          value={p.servicename}
-                          style={{
-                            backgroundColor: "var(--color-card)",
-                            color: "var(--color-text)",
-                          }}
-                        >
-                          {p.servicename}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-                <ChevronDown
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  size={18}
-                />
+                  <ExternalLink
+                    size={14}
+                    className="group-hover:scale-110 transition-transform"
+                  />
+                  <span>Lacak Pesanan Saya</span>
+                </a>
               </div>
             </div>
 
-            {pricelistsError && (
-              <p className="text-[10px] text-rose-400 font-bold">
-                Gagal memuat daftar paket: {pricelistsError}
-              </p>
-            )}
-
-            {/* Brief */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                Detail Brief
-              </label>
-              <textarea
-                required
-                name="brief"
-                rows="5"
-                placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
-                value={formData.brief}
-                onChange={handleChange}
-                style={{
-                  backgroundColor: "var(--color-border-adaptive)",
-                  color: "var(--color-text)",
-                }}
-                className="w-full p-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none shadow-inner"
-              ></textarea>
-            </div>
-
-            {/* Deadline */}
-            <div className="relative">
-              <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                Desain Harus Ready Tanggal
-              </label>
-              <div className="relative group">
-                <Calendar
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                  size={18}
-                />
-                <input
-                  required
-                  type="date"
-                  name="deadline"
-                  value={formData.deadline}
-                  onChange={handleChange}
-                  style={{
-                    backgroundColor: "var(--color-border-adaptive)",
-                    color: "var(--color-text)",
-                    boxSizing: "border-box",
-                    maxWidth: "100%",
-                  }}
-                  className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
-                />
-              </div>
-            </div>
+            <button
+              onClick={handleResetAndClose}
+              className="w-full py-4.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] text-sm cursor-pointer"
+            >
+              Selesai & Tutup
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex-1 px-4 py-4 md:p-8 overflow-y-auto">
+              <div className="space-y-4 md:space-y-6">
+                {/* Nama */}
+                <div className="relative">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
+                    Nama Lengkap
+                  </label>
+                  <div className="relative group">
+                    <User
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
+                      size={18}
+                    />
+                    <input
+                      required
+                      type="text"
+                      name="name"
+                      placeholder="Masukkan nama Anda"
+                      value={formData.name}
+                      onChange={handleChange}
+                      style={{
+                        backgroundColor: "var(--color-glass-bg)",
+                        color: "var(--color-text)",
+                      }}
+                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]"
+                    />
+                  </div>
+                </div>
 
-        {/* Fixed Footer Button */}
-        <form
-          onSubmit={handleSubmit}
-          className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent"
-        >
-          <button
-            type="submit"
-            className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-          >
-            <Send size={20} /> Kirim ke WhatsApp
-          </button>
-        </form>
+                {/* WhatsApp */}
+                <div className="relative">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
+                    Nomor WhatsApp
+                  </label>
+                  <div className="relative group">
+                    <Phone
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
+                      size={18}
+                    />
+                    <input
+                      required
+                      type="tel"
+                      name="whatsapp"
+                      placeholder="Contoh: 08123456789"
+                      value={formData.whatsapp}
+                      onChange={handleChange}
+                      style={{
+                        backgroundColor: "var(--color-glass-bg)",
+                        color: "var(--color-text)",
+                      }}
+                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]"
+                    />
+                  </div>
+                </div>
+
+                {/* Service Dropdown */}
+                <div className="relative">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
+                    Kebutuhan Desain
+                  </label>
+                  <div className="relative group">
+                    <MessageSquare
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
+                      size={18}
+                    />
+                    <select
+                      name="selected_package"
+                      value={formData.selected_package}
+                      onChange={(e) => {
+                        const selected = e.target.value;
+                        const selectedRow = pricelistOptions.find(
+                          (p) => p.servicename === selected,
+                        );
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          selected_package: selected,
+                          design_category:
+                            selectedRow?.category || prev.design_category,
+                          // only auto-fill deadline if user hasn't selected one yet
+                          deadline: prev.deadline
+                            ? prev.deadline
+                            : selectedRow?.duration
+                              ? (() => {
+                                  const targetDate = new Date();
+                                  targetDate.setDate(
+                                    targetDate.getDate() +
+                                      Number(selectedRow.duration),
+                                  );
+                                  return targetDate.toISOString().split("T")[0];
+                                })()
+                              : prev.deadline,
+                        }));
+                      }}
+                      required
+                      style={{
+                        backgroundColor: "var(--color-glass-bg)",
+                        color: "var(--color-text)",
+                      }}
+                      className="w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-xl border border-white/10 appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer border-[1px]"
+                    >
+                      {loadingPricelists ? (
+                        <option
+                          value=""
+                          style={{ backgroundColor: "var(--color-card)" }}
+                        >
+                          Memuat...
+                        </option>
+                      ) : (
+                        <>
+                          <option
+                            value=""
+                            style={{ backgroundColor: "var(--color-card)" }}
+                          >
+                            Pilih Paket...
+                          </option>
+                          {pricelistOptions.map((p) => (
+                            <option
+                              key={p.servicename}
+                              value={p.servicename}
+                              style={{
+                                backgroundColor: "var(--color-card)",
+                                color: "var(--color-text)",
+                              }}
+                            >
+                              {p.servicename}
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
+                    <ChevronDown
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      size={18}
+                    />
+                  </div>
+                </div>
+
+                {pricelistsError && (
+                  <p className="text-[10px] text-rose-400 font-bold">
+                    Gagal memuat daftar paket: {pricelistsError}
+                  </p>
+                )}
+
+                {/* Brief */}
+                <div className="relative">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
+                    Detail Brief
+                  </label>
+                  <textarea
+                    required
+                    name="brief"
+                    rows="5"
+                    placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
+                    value={formData.brief}
+                    onChange={handleChange}
+                    style={{
+                      backgroundColor: "var(--color-glass-bg)",
+                      color: "var(--color-text)",
+                    }}
+                    className="w-full p-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none border-[1px]"
+                  ></textarea>
+                </div>
+
+                {/* Deadline */}
+                <div className="relative">
+                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
+                    Desain Harus Ready Tanggal
+                  </label>
+                  <div className="relative group">
+                    <Calendar
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
+                      size={18}
+                    />
+                    <input
+                      required
+                      type="date"
+                      name="deadline"
+                      value={formData.deadline}
+                      onChange={handleChange}
+                      style={{
+                        backgroundColor: "var(--color-glass-bg)",
+                        color: "var(--color-text)",
+                        boxSizing: "border-box",
+                        maxWidth: "100%",
+                      }}
+                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all [color-scheme:light] dark:[color-scheme:dark] border-[1px]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fixed Footer Button */}
+            <form
+              onSubmit={handleSubmit}
+              className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent"
+            >
+              <button
+                type="submit"
+                className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                <Send size={20} /> Kirim ke WhatsApp
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
