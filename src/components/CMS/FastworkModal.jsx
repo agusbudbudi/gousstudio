@@ -59,21 +59,26 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
           initial={{ opacity: 0, scale: 0.98, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 10 }}
-          className="relative w-full max-w-lg bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-lg bg-white border border-slate-200/60 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-brand-500 rounded-md flex items-center justify-center shadow-md shadow-brand-500/10">
-                <Zap className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                <Zap className="w-4.5 h-4.5 text-white" />
               </div>
-              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
-                {initialData ? "Edit Fastwork Item" : "Tambah Fastwork Item"}
-              </h2>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                  {initialData ? "Edit Fastwork Item" : "Tambah Fastwork Item"}
+                </h2>
+                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">
+                  Update status dan link Fastwork
+                </p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-slate-200/50 text-slate-300 hover:text-slate-900 rounded-full transition-all cursor-pointer"
+              className="p-2 hover:bg-slate-200/50 text-slate-400 hover:text-slate-900 rounded-full transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -82,8 +87,8 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* Title */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                 Judul Layanan
               </label>
               <input
@@ -93,17 +98,17 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="e.g. Feed Sosial Media Paket Murah"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
               />
             </div>
 
             {/* URL */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                 URL Fastwork
               </label>
-              <div className="relative">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+              <div className="relative group">
+                <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
                   required
                   type="url"
@@ -111,29 +116,29 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.url}
                   onChange={handleChange}
                   placeholder="https://fastwork.id/user/..."
-                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                 />
               </div>
             </div>
 
             {/* Image URL */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                 URL Gambar
               </label>
-              <div className="relative">
-                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+              <div className="relative group">
+                <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
                   type="url"
                   name="image"
                   value={formData.image}
                   onChange={handleChange}
                   placeholder="https://storage.googleapis.com/fastwork-static/..."
-                  className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                 />
               </div>
               {formData.image && (
-                <div className="mt-2 w-full h-30 rounded-lg overflow-hidden border border-slate-100 bg-slate-50">
+                <div className="mt-3 w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50/50">
                   <img
                     src={formData.image}
                     alt="preview"
@@ -148,12 +153,12 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
 
             {/* Rating + Delay */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                   Rating (0–5)
                 </label>
-                <div className="relative">
-                  <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-400" />
+                <div className="relative group">
+                  <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" />
                   <input
                     required
                     type="number"
@@ -163,12 +168,12 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                     min="0"
                     max="5"
                     step="0.1"
-                    className="pl-9 pr-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all text-xs"
+                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm"
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                   Animasi Delay
                 </label>
                 <input
@@ -177,41 +182,39 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
                   value={formData.delay}
                   onChange={handleChange}
                   placeholder="0 / 0.1s / 0.2s"
-                  className="px-3 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500 transition-all placeholder:text-slate-300 text-xs"
+                  className="px-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                 />
               </div>
             </div>
 
             {/* Toggles */}
             <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all">
+              <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
                 <input
                   type="checkbox"
                   name="rehire"
                   checked={formData.rehire}
                   onChange={handleChange}
-                  className="w-4 h-4 accent-brand-500"
+                  className="w-5 h-5 accent-brand-500 rounded-lg"
                 />
                 <div>
-                  <p className="text-xs font-bold text-slate-700">
-                    Rehire Rate
-                  </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-sm font-bold text-slate-700">Rehire Rate</p>
+                  <p className="text-[10px] text-slate-400 font-medium">
                     Klien pernah order ulang
                   </p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all">
+              <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
                 <input
                   type="checkbox"
                   name="installment"
                   checked={formData.installment}
                   onChange={handleChange}
-                  className="w-4 h-4 accent-brand-500"
+                  className="w-5 h-5 accent-brand-500 rounded-lg"
                 />
                 <div>
-                  <p className="text-xs font-bold text-slate-700">Cicilan</p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-sm font-bold text-slate-700">Cicilan</p>
+                  <p className="text-[10px] text-slate-400 font-medium">
                     Tersedia opsi cicilan
                   </p>
                 </div>
@@ -220,20 +223,20 @@ const FastworkModal = ({ isOpen, onClose, onSave, initialData }) => {
           </form>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">
+          <div className="px-6 py-5 border-t border-slate-100 flex items-center justify-end gap-4 bg-slate-50/80 backdrop-blur-md">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-slate-400 hover:text-slate-900 font-bold uppercase tracking-widest text-[9px] transition-all cursor-pointer"
+              className="px-5 py-2.5 text-slate-500 hover:text-slate-900 font-bold uppercase tracking-widest text-[10px] transition-all cursor-pointer"
             >
               Batal
             </button>
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-md shadow-brand-500/10 active:scale-[0.98] flex items-center gap-2 text-[11px] cursor-pointer"
+              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
             >
-              <Save className="w-3.5 h-3.5" />
-              Simpan
+              <Save className="w-4 h-4" />
+              Simpan Perubahan
             </button>
           </div>
         </motion.div>
