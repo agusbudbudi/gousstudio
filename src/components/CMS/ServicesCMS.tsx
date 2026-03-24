@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
-import { Loader2, Plus, Search, Save, ChevronRight, Shapes } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Search,
+  Save,
+  ChevronRight,
+  Shapes,
+} from "lucide-react";
+import { useToast } from "../../hooks/useToast";
+import CMSHeader from "./CMSHeader";
 import ServicesList from "./ServicesList";
 import ServicesModal from "./ServicesModal";
 
 import { ServiceItem } from "../../types";
 
 const ServicesCMS: React.FC = () => {
+  const { addToast } = useToast();
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,20 +45,32 @@ const ServicesCMS: React.FC = () => {
     }
   };
 
-  const handleAddItem = () => { setEditingItem(null); setIsModalOpen(true); };
+  const handleAddItem = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
 
-  const handleEditItem = (item: ServiceItem, index: number) => { setEditingItem({ ...item, _index: index }); setIsModalOpen(true); };
+  const handleEditItem = (item: ServiceItem, index: number) => {
+    setEditingItem({ ...item, _index: index });
+    setIsModalOpen(true);
+  };
 
   const handleDeleteItem = (index: number) => {
     if (!window.confirm("Hapus layanan ini?")) return;
     setItems((prev) => prev.filter((_, i) => i !== index));
+    addToast(
+      "Layanan berhasil dihapus (lokal). Klik 'Simpan' untuk memperbarui database.",
+      "success",
+    );
   };
 
   const handleReorder = (index: number, direction: "up" | "down") => {
     setItems((prev) => {
       const arr = [...prev];
-      if (direction === "up" && index > 0) [arr[index], arr[index - 1]] = [arr[index - 1], arr[index]];
-      else if (direction === "down" && index < arr.length - 1) [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+      if (direction === "up" && index > 0)
+        [arr[index], arr[index - 1]] = [arr[index - 1], arr[index]];
+      else if (direction === "down" && index < arr.length - 1)
+        [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
       return arr;
     });
   };
@@ -61,6 +83,12 @@ const ServicesCMS: React.FC = () => {
       setItems((prev) => [rest, ...prev]);
     }
     setIsModalOpen(false);
+    addToast(
+      _index !== undefined
+        ? "Layanan berhasil diperbarui (lokal)."
+        : "Layanan berhasil ditambahkan (lokal).",
+      "success",
+    );
   };
 
   const persistToSupabase = async () => {
@@ -77,18 +105,23 @@ const ServicesCMS: React.FC = () => {
         order_index: index,
       }));
 
-      const { error: delError } = await supabase.from("services").delete().not("id", "is", null);
+      const { error: delError } = await supabase
+        .from("services")
+        .delete()
+        .not("id", "is", null);
       if (delError) throw delError;
 
       if (flatData.length > 0) {
-        const { error: insError } = await supabase.from("services").insert(flatData);
+        const { error: insError } = await supabase
+          .from("services")
+          .insert(flatData);
         if (insError) throw insError;
       }
 
-      alert("Services berhasil disimpan ke Supabase!");
+      addToast("Services berhasil disimpan ke Supabase!", "success");
       fetchItems();
     } catch (err: any) {
-      alert(`Gagal menyimpan: ${err.message}`);
+      addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
       setSaving(false);
     }
@@ -96,45 +129,40 @@ const ServicesCMS: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <div className="flex items-center gap-1.5 text-brand-500 text-[9px] font-bold mb-1 uppercase tracking-widest">
-            <span>Layanan</span>
-            <ChevronRight className="w-3 h-3" />
-            <span>Services</span>
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Manage Services</h1>
-          <p className="text-xs text-slate-400 mt-0.5">{items.length} layanan aktif</p>
+      <CMSHeader
+        title="Manage Services"
+        countText={`${items.length} layanan aktif`}
+      >
+        <div className="relative group w-64">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
+          <input
+            type="text"
+            placeholder="Cari layanan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all placeholder:text-slate-300"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
-            <input
-              type="text"
-              placeholder="Cari layanan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-48 shadow-sm transition-all placeholder:text-slate-200"
-            />
-          </div>
-          <button
-            onClick={handleAddItem}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] active:scale-[0.98] shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Tambah
-          </button>
-          <button
-            onClick={persistToSupabase}
-            disabled={saving}
-            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] shadow-md shadow-brand-500/10 active:scale-[0.98] shrink-0 cursor-pointer disabled:opacity-50"
-          >
+        <button
+          onClick={handleAddItem}
+          className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg flex items-center gap-2 transition-all font-bold text-xs active:scale-[0.98] shrink-0 cursor-pointer shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Tambah
+        </button>
+        <button
+          onClick={persistToSupabase}
+          disabled={saving}
+          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-xs shadow-md shadow-brand-500/10 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+        >
+          {saving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
             <Save className="w-4 h-4" />
-            {saving ? "Menyimpan..." : "Simpan"}
-          </button>
-        </div>
-      </header>
+          )}
+          Simpan
+        </button>
+      </CMSHeader>
 
       {/* Content */}
       {loading ? (

@@ -27,6 +27,8 @@ import FastworkCMS from "./FastworkCMS";
 import ServicesCMS from "./ServicesCMS";
 import OrderCMS from "./OrderCMS";
 import { Loader2 } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
+import CMSHeader from "./CMSHeader";
 
 import { PortfolioItem } from "../../types";
 
@@ -44,6 +46,7 @@ interface CMSContentProps {
 }
 
 const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
+  const { addToast } = useToast();
   const [activePage, setActivePage] = useState("orders"); // 'portfolio' | 'pricelist' | 'orders'
   const [activeTab, setActiveTab] = useState("poster");
   const [data, setData] = useState<Record<string, PortfolioItem[]>>({});
@@ -52,6 +55,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -102,8 +106,11 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
       if (newData[category]) {
         newData[category].splice(index, 1);
         setData(newData);
+        addToast(
+          "Portfolio berhasil dihapus (lokal). Klik 'Simpan' untuk memperbarui database.",
+          "success",
+        );
       }
-      // Auto-save logic could go here
     }
   };
 
@@ -123,6 +130,12 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
 
     setData(newData);
     setIsModalOpen(false);
+    addToast(
+      index !== undefined
+        ? "Portfolio berhasil diperbarui (lokal)."
+        : "Portfolio berhasil ditambahkan (lokal).",
+      "success",
+    );
   };
 
   const handleReorder = (
@@ -146,12 +159,13 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
   };
 
   const persistData = async () => {
-    const isLocal =
-      window.location.hostname === "localhost" && !import.meta.env.PROD;
-    const endpoint = "/api/save-portfolio";
-    const password = localStorage.getItem("cms_token");
-
+    setSaving(true);
     try {
+      const isLocal =
+        window.location.hostname === "localhost" && !import.meta.env.PROD;
+      const endpoint = "/api/save-portfolio";
+      const password = localStorage.getItem("cms_token");
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,15 +173,17 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
       });
 
       if (response.ok) {
-        alert("Data berhasil disimpan ke Supabase!");
+        addToast("Data berhasil disimpan ke Supabase!", "success");
         // Refetch to ensure we have the latest IDs and state
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 2000);
       } else {
         const err = await response.json();
-        alert(`Gagal menyimpan: ${err.message}`);
+        addToast(`Gagal menyimpan: ${err.message}`, "error");
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      addToast(`Error: ${err.message}`, "error");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -176,7 +192,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
       {/* Sidebar */}
       {/* Sidebar */}
       <aside className="w-48 border-r border-slate-200 bg-white flex flex-col shadow-[1px_0_0_rgba(0,0,0,0.02)]">
-        <div className="p-6 border-b border-slate-100">
+        <div className="py-3 px-4 border-b border-slate-100">
           <a
             href="/"
             target="_blank"
@@ -304,7 +320,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-50/20 p-6 custom-scrollbar">
+      <main className="flex-1 overflow-y-auto bg-slate-50/20 px-6 pb-6 custom-scrollbar relative">
         {activePage === "orders" ? (
           <OrderCMS />
         ) : activePage === "pricelist" ? (
@@ -314,21 +330,11 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
         ) : activePage === "services" ? (
           <ServicesCMS />
         ) : (
-          <>
-            <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-              <div>
-                <div className="flex items-center gap-1.5 text-brand-500 text-[9px] font-bold mb-1 uppercase tracking-widest">
-                  <span>Collection</span>
-                  <ChevronRight className="w-3 h-3" />
-                  <span>
-                    {CATEGORIES.find((c) => c.id === activeTab)?.label}
-                  </span>
-                </div>
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                  Portfolio
-                </h1>
-              </div>
-
+          <div className="flex-1">
+            <CMSHeader
+              title="Manage Portfolio"
+              countText={`${Object.values(data).flat().length} items aktif`}
+            >
               <div className="flex items-center gap-2">
                 <div className="relative group">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
@@ -337,28 +343,36 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
                     placeholder="Cari portfolio..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-56 shadow-sm transition-all placeholder:text-slate-200"
+                    className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-64 shadow-sm transition-all placeholder:text-slate-300"
                   />
                 </div>
                 <button
-                  onClick={handleAddItem}
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] active:scale-[0.98] shrink-0 cursor-pointer"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg flex items-center gap-2 transition-all font-bold text-xs active:scale-[0.98] shrink-0 cursor-pointer shadow-sm"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Tambah</span>
+                  Tambah
                 </button>
                 <button
                   onClick={persistData}
-                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] shadow-md shadow-brand-500/10 active:scale-[0.98] shrink-0 cursor-pointer"
+                  disabled={saving}
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-xs shadow-md shadow-brand-500/10 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Simpan</span>
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  Simpan
                 </button>
               </div>
-            </header>
+            </CMSHeader>
 
             {/* Category Tabs */}
-            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -420,7 +434,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
               categories={CATEGORIES}
               activeTab={activeTab}
             />
-          </>
+          </div>
         )}
       </main>
     </div>

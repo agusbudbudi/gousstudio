@@ -18,10 +18,13 @@ import {
   Tag,
   Package,
   FileText,
+  Trash2,
 } from "lucide-react";
 
 import { OrderItem, PricelistItem } from "../../types";
 import { z } from "zod";
+import { useToast } from "../../hooks/useToast";
+import CMSHeader from "./CMSHeader";
 
 const cmsOrderValidationSchema = z.object({
   full_name: z.string().min(2, "Nama minimal 2 karakter"),
@@ -47,6 +50,7 @@ const STATUSES: string[] = [
 ];
 
 const OrderCMS: React.FC = () => {
+  const { addToast } = useToast();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,8 +133,39 @@ const OrderCMS: React.FC = () => {
           prev ? ({ ...prev, status: newStatus } as OrderItem) : null,
         );
       }
+      const orderNumber = orders.find((o) => o.id === id)?.order_number || id;
+      addToast(
+        `Status order #${orderNumber} diperbarui ke ${newStatus}`,
+        "success",
+      );
     } catch (err: any) {
-      alert(`Gagal update status: ${err.message}`);
+      addToast(`Gagal update status: ${err.message}`, "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const deleteOrder = async (id: string, orderNumber: string) => {
+    if (
+      !window.confirm(
+        `Hapus order #${orderNumber}? Tindakan ini tidak dapat dibatalkan.`,
+      )
+    )
+      return;
+
+    try {
+      setUpdatingId(id);
+      const { error: deleteError } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) throw deleteError;
+
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+      addToast(`Order #${orderNumber} berhasil dihapus.`, "success");
+    } catch (err: any) {
+      addToast(`Gagal menghapus order: ${err.message}`, "error");
     } finally {
       setUpdatingId(null);
     }
@@ -280,7 +315,7 @@ const OrderCMS: React.FC = () => {
 
         setOrders((prev) => [data as OrderItem, ...prev]);
         setSelectedOrder(data as OrderItem);
-        alert("Order baru berhasil dibuat.");
+        addToast("Order baru berhasil dibuat.", "success");
       } else {
         const { error: updateError } = await supabase
           .from("orders")
@@ -309,10 +344,10 @@ const OrderCMS: React.FC = () => {
         setOrders((prev) =>
           prev.map((o) => (o.id === selectedOrder.id ? selectedOrder : o)),
         );
-        alert("Detail order berhasil diperbarui.");
+        addToast("Detail order berhasil diperbarui.", "success");
       }
     } catch (err: any) {
-      alert(`Gagal menyimpan detail: ${err.message}`);
+      addToast(`Gagal menyimpan detail: ${err.message}`, "error");
     } finally {
       setSavingDetails(false);
     }
@@ -358,6 +393,7 @@ Gous Studio`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
 
+    addToast(`Membuka WhatsApp untuk ${selectedOrder.full_name}...`, "info");
     window.open(whatsappUrl, "_blank");
   };
 
@@ -384,98 +420,39 @@ Gous Studio`;
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
-        <div className="flex items-start gap-4">
-          {selectedOrder && (
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="mt-1 p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-brand-500 hover:border-brand-200 hover:bg-brand-50 transition-all cursor-pointer"
-              title="Kembali ke List Order"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          <div>
-            <div className="flex items-center gap-1.5 text-brand-500 text-[9px] font-bold mb-1 uppercase tracking-widest">
-              <span>Manajemen</span>
-              <ChevronRight className="w-3 h-3" />
-              <span>Orders</span>
-              {selectedOrder && (
-                <>
-                  <ChevronRight className="w-3 h-3" />
-                  <span>Detail</span>
-                </>
-              )}
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-              {selectedOrder ? (
-                <>
-                  <span>Order: {selectedOrder.order_number}</span>
-                  <a
-                    href={`/order/${selectedOrder.order_number}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 text-slate-300 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-all"
-                    title="Buka Link Status Order (Customer View)"
-                  >
-                    <ExternalLink size={18} />
-                  </a>
-                </>
-              ) : (
-                <>
-                  <span>Data Orders</span>
-                  <span className="text-[10px] text-slate-400 font-medium bg-slate-100/50 px-2 py-1 rounded-md border border-slate-200/50">
-                    {orders.length} order terdaftar
-                  </span>
-                </>
-              )}
-            </h1>
-            {selectedOrder && (
-              <p className="text-[10px] text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
-                {`Dibuat pada: ${new Date(
-                  selectedOrder.created_at,
-                ).toLocaleString("id-ID", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`}
-              </p>
-            )}
-          </div>
-        </div>
-
+      <CMSHeader
+        title={selectedOrder ? "Order Detail" : "Data Orders"}
+        countText={!selectedOrder ? `${orders.length} order terdaftar` : undefined}
+      >
         {!selectedOrder && (
-          <div className="flex flex-col md:flex-row items-center gap-3">
+          <>
             {/* Status Filter */}
             <div className="relative group min-w-[160px]">
               <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none" />
               <select
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 shadow-sm transition-all appearance-none cursor-pointer"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all appearance-none cursor-pointer"
               >
                 <option value="ALL">Semua Status</option>
-                {STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none transition-transform group-focus-within:rotate-180" />
             </div>
 
             {/* Search */}
-            <div className="relative group">
+            <div className="relative group w-full md:w-64">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari order, nama, atau no. WA..."
+                placeholder="Cari Nama/Order #..."
+                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 shadow-sm transition-all placeholder:text-slate-300"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-64 shadow-sm transition-all placeholder:text-slate-300"
               />
             </div>
             <button
@@ -498,14 +475,14 @@ Gous Studio`;
                   created_at: new Date().toISOString(),
                 } as any);
               }}
-              className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] shadow-md shadow-brand-500/10 active:scale-[0.98] shrink-0 cursor-pointer"
+              className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-xs shadow-md shadow-brand-500/10 active:scale-[0.98] shrink-0 cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               Tambah
             </button>
-          </div>
+          </>
         )}
-      </header>
+      </CMSHeader>
 
       {/* Content */}
       {loading ? (
@@ -519,8 +496,60 @@ Gous Studio`;
           <p className="text-slate-500 text-sm">{error}</p>
         </div>
       ) : selectedOrder ? (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col relative h-[calc(100vh-[180px])] min-h-[500px]">
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col relative h-[100vh] min-h-[500px]">
+          {/* Sticky Detail Header */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 md:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-brand-500 hover:border-brand-200 hover:bg-brand-50 transition-all cursor-pointer group"
+                title="Kembali ke List Order"
+              >
+                <ArrowLeft
+                  size={18}
+                  className="group-hover:-translate-x-0.5 transition-transform"
+                />
+              </button>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                <span>{selectedOrder.order_number}</span>
+              </h2>
+              <a
+                href={`/order/${selectedOrder.order_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 text-slate-300 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-all border border-transparent hover:border-brand-100"
+                title="Buka Link Status Order (Customer View)"
+              >
+                <ExternalLink size={16} />
+              </a>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                Dibuat pada:
+              </span>
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
+                <Clock size={12} className="text-brand-500" />
+                <span className="text-[11px] font-bold text-slate-700">
+                  {new Date(selectedOrder.created_at).toLocaleString("id-ID", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+                <span className="text-[9px] text-slate-400 font-medium">
+                  pukul
+                </span>
+                <span className="text-[11px] font-bold text-slate-700">
+                  {new Date(selectedOrder.created_at).toLocaleString("id-ID", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8 pb-32">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Left Column (Main) */}
               <div className="md:col-span-2 space-y-6 flex flex-col">
@@ -1069,13 +1098,14 @@ Gous Studio`;
                   <th className="px-6 py-4 text-right">Final Price</th>
                   <th className="px-6 py-4">Deadline</th>
                   <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredOrders.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-6 py-8 text-center text-slate-400 font-medium"
                     >
                       Tidak ada order ditemukan.
@@ -1175,6 +1205,19 @@ Gous Studio`;
                             <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-90 text-slate-400 pointer-events-none" />
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteOrder(order.id, order.order_number);
+                          }}
+                          disabled={updatingId === order.id}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Hapus Order"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))

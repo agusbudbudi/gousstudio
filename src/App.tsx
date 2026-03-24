@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import OrderModal from './ui/OrderModal';
 import FloatingWhatsApp from './ui/FloatingWhatsApp';
 import { useAppStore } from './store/useAppStore';
+import ToastContainer from './components/Common/ToastContainer';
 
 // Lazy loaded pages
 const Home = lazy(() => import('./pages/Home'));
@@ -164,6 +165,7 @@ function AppContent() {
 
       {!isCMS && <OrderModal />}
       {!isCMS && <FloatingWhatsApp />}
+      <ToastContainer />
     </div>
   );
 }

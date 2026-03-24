@@ -33,6 +33,7 @@ interface FastworkModalProps {
 }
 
 const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -62,8 +63,13 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
     }
   }, [initialData, isOpen, reset]);
 
-  const onSubmit = (data: FastworkFormData) => {
-    onSave({ ...(initialData || {}), ...data });
+  const onSubmit = async (data: FastworkFormData) => {
+    setIsSubmitting(true);
+    try {
+      onSave({ ...(initialData || {}), ...data });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -244,10 +250,11 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
             </button>
             <button
               onClick={handleSubmit(onSubmit)}
-              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              Simpan Perubahan
+              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </motion.div>

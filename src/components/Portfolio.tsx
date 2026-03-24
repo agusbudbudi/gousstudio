@@ -30,7 +30,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
   const [portfolioData, setPortfolioData] = useState<Record<string, PortfolioItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 24;
+  const itemsPerPage = 36;
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -346,7 +346,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
         >
           {displayItems.map((item, index) => (
             <article
-              key={`${item.title || "item"}-${index}`}
+              key={item.id || `${item.title || "item"}-${index}`}
               onClick={() => setLightboxIndex(index)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {

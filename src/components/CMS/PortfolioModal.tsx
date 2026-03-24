@@ -34,6 +34,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
   categories,
   activeTab,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -77,18 +78,23 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
     }
   }, [initialData, activeTab, isOpen, reset]);
 
-  const onSubmit = (data: PortfolioFormData) => {
-    const result = {
-      ...(initialData || {}),
-      ...data,
-      tags: data.tags
-        ? data.tags.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
-        : [],
-      tools: data.tools
-        ? data.tools.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
-        : [],
-    };
-    onSave(result);
+  const onSubmit = async (data: PortfolioFormData) => {
+    setIsSubmitting(true);
+    try {
+      const result = {
+        ...(initialData || {}),
+        ...data,
+        tags: data.tags
+          ? data.tags.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
+          : [],
+        tools: data.tools
+          ? data.tools.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
+          : [],
+      };
+      onSave(result);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -282,10 +288,11 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
             </button>
             <button
               onClick={handleSubmit(onSubmit)}
-              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              Simpan Perubahan
+              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </motion.div>

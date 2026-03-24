@@ -43,6 +43,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
 
   const [deliverables, setDeliverables] = useState<string[]>([]);
   const [newDeliverable, setNewDeliverable] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isUnlimited = watch("isrevisionunlimited");
 
@@ -88,14 +89,19 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
     setDeliverables((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data: PricelistFormData) => {
-    const result = {
-      ...(initialData || {}),
-      ...data,
-      totalrevision: data.isrevisionunlimited ? 0 : data.totalrevision,
-      deliverables,
-    };
-    onSave(result);
+  const onSubmit = async (data: PricelistFormData) => {
+    setIsSubmitting(true);
+    try {
+      const result = {
+        ...(initialData || {}),
+        ...data,
+        totalrevision: data.isrevisionunlimited ? 0 : data.totalrevision,
+        deliverables,
+      };
+      onSave(result);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -364,10 +370,11 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
             </button>
             <button
               onClick={handleSubmit(onSubmit)}
-              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
+              disabled={isSubmitting}
+              className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              Simpan Perubahan
+              {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </motion.div>
