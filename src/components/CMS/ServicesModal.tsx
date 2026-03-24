@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, Tag, Layout, Palette, List, Plus, Trash2, Shapes } from "lucide-react";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { servicesSchema, ServicesFormData } from "../../utils/formSchemas";
 import { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { ServiceItem } from "../../types";
 
@@ -22,16 +25,7 @@ const COLOR_OPTIONS = [
   { value: "teal", label: "Teal", preview: "bg-teal-500" },
 ];
 
-const DEFAULT_FORM: any = {
-  slug: "",
-  title: "",
-  description: "",
-  icon: "Shapes",
-  category: "",
-  color: "brand",
-  included: [],
-  order_index: 0,
-};
+// DEFAULT_FORM no longer fundamentally needed as defaultValues handles it, but kept structure
 
 interface ServicesModalProps {
   isOpen: boolean;
@@ -41,37 +35,72 @@ interface ServicesModalProps {
 }
 
 const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState<any>(DEFAULT_FORM);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<ServicesFormData>({
+    resolver: zodResolver(servicesSchema),
+    defaultValues: {
+      slug: "",
+      title: "",
+      description: "",
+      icon: "Shapes",
+      category: "",
+      color: "brand",
+    },
+  });
+
+  const [included, setIncluded] = useState<string[]>([]);
   const [newIncluded, setNewIncluded] = useState<string>("");
+
+  const selectedColor = watch("color");
 
   useEffect(() => {
     if (initialData) {
-      setFormData({ ...DEFAULT_FORM, ...initialData, included: initialData.included || [] });
+      reset({
+        slug: initialData.slug || "",
+        title: initialData.title || "",
+        description: initialData.description || "",
+        icon: initialData.icon || "Shapes",
+        category: initialData.category || "",
+        color: initialData.color || "brand",
+      });
+      setIncluded(initialData.included || []);
     } else {
-      setFormData(DEFAULT_FORM);
+      reset({
+        slug: "",
+        title: "",
+        description: "",
+        icon: "Shapes",
+        category: "",
+        color: "brand",
+      });
+      setIncluded([]);
     }
     setNewIncluded("");
-  }, [initialData, isOpen]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-  };
+  }, [initialData, isOpen, reset]);
 
   const addIncluded = () => {
     const trimmed = newIncluded.trim();
     if (!trimmed) return;
-    setFormData((prev: any) => ({ ...prev, included: [...prev.included, trimmed] }));
+    setIncluded((prev) => [...prev, trimmed]);
     setNewIncluded("");
   };
 
   const removeIncluded = (index: number) => {
-    setFormData((prev: any) => ({ ...prev, included: prev.included.filter((_: any, i: number) => i !== index) }));
+    setIncluded((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  const onSubmit = (data: ServicesFormData) => {
+    const result = {
+      ...(initialData || {}),
+      ...data,
+      included,
+    };
+    onSave(result);
   };
 
   if (!isOpen) return null;
@@ -117,7 +146,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
 
           {/* Form */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar"
           >
             {/* Slug + Category */}
@@ -127,14 +156,12 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                   Slug ID
                 </label>
                 <input
-                  required
                   type="text"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleChange}
                   placeholder="e.g. logo"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                  {...register("slug")}
+                  className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.slug ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                 />
+                {errors.slug && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.slug.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -143,15 +170,13 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="relative group">
                   <Layout className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
-                    required
                     type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
                     placeholder="e.g. Brand Identity"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("category")}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.category ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.category && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.category.message}</p>}
               </div>
             </div>
 
@@ -161,14 +186,12 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 Nama Layanan
               </label>
               <input
-                required
                 type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
                 placeholder="e.g. Logo Design"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                {...register("title")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.title ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
               />
+              {errors.title && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.title.message}</p>}
             </div>
 
             {/* Description */}
@@ -177,14 +200,12 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 Deskripsi
               </label>
               <textarea
-                required
-                name="description"
                 rows={3}
-                value={formData.description}
-                onChange={handleChange}
                 placeholder="Deskripsi singkat layanan ini..."
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-sm leading-relaxed"
+                {...register("description")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.description ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-sm leading-relaxed`}
               />
+              {errors.description && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.description.message}</p>}
             </div>
 
             {/* Icon + Color */}
@@ -196,10 +217,8 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="relative group">
                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none group-focus-within:text-brand-500 transition-colors" />
                   <select
-                    name="icon"
-                    value={formData.icon}
-                    onChange={handleChange}
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer"
+                    {...register("icon")}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.icon ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer`}
                   >
                     {ICON_OPTIONS.map((ic) => (
                       <option key={ic} value={ic}>
@@ -208,6 +227,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                     ))}
                   </select>
                 </div>
+                {errors.icon && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.icon.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -216,10 +236,8 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="relative group">
                   <Palette className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none group-focus-within:text-brand-500 transition-colors" />
                   <select
-                    name="color"
-                    value={formData.color}
-                    onChange={handleChange}
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer"
+                    {...register("color")}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.color ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer`}
                   >
                     {COLOR_OPTIONS.map((c) => (
                       <option key={c.value} value={c.value}>
@@ -230,8 +248,9 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 </div>
                 {/* Color preview strip */}
                 <div
-                  className={`h-1.5 rounded-full ${COLOR_OPTIONS.find((c) => c.value === formData.color)?.preview || "bg-slate-200"}`}
+                  className={`h-1.5 rounded-full ${COLOR_OPTIONS.find((c) => c.value === selectedColor)?.preview || "bg-slate-200"}`}
                 />
+                {errors.color && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.color.message}</p>}
               </div>
             </div>
 
@@ -266,7 +285,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                {formData.included.map((feat: string, i: number) => (
+                {included.map((feat: string, i: number) => (
                   <div
                     key={i}
                     className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-xl group hover:border-brand-200 transition-all"
@@ -284,7 +303,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                   </div>
                 ))}
               </div>
-              {formData.included.length === 0 && (
+              {included.length === 0 && (
                 <p className="text-xs text-slate-300 italic px-2">
                   Belum ada fitur ditambahkan.
                 </p>
@@ -302,7 +321,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
               Batal
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSubmit(onSubmit)}
               className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />

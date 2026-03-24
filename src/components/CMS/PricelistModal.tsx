@@ -2,24 +2,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, Tag, DollarSign, Clock, CheckSquare, FileText, Layout, RefreshCw, Plus, Trash2 } from "lucide-react";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { pricelistSchema, PricelistFormData } from "../../utils/formSchemas";
 import { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { PricelistItem } from "../../types";
 
 const PRICE_CATEGORIES = ["Brand Identity", "Print & Digital", "Social Media", "Management"];
 
-const DEFAULT_FORM: any = {
-  slug: "",
-  servicename: "",
-  description: "",
-  category: "Brand Identity",
-  retailprice: "",
-  finalprice: "",
-  duration: "",
-  totalrevision: "",
-  isrevisionunlimited: false,
-  deliverables: [],
-  order_index: 0,
-};
+// DEFAULT_FORM no longer needed heavily due to RHF defaultValues, but keeping categories
 
 interface PricelistModalProps {
   isOpen: boolean;
@@ -29,50 +20,80 @@ interface PricelistModalProps {
 }
 
 const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState<any>(DEFAULT_FORM);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<PricelistFormData>({
+    resolver: zodResolver(pricelistSchema),
+    defaultValues: {
+      slug: "",
+      servicename: "",
+      description: "",
+      category: "Brand Identity",
+      retailprice: 0,
+      finalprice: 0,
+      duration: 1,
+      totalrevision: 0,
+      isrevisionunlimited: false,
+    } as PricelistFormData,
+  });
+
+  const [deliverables, setDeliverables] = useState<string[]>([]);
   const [newDeliverable, setNewDeliverable] = useState<string>("");
+
+  const isUnlimited = watch("isrevisionunlimited");
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
-        ...DEFAULT_FORM,
-        ...initialData,
-        deliverables: initialData.deliverables || [],
+      reset({
+        slug: initialData.slug || "",
+        servicename: initialData.servicename || "",
+        description: initialData.description || "",
+        category: initialData.category || "Brand Identity",
+        retailprice: Number(initialData.retailprice) || 0,
+        finalprice: Number(initialData.finalprice) || 0,
+        duration: Number(initialData.duration) || 1,
+        totalrevision: Number(initialData.totalrevision) || 0,
+        isrevisionunlimited: initialData.isrevisionunlimited || false,
       });
+      setDeliverables(initialData.deliverables || []);
     } else {
-      setFormData(DEFAULT_FORM);
+      reset({
+        slug: "",
+        servicename: "",
+        description: "",
+        category: "Brand Identity",
+        retailprice: 0,
+        finalprice: 0,
+        duration: 1,
+        totalrevision: 0,
+        isrevisionunlimited: false,
+      });
+      setDeliverables([]);
     }
     setNewDeliverable("");
-  }, [initialData, isOpen]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev: any) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-  };
+  }, [initialData, isOpen, reset]);
 
   const addDeliverable = () => {
     const trimmed = newDeliverable.trim();
     if (!trimmed) return;
-    setFormData((prev: any) => ({ ...prev, deliverables: [...prev.deliverables, trimmed] }));
+    setDeliverables((prev) => [...prev, trimmed]);
     setNewDeliverable("");
   };
 
   const removeDeliverable = (index: number) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      deliverables: prev.deliverables.filter((_: any, i: number) => i !== index),
-    }));
+    setDeliverables((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: PricelistFormData) => {
     const result = {
-      ...formData,
-      retailprice: parseFloat(formData.retailprice) || 0,
-      finalprice: parseFloat(formData.finalprice) || 0,
-      duration: parseInt(formData.duration) || 1,
-      totalrevision: formData.isrevisionunlimited ? 0 : (parseInt(formData.totalrevision) || 0),
+      ...(initialData || {}),
+      ...data,
+      totalrevision: data.isrevisionunlimited ? 0 : data.totalrevision,
+      deliverables,
     };
     onSave(result);
   };
@@ -121,7 +142,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
 
           {/* Form */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar"
           >
             {/* Slug + Category */}
@@ -132,15 +153,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 </label>
                 <div className="relative group">
                   <input
-                    required
                     type="text"
-                    name="slug"
-                    value={formData.slug}
-                    onChange={handleChange}
                     placeholder="e.g. logo-basic"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("slug")}
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.slug ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.slug && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.slug.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -148,10 +167,8 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 </label>
                 <div className="relative group">
                   <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer"
+                    {...register("category")}
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.category ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm cursor-pointer`}
                   >
                     {PRICE_CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -161,6 +178,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                   </select>
                   <Layout className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-focus-within:text-brand-500 transition-colors" />
                 </div>
+                {errors.category && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.category.message}</p>}
               </div>
             </div>
 
@@ -170,14 +188,12 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 Nama Layanan
               </label>
               <input
-                required
                 type="text"
-                name="servicename"
-                value={formData.servicename}
-                onChange={handleChange}
                 placeholder="e.g. Logo Design – Professional"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                {...register("servicename")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.servicename ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
               />
+              {errors.servicename && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.servicename.message}</p>}
             </div>
 
             {/* Description */}
@@ -186,14 +202,12 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 Deskripsi
               </label>
               <textarea
-                required
-                name="description"
                 rows={3}
-                value={formData.description}
-                onChange={handleChange}
                 placeholder="Deskripsi singkat layanan ini..."
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-sm leading-relaxed"
+                {...register("description")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.description ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 text-sm leading-relaxed`}
               />
+              {errors.description && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.description.message}</p>}
             </div>
 
             {/* Prices */}
@@ -205,15 +219,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 <div className="relative group">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
-                    required
                     type="number"
-                    name="retailprice"
-                    value={formData.retailprice}
-                    onChange={handleChange}
                     placeholder="500000"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("retailprice", { valueAsNumber: true })}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.retailprice ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.retailprice && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.retailprice.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -222,15 +234,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 <div className="relative group">
                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-500 group-focus-within:text-brand-600 transition-colors" />
                   <input
-                    required
                     type="number"
-                    name="finalprice"
-                    value={formData.finalprice}
-                    onChange={handleChange}
                     placeholder="349000"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("finalprice", { valueAsNumber: true })}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.finalprice ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.finalprice && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.finalprice.message}</p>}
               </div>
             </div>
 
@@ -243,16 +253,14 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 <div className="relative group">
                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
-                    required
                     type="number"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleChange}
                     placeholder="3"
                     min="1"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("duration", { valueAsNumber: true })}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.duration ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.duration && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.duration.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -262,15 +270,14 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                   <RefreshCw className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
                     type="number"
-                    name="totalrevision"
-                    value={formData.totalrevision}
-                    onChange={handleChange}
                     placeholder="2"
                     min="0"
-                    disabled={formData.isrevisionunlimited}
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm disabled:opacity-40"
+                    disabled={isUnlimited}
+                    {...register("totalrevision", { valueAsNumber: true })}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.totalrevision ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm disabled:opacity-40`}
                   />
                 </div>
+                {errors.totalrevision && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.totalrevision.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -279,9 +286,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 <label className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
                   <input
                     type="checkbox"
-                    name="isrevisionunlimited"
-                    checked={formData.isrevisionunlimited}
-                    onChange={handleChange}
+                    {...register("isrevisionunlimited")}
                     className="w-5 h-5 accent-brand-500 rounded-lg"
                   />
                   <span className="text-sm font-bold text-slate-700">
@@ -322,7 +327,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                {formData.deliverables.map((d: any, i: number) => (
+                {deliverables.map((d: any, i: number) => (
                   <div
                     key={i}
                     className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-xl group hover:border-brand-200 transition-all"
@@ -340,7 +345,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
                   </div>
                 ))}
               </div>
-              {formData.deliverables.length === 0 && (
+              {deliverables.length === 0 && (
                 <p className="text-xs text-slate-300 italic px-2">
                   Belum ada deliverable ditambahkan.
                 </p>
@@ -358,7 +363,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({ isOpen, onClose, onSave
               Batal
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSubmit(onSubmit)}
               className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />

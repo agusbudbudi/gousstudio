@@ -21,13 +21,28 @@ import {
 } from "lucide-react";
 
 import { OrderItem, PricelistItem } from "../../types";
+import { z } from "zod";
+
+const cmsOrderValidationSchema = z.object({
+  full_name: z.string().min(2, "Nama minimal 2 karakter"),
+  phone_number: z
+    .string()
+    .regex(/^\d+$/, "Nomor WhatsApp hanya boleh berisi angka")
+    .min(9, "Nomor WA tidak valid"),
+  design_category: z.string().min(1, "Kategori wajib diisi"),
+  selected_package: z.string().min(1, "Paket wajib dipilih"),
+  price: z.number().min(0, "Harga wajib diisi"),
+  final_price: z.number().min(0, "Harga final wajib diisi"),
+  brief_detail: z.string().min(10, "Brief minimal 10 karakter"),
+  deadline: z.string().min(1, "Silakan tentukan deadline"),
+});
 
 const STATUSES: string[] = [
   "DRAFT",
   "WAITING FOR PAYMENT",
   "IN PROGRESS",
-  "REVISION",
   "REVIEWED",
+  "REVISION",
   "DONE",
 ];
 
@@ -42,6 +57,9 @@ const OrderCMS: React.FC = () => {
   const [savingDetails, setSavingDetails] = useState(false);
   const [pricelists, setPricelists] = useState<PricelistItem[]>([]);
   const briefTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   const calculateDaysLeft = (deadlineDateStr?: string) => {
     if (!deadlineDateStr) return null;
@@ -99,13 +117,17 @@ const OrderCMS: React.FC = () => {
 
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === id ? ({ ...order, status: newStatus } as OrderItem) : order,
+          order.id === id
+            ? ({ ...order, status: newStatus } as OrderItem)
+            : order,
         ),
       );
 
       // Also update selectedOrder if it's the one being updated
       if (selectedOrder && selectedOrder.id === id) {
-        setSelectedOrder((prev) => (prev ? ({ ...prev, status: newStatus } as OrderItem) : null));
+        setSelectedOrder((prev) =>
+          prev ? ({ ...prev, status: newStatus } as OrderItem) : null,
+        );
       }
     } catch (err: any) {
       alert(`Gagal update status: ${err.message}`);
@@ -114,7 +136,11 @@ const OrderCMS: React.FC = () => {
     }
   };
 
-  const calculateFinalPrice = (price?: number | string | null, discountValue?: number | string | null, discountType?: string | null) => {
+  const calculateFinalPrice = (
+    price?: number | string | null,
+    discountValue?: number | string | null,
+    discountType?: string | null,
+  ) => {
     const p = parseFloat(String(price)) || 0;
     const v = parseFloat(String(discountValue)) || 0;
     if (discountType === "percentage") {
@@ -173,34 +199,118 @@ const OrderCMS: React.FC = () => {
 
   const saveOrderDetails = async () => {
     if (!selectedOrder) return;
+
+    const validationResult = cmsOrderValidationSchema.safeParse({
+      full_name: selectedOrder.full_name || "",
+      phone_number: selectedOrder.phone_number || "",
+      design_category: selectedOrder.design_category || "",
+      selected_package: selectedOrder.selected_package || "",
+      price:
+        selectedOrder.price !== undefined &&
+        selectedOrder.price !== null &&
+        String(selectedOrder.price) !== ""
+          ? Number(selectedOrder.price)
+          : -1,
+      final_price:
+        selectedOrder.final_price !== undefined &&
+        selectedOrder.final_price !== null &&
+        String(selectedOrder.final_price) !== ""
+          ? Number(selectedOrder.final_price)
+          : selectedOrder.price !== undefined &&
+              selectedOrder.price !== null &&
+              String(selectedOrder.price) !== ""
+            ? Number(selectedOrder.price)
+            : -1,
+      brief_detail: selectedOrder.brief_detail || "",
+      deadline: selectedOrder.deadline || "",
+    });
+
+    if (!validationResult.success) {
+      const errors: Record<string, string> = {};
+      validationResult.error.issues.forEach((err: any) => {
+        if (err.path[0]) {
+          errors[err.path[0].toString()] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      return;
+    }
+    setValidationErrors({});
+
     setSavingDetails(true);
     try {
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({
+      if (selectedOrder.id === "NEW") {
+        const now = new Date();
+        const dateStr = now.toISOString().slice(2, 10).replace(/-/g, "");
+        const randomStr = Math.random()
+          .toString(36)
+          .substring(2, 5)
+          .toUpperCase();
+        const orderNumber = `GS-${dateStr}${randomStr}`;
+
+        const payload = {
+          order_number: orderNumber,
+          status: selectedOrder.status || "DRAFT",
+          full_name: selectedOrder.full_name,
+          phone_number: selectedOrder.phone_number,
           design_category: selectedOrder.design_category,
           selected_package: selectedOrder.selected_package,
-          price: selectedOrder.price || 0,
-          discount_value: selectedOrder.discount_value || 0,
+          price: selectedOrder.price,
           discount_type: selectedOrder.discount_type || "fixed",
+          discount_value: selectedOrder.discount_value || 0,
           final_price:
             selectedOrder.final_price !== undefined &&
             selectedOrder.final_price !== null
               ? selectedOrder.final_price
               : selectedOrder.price || 0,
           brief_detail: selectedOrder.brief_detail,
-          deadline: selectedOrder.deadline || null,
+          deadline: selectedOrder.deadline,
+          source_order: selectedOrder.source_order || "web-ops",
           deliverables_url: selectedOrder.deliverables_url || null,
           internal_notes: selectedOrder.internal_notes || null,
-        })
-        .eq("id", selectedOrder.id);
+        };
 
-      if (updateError) throw updateError;
+        const { data, error: insertError } = await supabase
+          .from("orders")
+          .insert(payload)
+          .select()
+          .single();
 
-      setOrders((prev) =>
-        prev.map((o) => (o.id === selectedOrder.id ? selectedOrder : o)),
-      );
-      alert("Detail order berhasil diperbarui.");
+        if (insertError) throw insertError;
+
+        setOrders((prev) => [data as OrderItem, ...prev]);
+        setSelectedOrder(data as OrderItem);
+        alert("Order baru berhasil dibuat.");
+      } else {
+        const { error: updateError } = await supabase
+          .from("orders")
+          .update({
+            full_name: selectedOrder.full_name, // included now since it's editable
+            phone_number: selectedOrder.phone_number, // included now since it's editable
+            design_category: selectedOrder.design_category,
+            selected_package: selectedOrder.selected_package,
+            price: selectedOrder.price || 0,
+            discount_value: selectedOrder.discount_value || 0,
+            discount_type: selectedOrder.discount_type || "fixed",
+            final_price:
+              selectedOrder.final_price !== undefined &&
+              selectedOrder.final_price !== null
+                ? selectedOrder.final_price
+                : selectedOrder.price || 0,
+            brief_detail: selectedOrder.brief_detail,
+            deadline: selectedOrder.deadline || null,
+            deliverables_url: selectedOrder.deliverables_url || null,
+            internal_notes: selectedOrder.internal_notes || null,
+          })
+          .eq("id", selectedOrder.id);
+
+        if (updateError) throw updateError;
+
+        setOrders((prev) =>
+          prev.map((o) => (o.id === selectedOrder.id ? selectedOrder : o)),
+        );
+        alert("Detail order berhasil diperbarui.");
+      }
     } catch (err: any) {
       alert(`Gagal menyimpan detail: ${err.message}`);
     } finally {
@@ -313,22 +423,27 @@ Gous Studio`;
                   </a>
                 </>
               ) : (
-                "Data Orders"
+                <>
+                  <span>Data Orders</span>
+                  <span className="text-[10px] text-slate-400 font-medium bg-slate-100/50 px-2 py-1 rounded-md border border-slate-200/50">
+                    {orders.length} order terdaftar
+                  </span>
+                </>
               )}
             </h1>
-            <p className="text-[10px] text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
-              {selectedOrder
-                ? `Dibuat pada: ${new Date(
-                    selectedOrder.created_at,
-                  ).toLocaleString("id-ID", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}`
-                : `${orders.length} order terdaftar`}
-            </p>
+            {selectedOrder && (
+              <p className="text-[10px] text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
+                {`Dibuat pada: ${new Date(
+                  selectedOrder.created_at,
+                ).toLocaleString("id-ID", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`}
+              </p>
+            )}
           </div>
         </div>
 
@@ -363,6 +478,31 @@ Gous Studio`;
                 className="pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full md:w-64 shadow-sm transition-all placeholder:text-slate-300"
               />
             </div>
+            <button
+              onClick={() => {
+                setSelectedOrder({
+                  id: "NEW",
+                  order_number: "DRAFT Baru",
+                  status: "DRAFT",
+                  full_name: "",
+                  phone_number: "",
+                  design_category: "",
+                  selected_package: "",
+                  price: "" as any,
+                  final_price: "" as any,
+                  discount_value: 0,
+                  discount_type: "fixed",
+                  brief_detail: "",
+                  deadline: "",
+                  source_order: "web-ops",
+                  created_at: new Date().toISOString(),
+                } as any);
+              }}
+              className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-[11px] shadow-md shadow-brand-500/10 active:scale-[0.98] shrink-0 cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              Tambah
+            </button>
           </div>
         )}
       </header>
@@ -400,14 +540,22 @@ Gous Studio`;
                           </div>
                           <input
                             type="text"
-                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-medium"
+                            className={`w-full bg-white border ${validationErrors.design_category ? "border-rose-500" : "border-slate-200"} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-medium`}
                             value={selectedOrder.design_category || ""}
                             onChange={(e) =>
-                              handleOrderChange("design_category", e.target.value)
+                              handleOrderChange(
+                                "design_category",
+                                e.target.value,
+                              )
                             }
                             placeholder="Contoh: Social Media Design"
                           />
                         </div>
+                        {validationErrors.design_category && (
+                          <p className="text-rose-400 text-xs mt-1 font-medium">
+                            {validationErrors.design_category}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
@@ -418,7 +566,7 @@ Gous Studio`;
                             <Package size={14} />
                           </div>
                           <select
-                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-9 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold text-brand-600 cursor-pointer appearance-none"
+                            className={`w-full bg-white border ${validationErrors.selected_package ? "border-rose-500" : "border-slate-200"} rounded-lg pl-10 pr-9 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold text-brand-600 cursor-pointer appearance-none`}
                             value={selectedOrder.selected_package || ""}
                             onChange={(e) => {
                               const newPkg = e.target.value;
@@ -450,15 +598,25 @@ Gous Studio`;
                             ))}
                             {!pricelists.some(
                               (p) => p.servicename === "Custom Package",
-                            ) && <option value="Custom Package">Custom Package</option>}
+                            ) && (
+                              <option value="Custom Package">
+                                Custom Package
+                              </option>
+                            )}
                             <option value="Other">Other</option>
                           </select>
                           <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none transition-transform group-focus-within:rotate-180" />
                         </div>
+                        {validationErrors.selected_package && (
+                          <p className="text-rose-400 text-xs mt-1 font-medium">
+                            {validationErrors.selected_package}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-                          Harga Base (Order)
+                          Harga Base (Order){" "}
+                          <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative group">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold pointer-events-none group-focus-within:text-brand-500 transition-colors">
@@ -466,7 +624,7 @@ Gous Studio`;
                           </span>
                           <input
                             type="number"
-                            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
+                            className={`w-full bg-white border ${validationErrors.price ? "border-rose-500" : "border-slate-200"} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold`}
                             value={selectedOrder.price || ""}
                             onChange={(e) =>
                               handleOrderChange("price", e.target.value)
@@ -474,6 +632,11 @@ Gous Studio`;
                             placeholder="0"
                           />
                         </div>
+                        {validationErrors.price && (
+                          <p className="text-rose-400 text-xs mt-1 font-medium">
+                            {validationErrors.price}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5 font-medium">
@@ -532,7 +695,9 @@ Gous Studio`;
                                   : selectedOrder.price;
                               return Number(fp) === 0
                                 ? "GRATIS"
-                                : new Intl.NumberFormat("id-ID").format(Number(fp || 0));
+                                : new Intl.NumberFormat("id-ID").format(
+                                    Number(fp || 0),
+                                  );
                             })()}
                           />
                         </div>
@@ -605,13 +770,18 @@ Gous Studio`;
                   <div className="flex-1 flex flex-col">
                     <textarea
                       ref={briefTextareaRef}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all resize-none min-h-[120px] overflow-hidden"
+                      className={`w-full bg-white border ${validationErrors.brief_detail ? "border-rose-500" : "border-slate-200"} rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all resize-none min-h-[120px] overflow-hidden`}
                       value={selectedOrder.brief_detail || ""}
                       onChange={(e) =>
                         handleOrderChange("brief_detail", e.target.value)
                       }
                       placeholder="Masukkan detail brief pesanan di sini..."
                     />
+                    {validationErrors.brief_detail && (
+                      <p className="text-rose-400 text-xs mt-1 font-medium">
+                        {validationErrors.brief_detail}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -667,11 +837,13 @@ Gous Studio`;
                         <label className="block text-xs text-slate-400 font-medium">
                           Deadline
                         </label>
-                        {selectedOrder && selectedOrder.status !== "DONE" &&
+                        {selectedOrder &&
+                          selectedOrder.status !== "DONE" &&
                           selectedOrder.deadline && (
                             <span
                               className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                                (calculateDaysLeft(selectedOrder.deadline) ?? 0) < 0
+                                (calculateDaysLeft(selectedOrder.deadline) ??
+                                  0) < 0
                                   ? "text-red-600 bg-red-50 border-red-200"
                                   : (calculateDaysLeft(
                                         selectedOrder.deadline,
@@ -680,9 +852,11 @@ Gous Studio`;
                                     : "text-orange-500 bg-orange-50 border-orange-100"
                               }`}
                             >
-                              {(calculateDaysLeft(selectedOrder.deadline) ?? 0) > 0
+                              {(calculateDaysLeft(selectedOrder.deadline) ??
+                                0) > 0
                                 ? `${calculateDaysLeft(selectedOrder.deadline)} hari lagi`
-                                : (calculateDaysLeft(selectedOrder.deadline) ?? 0) === 0
+                                : (calculateDaysLeft(selectedOrder.deadline) ??
+                                      0) === 0
                                   ? `Hari ini`
                                   : `Terlewat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} hari`}
                             </span>
@@ -694,7 +868,7 @@ Gous Studio`;
                         </div>
                         <input
                           type="date"
-                          className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold"
+                          className={`w-full bg-white border ${validationErrors.deadline ? "border-rose-500" : "border-slate-200"} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold`}
                           value={
                             selectedOrder.deadline
                               ? selectedOrder.deadline.split("T")[0]
@@ -705,6 +879,11 @@ Gous Studio`;
                           }
                         />
                       </div>
+                      {validationErrors.deadline && (
+                        <p className="text-rose-400 text-xs mt-1 font-medium">
+                          {validationErrors.deadline}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
@@ -732,7 +911,10 @@ Gous Studio`;
                           className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-3 py-2 text-sm text-brand-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-bold placeholder:font-normal placeholder:text-slate-300"
                           value={selectedOrder.deliverables_url || ""}
                           onChange={(e) =>
-                            handleOrderChange("deliverables_url", e.target.value)
+                            handleOrderChange(
+                              "deliverables_url",
+                              e.target.value,
+                            )
                           }
                           placeholder="https://drive.google.com/..."
                         />
@@ -747,20 +929,42 @@ Gous Studio`;
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <span className="block text-xs text-slate-400 mb-1">
-                        Nama Lengkap
+                      <span className="block text-xs text-slate-400 mb-1 font-medium">
+                        Nama Lengkap <span className="text-rose-500">*</span>
                       </span>
-                      <span className="font-bold text-slate-800 text-sm">
-                        {selectedOrder.full_name}
-                      </span>
+                      <input
+                        type="text"
+                        className={`w-full bg-white border ${validationErrors.full_name ? "border-rose-500" : "border-slate-200"} rounded-lg px-3 py-2 text-sm text-slate-800 font-bold focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all`}
+                        value={selectedOrder.full_name || ""}
+                        onChange={(e) =>
+                          handleOrderChange("full_name", e.target.value)
+                        }
+                        placeholder="Contoh: Budi Santoso"
+                      />
+                      {validationErrors.full_name && (
+                        <p className="text-rose-400 text-xs mt-1 font-medium">
+                          {validationErrors.full_name}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <span className="block text-xs text-slate-400 mb-1">
-                        WhatsApp
+                      <span className="block text-xs text-slate-400 mb-1 font-medium">
+                        WhatsApp <span className="text-rose-500">*</span>
                       </span>
-                      <span className="font-medium text-slate-700 text-sm">
-                        {selectedOrder.phone_number}
-                      </span>
+                      <input
+                        type="text"
+                        className={`w-full bg-white border ${validationErrors.phone_number ? "border-rose-500" : "border-slate-200"} rounded-lg px-3 py-2 text-sm text-slate-700 font-medium focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all`}
+                        value={selectedOrder.phone_number || ""}
+                        onChange={(e) =>
+                          handleOrderChange("phone_number", e.target.value)
+                        }
+                        placeholder="Contoh: 08123456789"
+                      />
+                      {validationErrors.phone_number && (
+                        <p className="text-rose-400 text-xs mt-1 font-medium">
+                          {validationErrors.phone_number}
+                        </p>
+                      )}
                     </div>
 
                     <button

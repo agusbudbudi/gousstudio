@@ -65,11 +65,14 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
         if (fetchError) throw fetchError;
 
         // Group by category
-        const grouped = (portfolioItems as PortfolioItem[]).reduce((acc: Record<string, PortfolioItem[]>, item: PortfolioItem) => {
-          if (!acc[item.category]) acc[item.category] = [];
-          acc[item.category].push(item);
-          return acc;
-        }, {});
+        const grouped = (portfolioItems as PortfolioItem[]).reduce(
+          (acc: Record<string, PortfolioItem[]>, item: PortfolioItem) => {
+            if (!acc[item.category]) acc[item.category] = [];
+            acc[item.category].push(item);
+            return acc;
+          },
+          {},
+        );
 
         setData(grouped);
       } catch (err: any) {
@@ -122,7 +125,11 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
     setIsModalOpen(false);
   };
 
-  const handleReorder = (category: string, index: number, direction: "up" | "down") => {
+  const handleReorder = (
+    category: string,
+    index: number,
+    direction: "up" | "down",
+  ) => {
     const newData = { ...data };
     const items = [...(newData[category] || [])];
 
@@ -297,7 +304,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-50/20 p-8 custom-scrollbar">
+      <main className="flex-1 overflow-y-auto bg-slate-50/20 p-6 custom-scrollbar">
         {activePage === "orders" ? (
           <OrderCMS />
         ) : activePage === "pricelist" ? (

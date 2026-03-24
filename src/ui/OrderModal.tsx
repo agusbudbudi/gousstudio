@@ -10,10 +10,17 @@ import {
   CheckCircle2,
   ExternalLink,
 } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppStore } from "../store/useAppStore";
-import { CONFIG } from "../config/constants";
-import { supabase } from "../utils/supabase";
+import { orderSchema, OrderFormData } from "../utils/formSchemas";
 import { PricelistItem, OrderItem } from "../types";
+import { supabase } from "../utils/supabase";
+
+// Mock CONFIG if not imported from elsewhere
+const CONFIG = {
+  WA_NUMBER: "6289524036666", // Fallback to provided studio number
+};
 
 const OrderModal = () => {
   const {
@@ -21,30 +28,35 @@ const OrderModal = () => {
     closeOrderModal: onClose,
     prefillData,
   } = useAppStore();
-  const [formData, setFormData] = useState({
-    name: "",
-    whatsapp: "",
-    // Matches DB: `orders.selected_package` (pricelists.servicename)
-    selected_package: "",
-    // Category from pricelists (stored to `orders.design_category`)
-    design_category: "",
-    brief: "",
-    deadline: "",
-  });
-
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedOrder, setSubmittedOrder] = useState<OrderItem | null>(null);
-
-  // Reset function
-  const handleResetAndClose = () => {
-    setFormData({
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    watch,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<OrderFormData>({
+    resolver: zodResolver(orderSchema),
+    defaultValues: {
       name: "",
       whatsapp: "",
       selected_package: "",
       design_category: "",
       brief: "",
       deadline: "",
-    });
+    },
+  });
+
+  const selectedPackage = watch("selected_package");
+  const currentCategory = watch("design_category");
+  const currentDeadline = watch("deadline");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedOrder, setSubmittedOrder] = useState<OrderItem | null>(null);
+
+  // Reset function
+  const handleResetAndClose = () => {
+    reset();
     setIsSubmitted(false);
     setSubmittedOrder(null);
     onClose();
@@ -109,86 +121,79 @@ const OrderModal = () => {
         deadlineStr = targetDate.toISOString().split("T")[0]; // YYYY-MM-DD
       }
 
-      setFormData((prev) => ({
-        ...prev,
-        selected_package: prefillData.serviceName || prev.selected_package,
-        design_category: prefillData.category || prev.design_category,
-        brief: briefText || prev.brief,
-        deadline: deadlineStr || prev.deadline,
-      }));
+      setValue("selected_package", prefillData.serviceName || selectedPackage);
+      setValue("design_category", prefillData.category || currentCategory);
+      setValue("brief", briefText || watch("brief"));
+      setValue("deadline", deadlineStr || currentDeadline);
     }
-  }, [isOpen, prefillData]);
+  }, [isOpen, prefillData, setValue]);
 
   // When `selected_package` is set by a CTA (including default "Custom Package"),
   // fill derived fields (category + deadline) from the matching pricelist record.
   useEffect(() => {
     if (!isOpen) return;
     if (!pricelistOptions.length) return;
+    if (!selectedPackage) return;
 
-    setFormData((prev) => {
-      if (!prev.selected_package) return prev;
+    const selectedRow = pricelistOptions.find(
+      (p) => p.servicename === selectedPackage,
+    );
 
-      const selectedRow = pricelistOptions.find(
-        (p) => p.servicename === prev.selected_package,
-      );
+    // Fallback for Custom Package if not found in database yet
+    if (!selectedRow && selectedPackage === "Custom Package") {
+      const defaultCategory = "Other";
+      const defaultDeadline = !currentDeadline
+        ? (() => {
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 7); // Default 7 days for custom
+            return targetDate.toISOString().split("T")[0];
+          })()
+        : currentDeadline;
 
-      // Fallback for Custom Package if not found in database yet
-      if (!selectedRow && prev.selected_package === "Custom Package") {
-        const defaultCategory = "Other";
-        const defaultDeadline = !prev.deadline
-          ? (() => {
-              const targetDate = new Date();
-              targetDate.setDate(targetDate.getDate() + 7); // Default 7 days for custom
-              return targetDate.toISOString().split("T")[0];
-            })()
-          : prev.deadline;
+      if (
+        currentCategory === defaultCategory &&
+        currentDeadline === defaultDeadline
+      )
+        return;
 
-        if (
-          prev.design_category === defaultCategory &&
-          prev.deadline === defaultDeadline
-        )
-          return prev;
+      setValue("design_category", currentCategory || defaultCategory);
+      setValue("deadline", defaultDeadline);
+      return;
+    }
 
-        return {
-          ...prev,
-          design_category: prev.design_category || defaultCategory,
-          deadline: defaultDeadline,
-        };
-      }
+    if (!selectedRow) return;
 
-      if (!selectedRow) return prev;
+    const durationDays = Number(selectedRow.duration ?? 0);
 
-      const durationDays = Number(selectedRow.duration ?? 0);
+    const autoDeadline =
+      !currentDeadline && durationDays > 0
+        ? (() => {
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + durationDays);
+            return targetDate.toISOString().split("T")[0];
+          })()
+        : currentDeadline;
 
-      const autoDeadline =
-        !prev.deadline && durationDays > 0
-          ? (() => {
-              const targetDate = new Date();
-              targetDate.setDate(targetDate.getDate() + durationDays);
-              return targetDate.toISOString().split("T")[0];
-            })()
-          : prev.deadline;
+    const shouldAutoCategory = !currentCategory || currentCategory === "Other";
+    const autoDesignCategory =
+      shouldAutoCategory && selectedRow.category
+        ? selectedRow.category
+        : currentCategory;
 
-      const shouldAutoCategory =
-        !prev.design_category || prev.design_category === "Other";
-      const autoDesignCategory =
-        shouldAutoCategory && selectedRow.category
-          ? selectedRow.category
-          : prev.design_category;
-
-      const changed =
-        autoDeadline !== prev.deadline ||
-        autoDesignCategory !== prev.design_category;
-
-      return changed
-        ? {
-            ...prev,
-            deadline: autoDeadline,
-            design_category: autoDesignCategory,
-          }
-        : prev;
-    });
-  }, [isOpen, pricelistOptions]);
+    if (autoDeadline !== currentDeadline) {
+      setValue("deadline", autoDeadline);
+    }
+    if (autoDesignCategory !== currentCategory) {
+      setValue("design_category", autoDesignCategory);
+    }
+  }, [
+    isOpen,
+    pricelistOptions,
+    selectedPackage,
+    currentCategory,
+    currentDeadline,
+    setValue,
+  ]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -201,23 +206,7 @@ const OrderModal = () => {
 
   if (!isOpen) return null;
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    let { name, value } = e.target;
-    if (name === "whatsapp") {
-      value = value.replace(/\D/g, "");
-    }
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    // Manual validation for mandatory fields
-    if (!formData.name.trim() || !formData.whatsapp.trim()) {
-      alert("Nama Lengkap dan Nomor WhatsApp wajib diisi.");
-      return;
-    }
-
+  const onSubmit = async (data: OrderFormData) => {
     try {
       // First, save to database
       const response = await fetch("/api/save-order", {
@@ -226,7 +215,7 @@ const OrderModal = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderData: formData,
+          orderData: data,
         }),
       });
 
@@ -240,11 +229,11 @@ const OrderModal = () => {
       // Then send WhatsApp message
       const message = `Halo Gous Studio, saya ingin order desain!
 
-*Nama:* ${formData.name}
-*WhatsApp:* ${formData.whatsapp}
-*Kebutuhan:* ${formData.selected_package}
-*Detail Brief:* ${formData.brief}
-*Deadline:* ${formData.deadline}
+*Nama:* ${data.name}
+*WhatsApp:* ${data.whatsapp}
+*Kebutuhan:* ${data.selected_package}
+*Detail Brief:* ${data.brief}
+*Deadline:* ${data.deadline}
 *Order Number:* ${savedOrder.order_number}`;
 
       const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -321,7 +310,7 @@ const OrderModal = () => {
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">
                     Status
                   </span>
-                  <span className="text-emerald-500 font-bold text-[10px] px-2 py-0.5 bg-emerald-500/10 rounded-md border border-emerald-500/20">
+                  <span className="text-emerald-500 font-bold text-[12px] px-3 py-1 bg-emerald-500/10 rounded-md border border-emerald-500/20">
                     DIKIRIM
                   </span>
                 </div>
@@ -356,7 +345,7 @@ const OrderModal = () => {
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex-1 flex flex-col overflow-hidden"
           >
             <div className="flex-1 px-4 py-4 md:p-6 overflow-y-auto">
@@ -372,19 +361,21 @@ const OrderModal = () => {
                       size={18}
                     />
                     <input
-                      required
                       type="text"
-                      name="name"
                       placeholder="Masukkan nama Anda"
-                      value={formData.name}
-                      onChange={handleChange}
+                      {...register("name")}
                       style={{
                         backgroundColor: "var(--color-glass-bg)",
                         color: "var(--color-text)",
                       }}
-                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]"
+                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.name ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]`}
                     />
                   </div>
+                  {errors.name && (
+                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* WhatsApp */}
@@ -398,19 +389,25 @@ const OrderModal = () => {
                       size={18}
                     />
                     <input
-                      required
                       type="tel"
-                      name="whatsapp"
                       placeholder="Contoh: 08123456789"
-                      value={formData.whatsapp}
-                      onChange={handleChange}
+                      {...register("whatsapp")}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.replace(/\D/g, "");
+                        register("whatsapp").onChange(e);
+                      }}
                       style={{
                         backgroundColor: "var(--color-glass-bg)",
                         color: "var(--color-text)",
                       }}
-                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]"
+                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.whatsapp ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]`}
                     />
                   </div>
+                  {errors.whatsapp && (
+                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
+                      {errors.whatsapp.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Service Dropdown */}
@@ -423,99 +420,105 @@ const OrderModal = () => {
                       className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
                       size={18}
                     />
-                    <select
+                    <Controller
                       name="selected_package"
-                      value={formData.selected_package}
-                      onChange={(e) => {
-                        const selected = e.target.value;
-                        const selectedRow = pricelistOptions.find(
-                          (p) => p.servicename === selected,
-                        );
+                      control={control}
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            const selected = e.target.value;
+                            const selectedRow = pricelistOptions.find(
+                              (p) => p.servicename === selected,
+                            );
 
-                        setFormData((prev) => ({
-                          ...prev,
-                          selected_package: selected,
-                          design_category:
-                            selectedRow?.category ||
-                            (selected === "Custom Package"
-                              ? "Other"
-                              : prev.design_category),
-                          // only auto-fill deadline if user hasn't selected one yet
-                          deadline: prev.deadline
-                            ? prev.deadline
-                            : (selectedRow?.duration ||
-                                (selected === "Custom Package" ? 7 : 0))
-                              ? (() => {
-                                  const targetDate = new Date();
-                                  targetDate.setDate(
-                                    targetDate.getDate() +
-                                      Number(
-                                        selectedRow?.duration ||
-                                          (selected === "Custom Package"
-                                            ? 7
-                                            : 0),
-                                      ),
-                                  );
-                                  return targetDate.toISOString().split("T")[0];
-                                })()
-                              : prev.deadline,
-                        }));
-                      }}
-                      required
-                      style={{
-                        backgroundColor: "var(--color-glass-bg)",
-                        color: "var(--color-text)",
-                      }}
-                      className="w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-xl border border-white/10 appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer border-[1px]"
-                    >
-                      {loadingPricelists ? (
-                        <option
-                          value=""
-                          style={{ backgroundColor: "var(--color-card)" }}
+                            setValue(
+                              "design_category",
+                              selectedRow?.category ||
+                                (selected === "Custom Package"
+                                  ? "Other"
+                                  : currentCategory),
+                            );
+
+                            // auto-fill deadline only if user hasn't selected one
+                            const durationDays = Number(
+                              selectedRow?.duration ||
+                                (selected === "Custom Package" ? 7 : 0),
+                            );
+                            if (durationDays > 0) {
+                              const targetDate = new Date();
+                              targetDate.setDate(
+                                targetDate.getDate() + durationDays,
+                              );
+                              setValue(
+                                "deadline",
+                                targetDate.toISOString().split("T")[0],
+                              );
+                            }
+                          }}
+                          style={{
+                            backgroundColor: "var(--color-glass-bg)",
+                            color: "var(--color-text)",
+                          }}
+                          className={`w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-xl border ${errors.selected_package ? "border-rose-500" : "border-white/10"} appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer border-[1px]`}
                         >
-                          Memuat...
-                        </option>
-                      ) : (
-                        <>
-                          <option
-                            value=""
-                            style={{ backgroundColor: "var(--color-card)" }}
-                          >
-                            Pilih Paket...
-                          </option>
-
-                          {/* Fallback for Custom Package if not in database results */}
-                          {!pricelistOptions.some(
-                            (p) => p.servicename === "Custom Package",
-                          ) && (
+                          {loadingPricelists ? (
                             <option
-                              value="Custom Package"
+                              value=""
                               style={{ backgroundColor: "var(--color-card)" }}
                             >
-                              Custom Package
+                              Memuat...
                             </option>
-                          )}
+                          ) : (
+                            <>
+                              <option
+                                value=""
+                                style={{ backgroundColor: "var(--color-card)" }}
+                              >
+                                Pilih Paket...
+                              </option>
 
-                          {pricelistOptions.map((p) => (
-                            <option
-                              key={p.servicename}
-                              value={p.servicename}
-                              style={{
-                                backgroundColor: "var(--color-card)",
-                                color: "var(--color-text)",
-                              }}
-                            >
-                              {p.servicename}
-                            </option>
-                          ))}
-                        </>
+                              {!pricelistOptions.some(
+                                (p) => p.servicename === "Custom Package",
+                              ) && (
+                                <option
+                                  value="Custom Package"
+                                  style={{
+                                    backgroundColor: "var(--color-card)",
+                                  }}
+                                >
+                                  Custom Package
+                                </option>
+                              )}
+
+                              {pricelistOptions.map((p) => (
+                                <option
+                                  key={p.servicename}
+                                  value={p.servicename}
+                                  style={{
+                                    backgroundColor: "var(--color-card)",
+                                    color: "var(--color-text)",
+                                  }}
+                                >
+                                  {p.servicename}
+                                </option>
+                              ))}
+                            </>
+                          )}
+                        </select>
                       )}
-                    </select>
+                    />
                     <ChevronDown
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                       size={18}
                     />
                   </div>
+                  {errors.selected_package && (
+                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
+                      {errors.selected_package.message}
+                    </p>
+                  )}
                 </div>
 
                 {pricelistsError && (
@@ -530,24 +533,27 @@ const OrderModal = () => {
                     Detail Brief <span className="text-rose-500">*</span>
                   </label>
                   <textarea
-                    required
-                    name="brief"
+                    {...register("brief")}
                     rows={5}
                     placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
-                    value={formData.brief}
-                    onChange={handleChange}
                     style={{
                       backgroundColor: "var(--color-glass-bg)",
                       color: "var(--color-text)",
                     }}
-                    className="w-full p-4 text-base md:text-sm rounded-xl border border-white/10 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none border-[1px]"
+                    className={`w-full p-4 text-base md:text-sm rounded-xl border ${errors.brief ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none border-[1px]`}
                   ></textarea>
+                  {errors.brief && (
+                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
+                      {errors.brief.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Deadline */}
                 <div className="relative">
                   <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Desain Harus Ready Tanggal <span className="text-rose-500">*</span>
+                    Desain Harus Ready Tanggal{" "}
+                    <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
                     <Calendar
@@ -555,20 +561,22 @@ const OrderModal = () => {
                       size={18}
                     />
                     <input
-                      required
                       type="date"
-                      name="deadline"
-                      value={formData.deadline}
-                      onChange={handleChange}
+                      {...register("deadline")}
                       style={{
                         backgroundColor: "var(--color-glass-bg)",
                         color: "var(--color-text)",
                         boxSizing: "border-box",
                         maxWidth: "100%",
                       }}
-                      className="w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border border-white/10 focus:outline-none focus:border-brand-500 transition-all [color-scheme:light] dark:[color-scheme:dark] border-[1px]"
+                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.deadline ? "border-rose-500" : "border-white/10"} focus:outline-none focus:border-brand-500 transition-all [color-scheme:light] dark:[color-scheme:dark] border-[1px]`}
                     />
                   </div>
+                  {errors.deadline && (
+                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
+                      {errors.deadline.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -577,9 +585,11 @@ const OrderModal = () => {
             <div className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:pointer-events-none"
               >
-                <Send size={20} /> Kirim ke WhatsApp
+                <Send size={20} />{" "}
+                {isSubmitting ? "Mengirim..." : "Kirim ke WhatsApp"}
               </button>
             </div>
           </form>

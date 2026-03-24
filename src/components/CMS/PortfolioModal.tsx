@@ -12,7 +12,9 @@ import {
   Layout,
 } from "lucide-react";
 
-import { ChangeEvent, FormEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { portfolioSchema, PortfolioFormData } from "../../utils/formSchemas";
 import { PortfolioItem } from "../../types";
 
 interface PortfolioModalProps {
@@ -32,28 +34,36 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
   categories,
   activeTab,
 }) => {
-  const [formData, setFormData] = useState<any>({
-    title: "",
-    description: "",
-    tags: "",
-    imgalt: "",
-    linkurl: "",
-    image: null,
-    role: "",
-    tools: "",
-    category: activeTab,
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PortfolioFormData>({
+    resolver: zodResolver(portfolioSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      tags: "",
+      imgalt: "",
+      linkurl: "",
+      image: null,
+      role: "",
+      tools: "",
+      category: activeTab,
+    },
   });
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      reset({
         ...initialData,
         tags: (initialData.tags || []).join(", "),
         tools: (initialData.tools || []).join(", "),
         category: initialData.category || activeTab,
       });
     } else {
-      setFormData({
+      reset({
         title: "",
         description: "",
         tags: "",
@@ -65,27 +75,20 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         category: activeTab,
       });
     }
-  }, [initialData, activeTab, isOpen]);
+  }, [initialData, activeTab, isOpen, reset]);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: PortfolioFormData) => {
     const result = {
-      ...formData,
-      tags: formData.tags
-        .split(",")
-        .map((t: string) => t.trim())
-        .filter((t: string) => t !== ""),
-      tools: formData.tools
-        .split(",")
-        .map((t: string) => t.trim())
-        .filter((t: string) => t !== ""),
+      ...(initialData || {}),
+      ...data,
+      tags: data.tags
+        ? data.tags.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
+        : [],
+      tools: data.tools
+        ? data.tools.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
+        : [],
     };
     onSave(result);
-  };
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   if (!isOpen) return null;
@@ -132,7 +135,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
 
           {/* Form */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar"
           >
             {/* Category Selector */}
@@ -143,10 +146,8 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                 </label>
                 <div className="relative group">
                   <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all cursor-pointer text-sm"
+                    {...register("category")}
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.category ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold appearance-none focus:outline-none focus:bg-white focus:border-brand-500 transition-all cursor-pointer text-sm`}
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id} className="bg-white">
@@ -158,20 +159,19 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                     <Layout className="w-4 h-4" />
                   </div>
                 </div>
+                {errors.category && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.category.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                   Judul Project
                 </label>
                 <input
-                  required
                   type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
                   placeholder="e.g. Logo Design for Tech Co"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                  {...register("title")}
+                  className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.title ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                 />
+                {errors.title && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.title.message}</p>}
               </div>
             </div>
 
@@ -180,14 +180,12 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                 Deskripsi Singkat
               </label>
               <textarea
-                required
-                name="description"
                 rows={3}
-                value={formData.description}
-                onChange={handleChange}
                 placeholder="Jelaskan tentang project ini secara ringkas..."
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 leading-relaxed text-sm"
+                {...register("description")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.description ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-medium focus:outline-none focus:bg-white focus:border-brand-500 transition-all resize-none placeholder:text-slate-300 leading-relaxed text-sm`}
               ></textarea>
+              {errors.description && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.description.message}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -199,13 +197,12 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                   <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
                     type="text"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
                     placeholder="Branding, Minimalist"
+                    {...register("tags")}
                     className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                   />
                 </div>
+                {errors.tags && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.tags.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -215,32 +212,30 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
                     type="text"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
                     placeholder="Visual Designer"
+                    {...register("role")}
                     className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                   />
                 </div>
+                {errors.role && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.role.message}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
-                  Link Gallery / Drive
+                  Link Gallery / Drive <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative group">
                   <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
-                    type="url"
-                    name="linkurl"
-                    value={formData.linkurl}
-                    onChange={handleChange}
+                    type="text" // Use text instead of url to allow empty string easier
                     placeholder="https://drive.google.com/..."
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                    {...register("linkurl")}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.linkurl ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                   />
                 </div>
+                {errors.linkurl && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.linkurl.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -250,13 +245,12 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                   <Wrench className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                   <input
                     type="text"
-                    name="tools"
-                    value={formData.tools}
-                    onChange={handleChange}
                     placeholder="Photoshop, Illustrator"
+                    {...register("tools")}
                     className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                   />
                 </div>
+                {errors.tools && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.tools.message}</p>}
               </div>
             </div>
 
@@ -268,13 +262,12 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                 <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
                   type="text"
-                  name="imgalt"
-                  value={formData.imgalt}
-                  onChange={handleChange}
                   placeholder="e.g. Modern logo design showcase"
+                  {...register("imgalt")}
                   className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
                 />
               </div>
+              {errors.imgalt && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.imgalt.message}</p>}
             </div>
           </form>
 
@@ -288,7 +281,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
               Batal
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSubmit(onSubmit)}
               className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />

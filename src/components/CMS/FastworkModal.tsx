@@ -9,19 +9,22 @@ import {
   Zap,
 } from "lucide-react";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { fastworkSchema, FastworkFormData } from "../../utils/formSchemas";
 import { ChangeEvent, FormEvent } from "react";
 import { FastworkItem } from "../../types";
 
+// DEFAULT_FORM no longer strictly needed but kept as an empty/default structure.
 const DEFAULT_FORM: any = {
   title: "",
   url: "",
   image: "",
-  rating: 5.0,
+  rating: 5,
   rehire: false,
   installment: false,
   delay: "0",
 };
-
 interface FastworkModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,28 +33,37 @@ interface FastworkModalProps {
 }
 
 const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState<any>(DEFAULT_FORM);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<FastworkFormData>({
+    resolver: zodResolver(fastworkSchema),
+    defaultValues: DEFAULT_FORM,
+  });
+
+  const watchImage = watch("image");
 
   useEffect(() => {
     if (initialData) {
-      setFormData({ ...DEFAULT_FORM, ...initialData });
+      reset({
+        title: initialData.title || "",
+        url: initialData.url || "",
+        image: initialData.image || "",
+        rating: initialData.rating !== undefined ? Number(initialData.rating) : 5.0,
+        rehire: initialData.rehire || false,
+        installment: initialData.installment || false,
+        delay: initialData.delay || "0",
+      });
     } else {
-      setFormData(DEFAULT_FORM);
+      reset(DEFAULT_FORM);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, reset]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    onSave({ ...formData, rating: parseFloat(formData.rating) || 5 });
+  const onSubmit = (data: FastworkFormData) => {
+    onSave({ ...(initialData || {}), ...data });
   };
 
   if (!isOpen) return null;
@@ -96,21 +108,19 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
             {/* Title */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
                 Judul Layanan
               </label>
               <input
-                required
                 type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
                 placeholder="e.g. Feed Sosial Media Paket Murah"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                {...register("title")}
+                className={`w-full px-4 py-2.5 bg-slate-50 border ${errors.title ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
               />
+              {errors.title && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.title.message}</p>}
             </div>
 
             {/* URL */}
@@ -121,37 +131,34 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
               <div className="relative group">
                 <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
-                  required
                   type="url"
-                  name="url"
-                  value={formData.url}
-                  onChange={handleChange}
                   placeholder="https://fastwork.id/user/..."
-                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                  {...register("url")}
+                  className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.url ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                 />
               </div>
+              {errors.url && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.url.message}</p>}
             </div>
 
             {/* Image URL */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
-                URL Gambar
+                URL Gambar <span className="text-rose-500">*</span>
               </label>
               <div className="relative group">
                 <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
                 <input
                   type="url"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleChange}
                   placeholder="https://storage.googleapis.com/fastwork-static/..."
-                  className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                  {...register("image")}
+                  className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.image ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                 />
               </div>
-              {formData.image && (
+              {errors.image && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.image.message}</p>}
+              {watchImage && (
                 <div className="mt-3 w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50/50">
                   <img
-                    src={formData.image}
+                    src={watchImage}
                     alt="preview"
                     className="w-full h-full object-contain"
                     onError={(e) => {
@@ -171,17 +178,15 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
                 <div className="relative group">
                   <Star className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" />
                   <input
-                    required
                     type="number"
-                    name="rating"
-                    value={formData.rating}
-                    onChange={handleChange}
                     min="0"
                     max="5"
                     step="0.1"
-                    className="pl-11 pr-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm"
+                    {...register("rating", { valueAsNumber: true })}
+                    className={`pl-11 pr-4 py-2.5 w-full bg-slate-50 border ${errors.rating ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all text-sm`}
                   />
                 </div>
+                {errors.rating && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.rating.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">
@@ -189,12 +194,11 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
                 </label>
                 <input
                   type="text"
-                  name="delay"
-                  value={formData.delay}
-                  onChange={handleChange}
                   placeholder="0 / 0.1s / 0.2s"
-                  className="px-4 py-2.5 w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm"
+                  {...register("delay")}
+                  className={`px-4 py-2.5 w-full bg-slate-50 border ${errors.delay ? 'border-rose-500' : 'border-slate-200'} rounded-xl text-slate-900 font-bold focus:outline-none focus:bg-white focus:border-brand-500 transition-all placeholder:text-slate-300 text-sm`}
                 />
+                {errors.delay && <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{errors.delay.message}</p>}
               </div>
             </div>
 
@@ -203,9 +207,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
               <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
                 <input
                   type="checkbox"
-                  name="rehire"
-                  checked={formData.rehire}
-                  onChange={handleChange}
+                  {...register("rehire")}
                   className="w-5 h-5 accent-brand-500 rounded-lg"
                 />
                 <div>
@@ -218,9 +220,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
               <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
                 <input
                   type="checkbox"
-                  name="installment"
-                  checked={formData.installment}
-                  onChange={handleChange}
+                  {...register("installment")}
                   className="w-5 h-5 accent-brand-500 rounded-lg"
                 />
                 <div>
@@ -243,7 +243,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
               Batal
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSubmit(onSubmit)}
               className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] flex items-center gap-2.5 text-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />
