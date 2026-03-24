@@ -1,8 +1,0 @@
-<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="300" fill="#1e293b" rx="8"/>
-  <rect x="140" y="100" width="120" height="80" fill="#334155" rx="4"/>
-  <circle cx="170" cy="120" r="8" fill="#64748b"/>
-  <path d="M162 135 L170 127 L178 135 L185 128 L190 135 L190 145 L162 145 Z" fill="#64748b"/>
-  <text x="200" y="190" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="14">🎨 Poster Design</text>
-  <text x="200" y="210" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="12">Preview Coming Soon</text>
-</svg>

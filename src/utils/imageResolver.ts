@@ -1,0 +1,60 @@
+import { PortfolioItem } from "../types";
+
+export const resolveImageUrl = (item: PortfolioItem, size = "w800"): string | null => {
+  if (item.image) return item.image;
+  // Portfolio data dari JSON pakai `linkUrl`, sedangkan dari Supabase/CMS pakai `linkurl`.
+  const linkUrl = item.linkUrl || item.linkurl;
+  if (!linkUrl) return null;
+
+  const url = linkUrl;
+  // Google Drive - optimized for better loading and multiple sizes
+  if (url.includes("drive.google.com")) {
+    const match =
+      url.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+      url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      // Use Google Drive's direct image proxy with optimized size
+      return `https://lh3.googleusercontent.com/u/0/d/${match[1]}=${size}-rw`;
+    }
+  }
+  // Canva (Thumbnails blocked by Cloudflare - handled via iframe in UI)
+  if (url.includes("canva.com/design/")) {
+    return null;
+  }
+  return null;
+};
+
+export const getOptimizedImageUrl = (item: PortfolioItem, size = "w800") => {
+  return resolveImageUrl(item, size);
+};
+
+export const getThumbnailUrl = (item: PortfolioItem) => {
+  return resolveImageUrl(item, "w400");
+};
+
+export const getLightboxDisplayUrl = (item: PortfolioItem) => {
+  const resolved = resolveImageUrl(item, "w1200");
+  if (resolved) return resolved;
+
+  const linkUrl = item.linkUrl || item.linkurl;
+  if (linkUrl) {
+    if (linkUrl.includes("canva.com/design/")) {
+      return null; // Fallback to iframe in UI
+    }
+    // Use a more reliable screenshot service
+    return `https://api.screenshotone.com/take?access_key=demo&url=${encodeURIComponent(linkUrl)}&viewport_width=1200&viewport_height=800&image_quality=80&format=webp&cache=true`;
+  }
+  return null;
+};
+
+export const getFallbackImageUrl = (category: string) => {
+  const fallbacks: Record<string, string> = {
+    poster: "/img/fallbacks/poster-placeholder.svg",
+    feed: "/img/fallbacks/feed-placeholder.svg",
+    ecommerce: "/img/fallbacks/banner-placeholder.svg",
+    logo: "/img/fallbacks/logo-placeholder.svg",
+    management: "/img/fallbacks/management-placeholder.svg",
+    ads: "/img/fallbacks/ads-placeholder.svg",
+  };
+  return fallbacks[category] || "/img/fallbacks/default-placeholder.svg";
+};

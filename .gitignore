@@ -7,9 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies & build output
+node_modules/
+dist/
+dist-ssr/
 *.local
 
 # Editor directories and files
@@ -23,8 +24,14 @@ dist-ssr
 *.sln
 *.sw?
 
+# IDE - Cursor
+.cursor/
+
+# Temp / scratch folders
+.temp/
+tmp/
+
 # env files
 .env
 .env.*
 !.env.example
-.env
