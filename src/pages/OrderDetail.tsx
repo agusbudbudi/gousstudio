@@ -400,7 +400,7 @@ const OrderDetail = () => {
                 <FileText size={14} className="text-brand-500" /> Detail Brief
               </h3>
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <p className="text-slate-300 text-[13px] md:text-[14px] leading-relaxed whitespace-pre-wrap font-medium">
+                <p className="text-slate-300 text-[13px] md:text-[14px] leading-relaxed whitespace-pre-wrap font-medium break-words break-all">
                   {order.brief_detail ||
                     "Tidak ada detail brief khusus untuk pesanan ini."}
                 </p>
