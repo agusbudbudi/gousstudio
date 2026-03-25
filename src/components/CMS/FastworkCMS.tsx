@@ -7,6 +7,7 @@ import FastworkList from "./FastworkList";
 import FastworkModal from "./FastworkModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
+import CMSAlertBanner from "./Common/CMSAlertBanner";
 
 import { FastworkItem } from "../../types";
 
@@ -19,6 +20,26 @@ const FastworkCMS: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pristineItems, setPristineItems] = useState<FastworkItem[]>([]);
+
+  const isDirty = React.useMemo(() => {
+    if (loading) return false;
+
+    const sanitize = (list: FastworkItem[]) =>
+      JSON.stringify(
+        list.map((item) => ({
+          title: item.title,
+          url: item.url,
+          image: item.image,
+          rating: item.rating,
+          rehire: item.rehire,
+          installment: item.installment,
+          delay: item.delay,
+        }))
+      );
+
+    return sanitize(items) !== sanitize(pristineItems);
+  }, [items, pristineItems, loading]);
 
   useEffect(() => {
     fetchItems();
@@ -33,6 +54,7 @@ const FastworkCMS: React.FC = () => {
         .order("order_index", { ascending: true });
       if (fetchError) throw fetchError;
       setItems((data as FastworkItem[]) || []);
+      setPristineItems((data as FastworkItem[]) || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -104,18 +126,18 @@ const FastworkCMS: React.FC = () => {
       const { error: delError } = await supabase
         .from("fastwork_items")
         .delete()
-        .not("id", "is", null);
+        .neq("title", ""); // All items have a title
       if (delError) throw delError;
 
-      if (flatData.length > 0) {
+      if (items.length > 0) {
         const { error: insError } = await supabase
           .from("fastwork_items")
-          .insert(flatData);
+          .insert(items.map((item, index) => ({ ...item, order_index: index })));
         if (insError) throw insError;
       }
 
-      addToast("Fastwork items berhasil disimpan!", "success");
-      fetchItems();
+      addToast("Data Fastwork berhasil disimpan!", "success");
+      await fetchItems();
     } catch (err: any) {
       addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
@@ -152,6 +174,15 @@ const FastworkCMS: React.FC = () => {
           Simpan
         </CMSButton>
       </CMSHeader>
+
+      {/* Unsaved Changes Banner */}
+      <div className="relative z-30">
+        <CMSAlertBanner
+          isVisible={isDirty}
+          isSaving={saving}
+          onSave={persistToSupabase}
+        />
+      </div>
 
       {/* Content */}
       <div className="pt-4">

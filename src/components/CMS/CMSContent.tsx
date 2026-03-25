@@ -187,6 +187,14 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
                 isCollapsed={isCollapsed}
                 onClick={() => navigate("/cms/clients")}
               />
+              <MenuItem
+                id="pricelist"
+                icon={DollarSign}
+                label="Pricelist"
+                activePage={activePage}
+                isCollapsed={isCollapsed}
+                onClick={() => navigate("/cms/pricelist")}
+              />
             </div>
           </div>
 
@@ -207,14 +215,6 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
                 activePage={activePage}
                 isCollapsed={isCollapsed}
                 onClick={() => navigate("/cms/portfolio")}
-              />
-              <MenuItem
-                id="pricelist"
-                icon={DollarSign}
-                label="Pricelist"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/pricelist")}
               />
               <MenuItem
                 id="services"

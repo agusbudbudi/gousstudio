@@ -14,6 +14,7 @@ import ServicesList from "./ServicesList";
 import ServicesModal from "./ServicesModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
+import CMSAlertBanner from "./Common/CMSAlertBanner";
 
 import { ServiceItem } from "../../types";
 
@@ -26,6 +27,26 @@ const ServicesCMS: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pristineItems, setPristineItems] = useState<ServiceItem[]>([]);
+
+  const isDirty = React.useMemo(() => {
+    if (loading) return false;
+
+    const sanitize = (list: ServiceItem[]) =>
+      JSON.stringify(
+        list.map((item) => ({
+          slug: item.slug,
+          title: item.title,
+          description: item.description,
+          icon: item.icon,
+          category: item.category,
+          color: item.color,
+          included: [...(item.included || [])].sort(),
+        }))
+      );
+
+    return sanitize(items) !== sanitize(pristineItems);
+  }, [items, pristineItems, loading]);
 
   useEffect(() => {
     fetchItems();
@@ -39,7 +60,15 @@ const ServicesCMS: React.FC = () => {
         .select("*")
         .order("order_index", { ascending: true });
       if (fetchError) throw fetchError;
-      setItems((data as ServiceItem[]) || []);
+
+      // Ensure 'included' is always an array for consistency with isDirty logic
+      const processedData = (data as ServiceItem[] || []).map(item => ({
+        ...item,
+        included: item.included || []
+      }));
+
+      setItems(processedData);
+      setPristineItems(processedData);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -110,18 +139,18 @@ const ServicesCMS: React.FC = () => {
       const { error: delError } = await supabase
         .from("services")
         .delete()
-        .not("id", "is", null);
+        .not("slug", "is", null); // services always have slug
       if (delError) throw delError;
 
-      if (flatData.length > 0) {
+      if (items.length > 0) {
         const { error: insError } = await supabase
           .from("services")
-          .insert(flatData);
+          .insert(items.map((item, index) => ({ ...item, order_index: index })));
         if (insError) throw insError;
       }
 
-      addToast("Services berhasil disimpan ke Supabase!", "success");
-      fetchItems();
+      addToast("Layanan berhasil disimpan!", "success");
+      await fetchItems();
     } catch (err: any) {
       addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
@@ -159,6 +188,15 @@ const ServicesCMS: React.FC = () => {
           Simpan
         </CMSButton>
       </CMSHeader>
+
+      {/* Unsaved Changes Banner */}
+      <div className="relative z-30">
+        <CMSAlertBanner
+          isVisible={isDirty}
+          isSaving={saving}
+          onSave={persistToSupabase}
+        />
+      </div>
 
       {/* Content */}
       <div className="pt-4">

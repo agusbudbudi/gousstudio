@@ -27,6 +27,7 @@ export interface PricelistItem {
   totalrevision?: number;
   order_index?: number;
   deliverables?: string[];
+  isShowToCustomer?: boolean;
 }
 
 export interface OrderItem {

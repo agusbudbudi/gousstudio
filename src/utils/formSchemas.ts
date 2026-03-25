@@ -36,6 +36,7 @@ export const pricelistSchema = z.object({
   duration: z.number({ message: "Durasi harus berupa angka" }).min(1, "Durasi minimal 1 hari"),
   totalrevision: z.number().optional(), // Can be 0 if unlimited
   isrevisionunlimited: z.boolean(),
+  isShowToCustomer: z.boolean(),
   // deliverables array is managed separately in state in the component
 });
 export type PricelistFormData = z.infer<typeof pricelistSchema>;

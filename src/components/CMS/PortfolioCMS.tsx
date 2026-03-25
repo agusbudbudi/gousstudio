@@ -19,6 +19,7 @@ import { useToast } from "../../hooks/useToast";
 import CMSHeader from "./CMSHeader";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
+import CMSAlertBanner from "./Common/CMSAlertBanner";
 import { PortfolioItem } from "../../types";
 
 const CATEGORIES: { id: string; label: string; icon: any }[] = [
@@ -40,37 +41,61 @@ const PortfolioCMS: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [pristineData, setPristineData] = useState<Record<string, PortfolioItem[]>>({});
 
-  useEffect(() => {
-    const fetchPortfolio = async () => {
-      try {
-        setLoading(true);
-        const { data: portfolioItems, error: fetchError } = await supabase
-          .from("portfolios")
-          .select("*")
-          .order("order_index", { ascending: true });
-
-        if (fetchError) throw fetchError;
-
-        // Group by category
-        const grouped = (portfolioItems as PortfolioItem[]).reduce(
-          (acc: Record<string, PortfolioItem[]>, item: PortfolioItem) => {
-            if (!acc[item.category]) acc[item.category] = [];
-            acc[item.category].push(item);
-            return acc;
-          },
-          {},
-        );
-
-        setData(grouped);
-      } catch (err: any) {
-        console.error("Error fetching portfolio:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  // Deep comparison for grouped data
+  const isDirty = React.useMemo(() => {
+    if (loading) return false;
+    
+    const sanitizeData = (d: Record<string, PortfolioItem[]>) => {
+      const cleaned: any = {};
+      Object.keys(d).forEach((cat) => {
+        cleaned[cat] = (d[cat] || []).map((item) => ({
+          title: item.title,
+          description: item.description,
+          image: item.image,
+          category: item.category,
+          slug: (item as any).slug,
+          order_index: item.order_index,
+        }));
+      });
+      return JSON.stringify(cleaned);
     };
 
+    return sanitizeData(data) !== sanitizeData(pristineData);
+  }, [data, pristineData, loading]);
+
+  const fetchPortfolio = async () => {
+    try {
+      setLoading(true);
+      const { data: portfolioItems, error: fetchError } = await supabase
+        .from("portfolios")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      // Group by category
+      const grouped = (portfolioItems as PortfolioItem[]).reduce(
+        (acc: Record<string, PortfolioItem[]>, item: PortfolioItem) => {
+          if (!acc[item.category]) acc[item.category] = [];
+          acc[item.category].push(item);
+          return acc;
+        },
+        {},
+      );
+
+      setData(grouped);
+      setPristineData(grouped);
+    } catch (err: any) {
+      console.error("Error fetching portfolio:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPortfolio();
   }, []);
 
@@ -168,7 +193,7 @@ const PortfolioCMS: React.FC = () => {
 
       if (response.ok) {
         addToast("Data berhasil disimpan ke Supabase!", "success");
-        setTimeout(() => window.location.reload(), 2000);
+        fetchPortfolio(); // Refresh data to reset pristine state
       } else {
         const err = await response.json();
         addToast(`Gagal menyimpan: ${err.message}`, "error");
@@ -224,6 +249,15 @@ const PortfolioCMS: React.FC = () => {
           </CMSButton>
         </div>
       </CMSHeader>
+
+      {/* Unsaved Changes Banner */}
+      <div className="relative z-30">
+        <CMSAlertBanner
+          isVisible={isDirty}
+          isSaving={saving}
+          onSave={persistData}
+        />
+      </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
 
