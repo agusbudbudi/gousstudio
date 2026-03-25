@@ -11,7 +11,7 @@ import {
 import { resolveImageUrl } from "../../utils/imageResolver";
 import CMSButton from "./Common/CMSButton";
 
-import { PortfolioItem } from "../../types";
+import { PortfolioItem, PricelistItem } from "../../types";
 
 interface PortfolioListProps {
   items: PortfolioItem[];
@@ -24,6 +24,7 @@ interface PortfolioListProps {
     index: number,
     direction: "up" | "down",
   ) => void;
+  pricelists: PricelistItem[];
 }
 
 const PortfolioList: React.FC<PortfolioListProps> = ({
@@ -33,6 +34,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
   onEdit,
   onDelete,
   onReorder,
+  pricelists,
 }) => {
   const filteredItems = items.filter(
     (item) =>
@@ -141,6 +143,22 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
                 <p className="text-[11px] text-slate-500 mt-0.5 truncate opacity-80">
                   {item.description || "No description."}
                 </p>
+                {item.pricelist_id && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    {(() => {
+                      const pl = pricelists.find(p => String(p.id) === String(item.pricelist_id));
+                      return pl ? (
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                          Linked to: {pl.servicename}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-rose-300 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                          Linked Pricelist Missing
+                        </span>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Tags - Hidden on small screens to keep list compact */}

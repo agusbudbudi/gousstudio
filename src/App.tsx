@@ -15,6 +15,7 @@ const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const PricelistPage = lazy(() => import('./pages/PricelistPage'));
 const CMS = lazy(() => import('./pages/CMS'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
+const PricelistDetailPage = lazy(() => import('./pages/PricelistDetailPage'));
 
 // CMS Components
 const OrderCMS = lazy(() => import('./components/CMS/OrderCMS'));
@@ -120,6 +121,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/pricelist" element={<PricelistPage />} />
+        <Route path="/pricelist/:slug" element={<PricelistDetailPage />} />
         <Route path="/cms" element={<CMS />}>
           <Route index element={<Navigate to="orders" replace />} />
           <Route path="orders" element={<OrderCMS />} />

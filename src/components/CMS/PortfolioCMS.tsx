@@ -20,7 +20,7 @@ import CMSHeader from "./CMSHeader";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
 import CMSAlertBanner from "./Common/CMSAlertBanner";
-import { PortfolioItem } from "../../types";
+import { PortfolioItem, PricelistItem } from "../../types";
 
 const CATEGORIES: { id: string; label: string; icon: any }[] = [
   { id: "poster", label: "Poster & Banner", icon: FileText },
@@ -42,6 +42,7 @@ const PortfolioCMS: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [pristineData, setPristineData] = useState<Record<string, PortfolioItem[]>>({});
+  const [pricelists, setPricelists] = useState<PricelistItem[]>([]);
 
   // Deep comparison for grouped data
   const isDirty = React.useMemo(() => {
@@ -57,6 +58,8 @@ const PortfolioCMS: React.FC = () => {
           category: item.category,
           slug: (item as any).slug,
           order_index: item.order_index,
+          pricelist_id: item.pricelist_id ? String(item.pricelist_id) : null,
+          role: item.role || null, // Include role for completeness
         }));
       });
       return JSON.stringify(cleaned);
@@ -95,8 +98,23 @@ const PortfolioCMS: React.FC = () => {
     }
   };
 
+  const fetchPricelists = async () => {
+    try {
+      const { data: pricelistItems, error: fetchError } = await supabase
+        .from("pricelists")
+        .select("*")
+        .order("servicename", { ascending: true });
+
+      if (fetchError) throw fetchError;
+      setPricelists(pricelistItems || []);
+    } catch (err: any) {
+      console.error("Error fetching pricelists:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPortfolio();
+    fetchPricelists();
   }, []);
 
   const handleEditItem = (item: PortfolioItem, index: number) => {
@@ -308,6 +326,7 @@ const PortfolioCMS: React.FC = () => {
           onEdit={handleEditItem}
           onDelete={handleDeleteItem}
           onReorder={handleReorder}
+          pricelists={pricelists}
         />
       )}
 
@@ -318,6 +337,7 @@ const PortfolioCMS: React.FC = () => {
         initialData={editingItem}
         categories={CATEGORIES}
         activeTab={activeTab}
+        pricelists={pricelists}
       />
       </div>
     </div>

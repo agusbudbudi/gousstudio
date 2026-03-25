@@ -16,7 +16,7 @@ import CMSButton from "./Common/CMSButton";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { portfolioSchema, PortfolioFormData } from "../../utils/formSchemas";
-import { PortfolioItem } from "../../types";
+import { PortfolioItem, PricelistItem } from "../../types";
 
 interface PortfolioModalProps {
   isOpen: boolean;
@@ -25,6 +25,7 @@ interface PortfolioModalProps {
   initialData: any;
   categories: { id: string; label: string; icon: any }[];
   activeTab: string;
+  pricelists: PricelistItem[];
 }
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
@@ -34,6 +35,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
   initialData,
   categories,
   activeTab,
+  pricelists,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
@@ -53,6 +55,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
       role: "",
       tools: "",
       category: activeTab,
+      pricelist_id: "",
     },
   });
 
@@ -63,6 +66,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         tags: (initialData.tags || []).join(", "),
         tools: (initialData.tools || []).join(", "),
         category: initialData.category || activeTab,
+        pricelist_id: initialData.pricelist_id ? String(initialData.pricelist_id) : "",
       });
     } else {
       reset({
@@ -75,6 +79,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         role: "",
         tools: "",
         category: activeTab,
+        pricelist_id: "",
       });
     }
   }, [initialData, activeTab, isOpen, reset]);
@@ -91,6 +96,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         tools: data.tools
           ? data.tools.split(",").map((t: string) => t.trim()).filter((t: string) => t !== "")
           : [],
+        slug: (initialData as any)?.slug || null,
       };
       onSave(result);
     } finally {
@@ -144,6 +150,25 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                 {...register("title")}
                 error={errors.title?.message}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CMSSelect
+                label="Link ke Pricelist (Optional)"
+                icon={Link2}
+                error={errors.pricelist_id?.message}
+                {...register("pricelist_id")}
+              >
+                <option value="" className="bg-white">
+                  None (Tidak ada link)
+                </option>
+                {pricelists.map((price) => (
+                  <option key={price.id} value={price.id} className="bg-white">
+                    [{price.category.toUpperCase()}] {price.servicename}
+                  </option>
+                ))}
+              </CMSSelect>
+              <div className="hidden md:block" /> {/* Spacer */}
             </div>
 
             <CMSInput
