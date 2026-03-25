@@ -4,6 +4,7 @@ import {
   Lock,
   AlertCircle,
 } from "lucide-react";
+import { Outlet } from "react-router-dom";
 import CMSContent from "../components/CMS/CMSContent";
 
 const CMS: React.FC = () => {
@@ -108,7 +109,9 @@ const CMS: React.FC = () => {
             className="flex flex-col h-screen overflow-hidden"
           >
             {/* CMS Sidebar & Content will be handled by CMSContent */}
-            <CMSContent onLogout={handleLogout} />
+            <CMSContent onLogout={handleLogout}>
+              <Outlet />
+            </CMSContent>
           </motion.div>
         )}
       </AnimatePresence>

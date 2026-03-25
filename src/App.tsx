@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import Navbar from './components/Navbar';
@@ -15,6 +15,14 @@ const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const PricelistPage = lazy(() => import('./pages/PricelistPage'));
 const CMS = lazy(() => import('./pages/CMS'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
+
+// CMS Components
+const OrderCMS = lazy(() => import('./components/CMS/OrderCMS'));
+const ClientCMS = lazy(() => import('./components/CMS/ClientCMS'));
+const PortfolioCMS = lazy(() => import('./components/CMS/PortfolioCMS'));
+const PricelistCMS = lazy(() => import('./components/CMS/PricelistCMS'));
+const ServicesCMS = lazy(() => import('./components/CMS/ServicesCMS'));
+const FastworkCMS = lazy(() => import('./components/CMS/FastworkCMS'));
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -112,7 +120,17 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/pricelist" element={<PricelistPage />} />
-        <Route path="/cms" element={<CMS />} />
+        <Route path="/cms" element={<CMS />}>
+          <Route index element={<Navigate to="orders" replace />} />
+          <Route path="orders" element={<OrderCMS />} />
+          <Route path="orders/:orderNumber" element={<OrderCMS />} />
+          <Route path="clients" element={<ClientCMS />} />
+          <Route path="clients/:clientNo" element={<ClientCMS />} />
+          <Route path="portfolio" element={<PortfolioCMS />} />
+          <Route path="pricelist" element={<PricelistCMS />} />
+          <Route path="services" element={<ServicesCMS />} />
+          <Route path="fastwork" element={<FastworkCMS />} />
+        </Route>
         <Route path="/order/:orderNumber" element={<OrderDetail />} />
       </Routes>
     </AnimatePresence>

@@ -6,8 +6,8 @@ import {
   Monitor, ShoppingBag, FileText, Briefcase, Megaphone,
   Globe, Camera, Video, PenTool, Layers, Award
 } from "lucide-react";
-
 import { ServiceItem } from "../../types";
+import CMSButton from "./Common/CMSButton";
 
 // Map icon name string → Lucide component
 const ICON_MAP: Record<string, any> = {
@@ -85,7 +85,7 @@ const ServicesList: React.FC<ServicesListProps> = ({ items, searchQuery, onEdit,
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors hover:shadow-sm"
+              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors"
             >
               {/* Reorder */}
               {!isSearching && (
@@ -118,7 +118,7 @@ const ServicesList: React.FC<ServicesListProps> = ({ items, searchQuery, onEdit,
               {/* Content */}
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(item, index)}>
                 <div className="flex items-center gap-2 mb-0.5">
-                  <h3 className="text-sm font-extrabold text-slate-900 truncate group-hover:text-brand-500 transition-colors">
+                  <h3 className="text-sm font-bold text-slate-900 truncate group-hover:text-brand-500 transition-colors">
                     {item.title || "Untitled"}
                   </h3>
                   <div className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
@@ -128,7 +128,7 @@ const ServicesList: React.FC<ServicesListProps> = ({ items, searchQuery, onEdit,
 
               {/* Category + features count */}
               <div className="hidden md:flex flex-col items-end gap-1 shrink-0">
-                <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${colorClass}`}>
+                <span className={`text-[9px] font-bold   px-2 py-0.5 rounded border ${colorClass}`}>
                   {item.category}
                 </span>
                 <span className="text-[10px] text-slate-300">
@@ -138,20 +138,22 @@ const ServicesList: React.FC<ServicesListProps> = ({ items, searchQuery, onEdit,
 
               {/* Actions */}
               <div className="flex items-center gap-1 pl-3 border-l border-slate-50">
-                <button
+                <CMSButton
+                  variant="ghost"
                   onClick={() => onEdit(item, index)}
-                  className="p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded transition-all cursor-pointer"
+                  icon={Edit3}
+                  iconSize={16}
                   title="Edit"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
+                  className="!p-2"
+                />
+                <CMSButton
+                  variant="danger"
                   onClick={(e) => { e.stopPropagation(); onDelete(index); }}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"
+                  icon={Trash2}
+                  iconSize={16}
                   title="Hapus"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  className="!p-2"
+                />
               </div>
             </motion.div>
           );

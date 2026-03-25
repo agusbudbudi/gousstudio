@@ -1,6 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit3, Trash2, ChevronUp, ChevronDown, Tag, Clock, RefreshCw } from "lucide-react";
+import CMSButton from "./Common/CMSButton";
+import CMSBadge from "./Common/CMSBadge";
 
 import { PricelistItem } from "../../types";
 
@@ -57,7 +59,7 @@ const PricelistList: React.FC<PricelistListProps> = ({ items, searchQuery, onEdi
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            className="group flex items-start gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-4 transition-colors hover:shadow-sm"
+            className="group flex items-start gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-4 transition-colors"
           >
             {/* Reorder */}
             {!isSearching && (
@@ -87,16 +89,14 @@ const PricelistList: React.FC<PricelistListProps> = ({ items, searchQuery, onEdi
               <div className="flex items-start gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-brand-500 bg-brand-50 px-2 py-0.5 rounded">
-                      {item.category}
-                    </span>
+                    <CMSBadge variant="brand">{item.category}</CMSBadge>
                     {discount > 0 && (
-                      <span className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                      <CMSBadge className="!bg-green-50 !text-green-700 !border-green-200">
                         -{discount}% OFF
-                      </span>
+                      </CMSBadge>
                     )}
                   </div>
-                  <h3 className="text-sm font-extrabold text-slate-900 group-hover:text-brand-500 transition-colors leading-tight">
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-500 transition-colors leading-tight">
                     {item.servicename || "Untitled"}
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{item.description}</p>
@@ -105,7 +105,7 @@ const PricelistList: React.FC<PricelistListProps> = ({ items, searchQuery, onEdi
                 {/* Pricing */}
                 <div className="text-right shrink-0">
                   <p className="text-[10px] text-slate-300 line-through">{formatPrice(item.retailprice)}</p>
-                  <p className="text-sm font-extrabold text-brand-500">{formatPrice(item.finalprice)}</p>
+                  <p className="text-sm font-bold text-brand-500">{formatPrice(item.finalprice)}</p>
                 </div>
               </div>
 
@@ -127,20 +127,22 @@ const PricelistList: React.FC<PricelistListProps> = ({ items, searchQuery, onEdi
 
             {/* Actions */}
             <div className="flex items-center gap-1 pl-3 border-l border-slate-50 self-center">
-              <button
+              <CMSButton
+                variant="ghost"
                 onClick={() => onEdit(item, index)}
-                className="p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded transition-all cursor-pointer"
+                icon={Edit3}
+                iconSize={16}
                 title="Edit"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
-              <button
+                className="!p-2"
+              />
+              <CMSButton
+                variant="danger"
                 onClick={(e) => { e.stopPropagation(); onDelete(index); }}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"
+                icon={Trash2}
+                iconSize={16}
                 title="Hapus"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                className="!p-2"
+              />
             </div>
           </motion.div>
         );

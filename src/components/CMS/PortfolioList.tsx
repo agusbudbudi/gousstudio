@@ -9,6 +9,7 @@ import {
   ImageOff,
 } from "lucide-react";
 import { resolveImageUrl } from "../../utils/imageResolver";
+import CMSButton from "./Common/CMSButton";
 
 import { PortfolioItem } from "../../types";
 
@@ -18,7 +19,11 @@ interface PortfolioListProps {
   searchQuery: string;
   onEdit: (item: PortfolioItem, index: number) => void;
   onDelete: (category: string, index: number) => void;
-  onReorder: (category: string, index: number, direction: "up" | "down") => void;
+  onReorder: (
+    category: string,
+    index: number,
+    direction: "up" | "down",
+  ) => void;
 }
 
 const PortfolioList: React.FC<PortfolioListProps> = ({
@@ -56,7 +61,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors hover:shadow-sm"
+              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors"
             >
               {/* Reorder Controls - Only show if not searching */}
               {!isSearching && (
@@ -105,7 +110,8 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
                       const target = e.target as HTMLImageElement;
                       target.style.display = "none";
                       if (target.nextSibling) {
-                        (target.nextSibling as HTMLElement).style.display = "flex";
+                        (target.nextSibling as HTMLElement).style.display =
+                          "flex";
                       }
                     }}
                   />
@@ -127,7 +133,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
                     {item.title || "Untitled Project"}
                   </h3>
                   {item.role && (
-                    <span className="text-[8px] font-bold text-brand-500 uppercase tracking-widest bg-brand-50 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded">
                       {item.role}
                     </span>
                   )}
@@ -142,7 +148,7 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
                 {(item.tags || []).slice(0, 2).map((tag, i) => (
                   <span
                     key={i}
-                    className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[8px] text-slate-500 uppercase font-bold tracking-wider"
+                    className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] text-slate-500 font-bold"
                   >
                     {tag}
                   </span>
@@ -163,23 +169,25 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
-                <button
+                <CMSButton
+                  variant="ghost"
                   onClick={() => onEdit(item, index)}
-                  className="p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded transition-all cursor-pointer"
+                  icon={Edit3}
+                  iconSize={16}
                   title="Edit"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
+                  className="!p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-500/50"
+                />
+                <CMSButton
+                  variant="danger"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(category, index);
                   }}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"
+                  icon={Trash2}
+                  iconSize={16}
                   title="Hapus"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  className="!p-2"
+                />
               </div>
             </motion.div>
           );

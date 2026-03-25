@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit3, Trash2, ChevronUp, ChevronDown, Star, ExternalLink, RefreshCw, CreditCard, Zap } from "lucide-react";
+import CMSButton from "./Common/CMSButton";
 
 import { FastworkItem } from "../../types";
 
@@ -46,7 +47,7 @@ const FastworkList: React.FC<FastworkListProps> = ({ items, searchQuery, onEdit,
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors hover:shadow-sm"
+              className="group flex items-center gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-3 transition-colors"
             >
               {/* Reorder */}
               {!isSearching && (
@@ -124,20 +125,22 @@ const FastworkList: React.FC<FastworkListProps> = ({ items, searchQuery, onEdit,
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
-                <button
+                <CMSButton
+                  variant="ghost"
                   onClick={() => onEdit(item, index)}
-                  className="p-2 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded transition-all cursor-pointer"
+                  icon={Edit3}
+                  iconSize={16}
                   title="Edit"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
+                  className="!p-2"
+                />
+                <CMSButton
+                  variant="danger"
                   onClick={(e) => { e.stopPropagation(); onDelete(index); }}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"
+                  icon={Trash2}
+                  iconSize={16}
                   title="Hapus"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  className="!p-2"
+                />
               </div>
             </motion.div>
           );

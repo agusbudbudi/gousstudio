@@ -12,6 +12,8 @@ import { useToast } from "../../hooks/useToast";
 import CMSHeader from "./CMSHeader";
 import PricelistList from "./PricelistList";
 import PricelistModal from "./PricelistModal";
+import CMSButton from "./Common/CMSButton";
+import CMSSearchBar from "./Common/CMSSearchBar";
 
 import { PricelistItem } from "../../types";
 
@@ -138,57 +140,53 @@ const PricelistCMS: React.FC = () => {
         title="Manage Pricelist"
         countText={`${items.length} paket harga aktif`}
       >
-        <div className="relative group w-64">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300 group-focus-within:text-brand-500 transition-colors" />
-          <input
-            type="text"
-            placeholder="Cari pricelist..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full shadow-sm transition-all placeholder:text-slate-300"
-          />
-        </div>
-        <button
+        <CMSSearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari pricelist..."
+          className="w-full md:w-64"
+        />
+        <CMSButton
+          variant="secondary"
           onClick={handleAddItem}
-          className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg flex items-center gap-2 transition-all font-bold text-xs active:scale-[0.98] shrink-0 cursor-pointer shadow-sm"
+          icon={Plus}
+          className="shrink-0 font-bold"
         >
-          <Plus className="w-4 h-4" />
           Tambah
-        </button>
-        <button
+        </CMSButton>
+        <CMSButton
+          variant="primary"
           onClick={persistToSupabase}
-          disabled={saving}
-          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center gap-2 transition-all font-bold text-xs shadow-md shadow-brand-500/10 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+          loading={saving}
+          icon={Save}
+          className="shrink-0 font-bold"
         >
-          {saving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
           Simpan
-        </button>
+        </CMSButton>
       </CMSHeader>
 
       {/* Content */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-40">
-          <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-          <p className="text-slate-400 font-medium">Memuat pricelist...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-          <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-          <p className="text-slate-500 text-sm">{error}</p>
-        </div>
-      ) : (
-        <PricelistList
-          items={items}
-          searchQuery={searchQuery}
-          onEdit={handleEditItem}
-          onDelete={handleDeleteItem}
-          onReorder={handleReorder}
-        />
-      )}
+      <div className="pt-4">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40">
+            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
+            <p className="text-slate-400 font-medium">Memuat pricelist...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
+            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
+            <p className="text-slate-500 text-sm">{error}</p>
+          </div>
+        ) : (
+          <PricelistList
+            items={items}
+            searchQuery={searchQuery}
+            onEdit={handleEditItem}
+            onDelete={handleDeleteItem}
+            onReorder={handleReorder}
+          />
+        )}
+      </div>
 
       <PricelistModal
         isOpen={isModalOpen}

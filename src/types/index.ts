@@ -31,6 +31,7 @@ export interface PricelistItem {
 
 export interface OrderItem {
   id: string;
+  client_id?: string;
   order_number: string;
   full_name: string;
   phone_number: string;
@@ -82,4 +83,14 @@ export interface ServiceItem {
   color: string;
   included: string[];
   order_index?: number;
+}
+
+export interface ClientItem {
+  id: string;
+  client_no?: number;
+  full_name: string;
+  phone_number?: string;
+  company?: string;
+  notes?: string;
+  created_at: string;
 }

@@ -63,8 +63,17 @@ body.light {
   --font-sans: var(--font-sans);
 
   /* Brand Colors */
-  --color-brand-400: var(--color-brand-light);
+  --color-brand-50: #fff4ee;
+  --color-brand-100: #ffe6d9;
+  --color-brand-200: #ffc2a3;
+  --color-brand-300: var(--color-brand-light);
+  --color-brand-400: #ff874f;
   --color-brand-500: var(--color-brand);
+  --color-brand-600: #e65c19;
+  --color-brand-700: #bf470d;
+  --color-brand-800: #993709;
+  --color-brand-900: #7d2c06;
+  --color-brand-950: #451501;
 
   /* Neon Palette */
   --color-neon: var(--color-neon-purple);
@@ -130,10 +139,11 @@ body {
   color: var(--color-text-title) !important;
 }
 
-/* Force white text on dark primary buttons regardless of theme */
+/* Force white text on specific elements to prevent theme inversion */
 .bg-brand-500.text-white,
 .bg-brand-600.text-white,
-.tab-btn.bg-brand-500.text-white {
+.tab-btn.bg-brand-500.text-white,
+.lucide.text-white {
   color: #ffffff !important;
 }
 
