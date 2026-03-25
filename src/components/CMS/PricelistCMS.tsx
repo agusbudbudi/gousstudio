@@ -14,6 +14,7 @@ import PricelistList from "./PricelistList";
 import PricelistModal from "./PricelistModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
+import CMSAlertBanner from "./Common/CMSAlertBanner";
 
 import { PricelistItem } from "../../types";
 
@@ -26,6 +27,31 @@ const PricelistCMS: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pristineItems, setPristineItems] = useState<PricelistItem[]>([]);
+
+  // Check if items have changed since last fetch/save
+  const isDirty = React.useMemo(() => {
+    if (loading) return false;
+    
+    const sanitize = (list: PricelistItem[]) =>
+      JSON.stringify(
+        list.map((item) => ({
+          slug: (item as any).slug,
+          category: item.category,
+          servicename: item.servicename,
+          description: item.description,
+          retailprice: Number(item.retailprice) || 0,
+          finalprice: Number(item.finalprice) || 0,
+          duration: Number(item.duration) || 0,
+          isrevisionunlimited: Boolean(item.isrevisionunlimited),
+          totalrevision: Number(item.totalrevision) || 0,
+          deliverables: [...(item.deliverables || [])].sort(),
+          isShowToCustomer: Boolean(item.isShowToCustomer),
+        }))
+      );
+    
+    return sanitize(items) !== sanitize(pristineItems);
+  }, [items, pristineItems, loading]);
 
   useEffect(() => {
     fetchPricelist();
@@ -39,7 +65,12 @@ const PricelistCMS: React.FC = () => {
         .select("*")
         .order("order_index", { ascending: true });
       if (fetchError) throw fetchError;
-      setItems((data as PricelistItem[]) || []);
+      const itemsWithMapping = (data || []).map((row: any) => ({
+        ...row,
+        isShowToCustomer: Boolean(row.is_show_to_customer),
+      }));
+      setItems(itemsWithMapping || []);
+      setPristineItems(itemsWithMapping || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -63,6 +94,20 @@ const PricelistCMS: React.FC = () => {
     addToast(
       "Item berhasil dihapus (lokal). Klik 'Simpan' untuk memperbarui database.",
       "success",
+    );
+  };
+
+  const handleToggleVisibility = (index: number) => {
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, isShowToCustomer: !item.isShowToCustomer }
+          : item
+      )
+    );
+    addToast(
+      "Visibility diubah (lokal). Klik 'Simpan' untuk memperbarui database.",
+      "info",
     );
   };
 
@@ -109,13 +154,14 @@ const PricelistCMS: React.FC = () => {
         totalrevision: item.totalrevision,
         deliverables: item.deliverables || [],
         order_index: index,
+        is_show_to_customer: item.isShowToCustomer ?? false,
       }));
 
       // Delete all then reinsert to preserve order cleanly
       const { error: delError } = await supabase
         .from("pricelists")
         .delete()
-        .not("id", "is", null);
+        .gte("order_index", 0); // More robust filter for "delete all"
       if (delError) throw delError;
 
       if (flatData.length > 0) {
@@ -126,7 +172,7 @@ const PricelistCMS: React.FC = () => {
       }
 
       addToast("Pricelist berhasil disimpan ke Supabase!", "success");
-      fetchPricelist(); // Refresh to get new IDs
+      await fetchPricelist(); // Await the refresh
     } catch (err: any) {
       addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
@@ -165,6 +211,15 @@ const PricelistCMS: React.FC = () => {
         </CMSButton>
       </CMSHeader>
 
+      {/* Unsaved Changes Banner */}
+      <div className="relative z-30">
+        <CMSAlertBanner
+          isVisible={isDirty}
+          isSaving={saving}
+          onSave={persistToSupabase}
+        />
+      </div>
+
       {/* Content */}
       <div className="pt-4">
         {loading ? (
@@ -184,6 +239,7 @@ const PricelistCMS: React.FC = () => {
             onEdit={handleEditItem}
             onDelete={handleDeleteItem}
             onReorder={handleReorder}
+            onToggleVisibility={handleToggleVisibility}
           />
         )}
       </div>

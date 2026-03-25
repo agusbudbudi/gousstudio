@@ -75,6 +75,7 @@ interface PriceItem {
   isRevisionUnlimited: boolean;
   totalRevision: number;
   deliverables: string[];
+  isShowToCustomer: boolean;
 }
 
 const PriceCard = ({ item }: { item: PriceItem }) => {
@@ -262,7 +263,8 @@ const PricelistPage = () => {
           isRevisionUnlimited: Boolean(row.isrevisionunlimited),
           totalRevision: Number(row.totalrevision ?? 0),
           deliverables: row.deliverables || [],
-        }));
+          isShowToCustomer: Boolean(row.is_show_to_customer ?? false),
+        })).filter((item) => item.isShowToCustomer);
 
         if (!cancelled) setPricelistItems(mapped);
       } catch (err: any) {

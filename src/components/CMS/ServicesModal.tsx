@@ -147,6 +147,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({ isOpen, onClose, onSave, 
                 placeholder="e.g. logo"
                 {...register("slug")}
                 error={errors.slug?.message}
+                disabled={!!initialData}
               />
               <CMSInput
                 label="Kategori"

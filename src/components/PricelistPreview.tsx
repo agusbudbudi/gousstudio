@@ -26,6 +26,7 @@ interface PreviewItem {
   isRevisionUnlimited: boolean;
   totalRevision: number;
   deliverables: string[];
+  isShowToCustomer: boolean;
 }
 
 const formatPrice = (price: number) =>
@@ -234,6 +235,7 @@ const PricelistPreview: React.FC = () => {
           isRevisionUnlimited: Boolean(row.isrevisionunlimited),
           totalRevision: Number(row.totalrevision ?? 0),
           deliverables: row.deliverables || [],
+          isShowToCustomer: Boolean(row.is_show_to_customer ?? false),
         }));
 
         if (!cancelled) setPricelistItems(mapped);
@@ -252,7 +254,7 @@ const PricelistPreview: React.FC = () => {
 
   const previewItems = useMemo(() => {
     return [...pricelistItems]
-      .filter((item) => item.serviceName !== "Custom Package")
+      .filter((item) => item.isShowToCustomer && item.serviceName !== "Custom Package")
       .sort((a, b) => a.finalPrice - b.finalPrice)
       .slice(0, 4);
   }, [pricelistItems]);

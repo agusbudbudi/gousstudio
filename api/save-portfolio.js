@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     const { error: deleteError } = await supabase
       .from('portfolios')
       .delete()
-      .not('id', 'is', null); // Delete all
+      .neq('title', ''); // Delete all items (all portfolios have titles)
 
     if (deleteError) throw deleteError;
 
