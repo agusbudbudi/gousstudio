@@ -143,6 +143,7 @@ const PricelistCMS: React.FC = () => {
     setSaving(true);
     try {
       const flatData = items.map((item, index) => ({
+        ...(item.id ? { id: item.id } : {}),
         slug: (item as any).slug,
         category: item.category,
         servicename: item.servicename,
@@ -157,17 +158,40 @@ const PricelistCMS: React.FC = () => {
         is_show_to_customer: item.isShowToCustomer ?? false,
       }));
 
-      // Delete all then reinsert to preserve order cleanly
-      const { error: delError } = await supabase
-        .from("pricelists")
-        .delete()
-        .gte("order_index", 0); // More robust filter for "delete all"
-      if (delError) throw delError;
+      const currentIds = items.filter(item => item.id).map(item => item.id);
+      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
 
-      if (flatData.length > 0) {
+      // Separate items to update vs insert
+      const itemsToUpdate = flatData.filter(item => item.id);
+      const itemsToInsert = flatData.filter(item => !item.id);
+
+      // Explicitly delete removed items
+      if (deletedIds.length > 0) {
+        const { error: delError } = await supabase
+          .from("pricelists")
+          .delete()
+          .in("id", deletedIds);
+        if (delError) throw delError;
+      }
+
+      // Update existing items individually
+      if (itemsToUpdate.length > 0) {
+        const updatePromises = itemsToUpdate.map(async (item) => {
+          const { id, ...updateData } = item;
+          const { error } = await supabase
+            .from("pricelists")
+            .update(updateData)
+            .eq("id", id);
+          if (error) throw error;
+        });
+        await Promise.all(updatePromises);
+      }
+
+      // Insert new items without IDs
+      if (itemsToInsert.length > 0) {
         const { error: insError } = await supabase
           .from("pricelists")
-          .insert(flatData);
+          .insert(itemsToInsert);
         if (insError) throw insError;
       }
 
