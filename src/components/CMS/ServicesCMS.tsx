@@ -126,6 +126,7 @@ const ServicesCMS: React.FC = () => {
     setSaving(true);
     try {
       const flatData = items.map((item, index) => ({
+        ...(item.id ? { id: item.id } : {}),
         slug: item.slug,
         title: item.title,
         description: item.description,
@@ -136,16 +137,36 @@ const ServicesCMS: React.FC = () => {
         order_index: index,
       }));
 
-      const { error: delError } = await supabase
-        .from("services")
-        .delete()
-        .not("slug", "is", null); // services always have slug
-      if (delError) throw delError;
+      const currentIds = items.filter(item => item.id).map(item => item.id);
+      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
 
-      if (items.length > 0) {
+      const itemsToUpdate = flatData.filter(item => item.id);
+      const itemsToInsert = flatData.filter(item => !item.id);
+
+      if (deletedIds.length > 0) {
+        const { error: delError } = await supabase
+          .from("services")
+          .delete()
+          .in("id", deletedIds);
+        if (delError) throw delError;
+      }
+
+      if (itemsToUpdate.length > 0) {
+        const updatePromises = itemsToUpdate.map(async (item) => {
+          const { id, ...updateData } = item;
+          const { error } = await supabase
+            .from("services")
+            .update(updateData)
+            .eq("id", id);
+          if (error) throw error;
+        });
+        await Promise.all(updatePromises);
+      }
+
+      if (itemsToInsert.length > 0) {
         const { error: insError } = await supabase
           .from("services")
-          .insert(items.map((item, index) => ({ ...item, order_index: index })));
+          .insert(itemsToInsert);
         if (insError) throw insError;
       }
 

@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     // 1. Flatten the data from { category: [items] } to [items]
     const flatData = Object.entries(data).flatMap(([category, items]) => 
       items.map((item, index) => ({ 
+        ...(item.id ? { id: item.id } : {}),
         title: item.title,
         description: item.description,
         category: category,
@@ -45,20 +46,48 @@ export default async function handler(req, res) {
       }))
     );
 
-    // 2. Clear existing portfolios (using a more robust filter to delete all)
-    const { error: deleteError } = await supabase
+    // Fetch existing logic to find deleted ones
+    const { data: existingPortfolios, error: fetchError } = await supabase
       .from('portfolios')
-      .delete()
-      .not('id', 'is', null); // This correctly targets all rows with an ID
+      .select('id');
+      
+    if (fetchError) throw fetchError;
 
-    if (deleteError) throw deleteError;
+    const existingIds = existingPortfolios.map(p => p.id);
+    const incomingIds = flatData.map(p => p.id).filter(Boolean);
+    const deletedIds = existingIds.filter(id => !incomingIds.includes(id));
 
-    // 3. Insert new items
-    if (flatData.length > 0) {
+    // 2. Delete missing items
+    if (deletedIds.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('portfolios')
+        .delete()
+        .in('id', deletedIds);
+
+      if (deleteError) throw deleteError;
+    }
+
+    const itemsToUpdate = flatData.filter(item => item.id);
+    const itemsToInsert = flatData.filter(item => !item.id);
+
+    // 3. Update existing items
+    if (itemsToUpdate.length > 0) {
+      const updatePromises = itemsToUpdate.map(async (item) => {
+        const { id, ...updateData } = item;
+        const { error } = await supabase
+          .from('portfolios')
+          .update(updateData)
+          .eq('id', id);
+        if (error) throw error;
+      });
+      await Promise.all(updatePromises);
+    }
+
+    // 4. Insert new items
+    if (itemsToInsert.length > 0) {
       const { error: insertError } = await supabase
         .from('portfolios')
-        .insert(flatData);
-
+        .insert(itemsToInsert);
       if (insertError) throw insertError;
     }
 

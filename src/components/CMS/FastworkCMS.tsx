@@ -113,6 +113,7 @@ const FastworkCMS: React.FC = () => {
     setSaving(true);
     try {
       const flatData = items.map((item, index) => ({
+        ...(item.id ? { id: item.id } : {}),
         title: item.title,
         url: item.url,
         image: item.image,
@@ -123,16 +124,36 @@ const FastworkCMS: React.FC = () => {
         order_index: index,
       }));
 
-      const { error: delError } = await supabase
-        .from("fastwork_items")
-        .delete()
-        .neq("title", ""); // All items have a title
-      if (delError) throw delError;
+      const currentIds = items.filter(item => item.id).map(item => item.id);
+      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
 
-      if (items.length > 0) {
+      const itemsToUpdate = flatData.filter(item => item.id);
+      const itemsToInsert = flatData.filter(item => !item.id);
+
+      if (deletedIds.length > 0) {
+        const { error: delError } = await supabase
+          .from("fastwork_items")
+          .delete()
+          .in("id", deletedIds);
+        if (delError) throw delError;
+      }
+
+      if (itemsToUpdate.length > 0) {
+        const updatePromises = itemsToUpdate.map(async (item) => {
+          const { id, ...updateData } = item;
+          const { error } = await supabase
+            .from("fastwork_items")
+            .update(updateData)
+            .eq("id", id);
+          if (error) throw error;
+        });
+        await Promise.all(updatePromises);
+      }
+
+      if (itemsToInsert.length > 0) {
         const { error: insError } = await supabase
           .from("fastwork_items")
-          .insert(items.map((item, index) => ({ ...item, order_index: index })));
+          .insert(itemsToInsert);
         if (insError) throw insError;
       }
 
