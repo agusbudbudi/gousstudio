@@ -52,12 +52,18 @@ export default defineConfig({
                     image: item.image,
                     role: item.role,
                     tools: item.tools || [],
-                    order_index: index
+                    order_index: index,
+                    pricelist_id: (item.pricelist_id && String(item.pricelist_id).trim() !== "" && String(item.pricelist_id) !== "null") ? parseInt(item.pricelist_id, 10) : null
                   }))
                 );
 
-                await supabase.from('portfolios').delete().not('id', 'is', null);
-                await supabase.from('portfolios').insert(flatData);
+                const { error: delError } = await supabase.from('portfolios').delete().not('id', 'is', null);
+                if (delError) throw delError;
+
+                if (flatData.length > 0) {
+                  const { error: insError } = await supabase.from('portfolios').insert(flatData);
+                  if (insError) throw insError;
+                }
 
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');

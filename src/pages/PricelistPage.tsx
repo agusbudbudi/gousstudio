@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import {
   Tag,
   Check,
@@ -64,7 +65,7 @@ const categoryColorMap = {
   },
 };
 
-interface PriceItem {
+export interface PriceItem {
   id: string;
   category: string;
   serviceName: string;
@@ -78,14 +79,21 @@ interface PriceItem {
   isShowToCustomer: boolean;
 }
 
-const PriceCard = ({ item }: { item: PriceItem }) => {
+export const PriceCard = ({
+  item,
+  isLink = true,
+}: {
+  item: PriceItem;
+  isLink?: boolean;
+}) => {
   const { openOrderModal } = useAppStore();
   const discount = getDiscountPercent(item.retailPrice, item.finalPrice);
   const isBestValue = discount >= 25;
   const colors =
-    (categoryColorMap as any)[item.category] || categoryColorMap["Brand Identity"];
+    (categoryColorMap as any)[item.category] ||
+    categoryColorMap["Brand Identity"];
 
-  return (
+  const CardContent = (
     <div
       className={`group relative rounded-2xl border bg-gradient-to-br ${colors.accent} glass flex flex-col overflow-hidden h-full`}
       style={{
@@ -94,9 +102,11 @@ const PriceCard = ({ item }: { item: PriceItem }) => {
         animation: "cardFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both",
       }}
       onMouseEnter={(e) =>
-        (e.currentTarget.style.transform = "translateY(-8px)")
+        isLink && (e.currentTarget.style.transform = "translateY(-8px)")
       }
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+      onMouseLeave={(e) =>
+        isLink && (e.currentTarget.style.transform = "translateY(0)")
+      }
     >
       {/* Best Value badge */}
       {/* Best Value ribbon — full-width, fades to transparent on the left */}
@@ -124,7 +134,7 @@ const PriceCard = ({ item }: { item: PriceItem }) => {
         </div>
       )}
 
-      <div className="p-6 pt-8 flex flex-col gap-5 flex-1">
+      <div className="p-6 pt-8 flex flex-col gap-4 flex-1">
         {/* Category + Name */}
         <div className="mt-2">
           <span
@@ -208,7 +218,11 @@ const PriceCard = ({ item }: { item: PriceItem }) => {
       {/* CTA Button */}
       <div className="px-6 pb-6">
         <button
-          onClick={() => openOrderModal(item)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openOrderModal(item);
+          }}
           className={`w-full py-3 rounded-xl bg-gradient-to-r ${colors.btn} text-sm font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer`}
           style={{
             color: "#ffffff",
@@ -232,6 +246,16 @@ const PriceCard = ({ item }: { item: PriceItem }) => {
       </div>
     </div>
   );
+
+  if (isLink) {
+    return (
+      <Link to={`/pricelist/${item.id}`} className="block h-full no-underline">
+        {CardContent}
+      </Link>
+    );
+  }
+
+  return CardContent;
 };
 
 const PricelistPage = () => {
@@ -252,19 +276,21 @@ const PricelistPage = () => {
           .order("order_index", { ascending: true });
         if (fetchError) throw fetchError;
 
-        const mapped: PriceItem[] = (data || []).map((row) => ({
-          id: row.slug || row.servicename,
-          category: row.category,
-          serviceName: row.servicename,
-          description: row.description,
-          retailPrice: Number(row.retailprice ?? 0),
-          finalPrice: Number(row.finalprice ?? 0),
-          duration: Number(row.duration ?? 1),
-          isRevisionUnlimited: Boolean(row.isrevisionunlimited),
-          totalRevision: Number(row.totalrevision ?? 0),
-          deliverables: row.deliverables || [],
-          isShowToCustomer: Boolean(row.is_show_to_customer ?? false),
-        })).filter((item) => item.isShowToCustomer);
+        const mapped: PriceItem[] = (data || [])
+          .map((row) => ({
+            id: row.slug || row.servicename,
+            category: row.category,
+            serviceName: row.servicename,
+            description: row.description,
+            retailPrice: Number(row.retailprice ?? 0),
+            finalPrice: Number(row.finalprice ?? 0),
+            duration: Number(row.duration ?? 1),
+            isRevisionUnlimited: Boolean(row.isrevisionunlimited),
+            totalRevision: Number(row.totalrevision ?? 0),
+            deliverables: row.deliverables || [],
+            isShowToCustomer: Boolean(row.is_show_to_customer ?? false),
+          }))
+          .filter((item) => item.isShowToCustomer);
 
         if (!cancelled) setPricelistItems(mapped);
       } catch (err: any) {
@@ -442,14 +468,18 @@ const PricelistPage = () => {
           {error ? (
             <div className="py-12 flex flex-col items-center justify-center text-center">
               <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 max-w-xl w-full">
-                <p className="text-red-400 font-bold mb-2">Gagal memuat paket</p>
+                <p className="text-red-400 font-bold mb-2">
+                  Gagal memuat paket
+                </p>
                 <p className="text-slate-400 text-sm">{error}</p>
               </div>
             </div>
           ) : loading ? (
             <div className="py-20 flex flex-col items-center justify-center text-center opacity-100">
               <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
-              <p className="text-slate-400 font-medium">Memuat paket layanan...</p>
+              <p className="text-slate-400 font-medium">
+                Memuat paket layanan...
+              </p>
             </div>
           ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

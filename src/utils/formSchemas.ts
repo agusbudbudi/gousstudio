@@ -22,6 +22,7 @@ export const portfolioSchema = z.object({
   role: z.string().optional(),
   tools: z.string().optional(),
   category: z.string().min(1, "Kategori wajib diisi"),
+  pricelist_id: z.string().optional(),
 });
 export type PortfolioFormData = z.infer<typeof portfolioSchema>;
 

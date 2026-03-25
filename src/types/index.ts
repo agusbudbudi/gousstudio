@@ -13,6 +13,7 @@ export interface PortfolioItem {
   role?: string;
   tools?: string[];
   order_index?: number;
+  pricelist_id?: string;
 }
 
 export interface PricelistItem {

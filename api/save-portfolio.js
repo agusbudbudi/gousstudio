@@ -40,25 +40,27 @@ export default async function handler(req, res) {
         image: item.image,
         role: item.role,
         tools: item.tools || [],
-        order_index: index
+        order_index: index,
+        pricelist_id: (item.pricelist_id && String(item.pricelist_id).trim() !== "" && String(item.pricelist_id) !== "null") ? parseInt(item.pricelist_id, 10) : null
       }))
     );
 
-    // 2. Clear existing portfolios (since we are doing a full sync)
-    // In a more robust system, we would do a diff or use a 'sync' table
+    // 2. Clear existing portfolios (using a more robust filter to delete all)
     const { error: deleteError } = await supabase
       .from('portfolios')
       .delete()
-      .neq('title', ''); // Delete all items (all portfolios have titles)
+      .not('id', 'is', null); // This correctly targets all rows with an ID
 
     if (deleteError) throw deleteError;
 
     // 3. Insert new items
-    const { error: insertError } = await supabase
-      .from('portfolios')
-      .insert(flatData);
+    if (flatData.length > 0) {
+      const { error: insertError } = await supabase
+        .from('portfolios')
+        .insert(flatData);
 
-    if (insertError) throw insertError;
+      if (insertError) throw insertError;
+    }
 
     return res.status(200).json({ success: true });
   } catch (error) {
