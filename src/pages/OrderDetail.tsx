@@ -24,7 +24,11 @@ import {
   Check,
   Image as ImageIcon,
   CreditCard,
+  FileDown,
 } from "lucide-react";
+import { toPng } from "html-to-image";
+import { InvoiceTemplate } from "../components/Invoice/InvoiceTemplate";
+import { useToast } from "../hooks/useToast";
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -34,10 +38,12 @@ const formatPrice = (price: number) =>
   }).format(price);
 
 const OrderDetail = () => {
+  const { addToast } = useToast();
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const [order, setOrder] = useState<OrderItem | null>(null);
   const [packageData, setPackageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -46,7 +52,9 @@ const OrderDetail = () => {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/orders?action=get&orderNumber=${orderNumber}`);
+        const res = await fetch(
+          `/api/orders?action=get&orderNumber=${orderNumber}`,
+        );
 
         if (!res.ok) {
           throw new Error("Order tidak ditemukan atau terjadi kesalahan.");
@@ -160,6 +168,32 @@ const OrderDetail = () => {
     const diffTime = (end as any) - (start as any);
     const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return days > 0 ? days : 1; // Minimum 1 day
+  };
+
+  const handleDownloadInvoice = async () => {
+    const invoiceId = `invoice-${orderNumber}`;
+    const element = document.getElementById(invoiceId);
+    if (!element) return;
+
+    try {
+      setDownloadingInvoice(true);
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        style: {
+          visibility: "visible",
+        },
+      });
+      const link = document.createElement("a");
+      link.download = `invoice-${orderNumber}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate invoice image", err);
+      addToast("Gagal mengunduh invoice. Silakan coba lagi.", "error");
+    } finally {
+      setDownloadingInvoice(false);
+    }
   };
 
   const getStatusInfo = (status: string) => {
@@ -451,7 +485,8 @@ const OrderDetail = () => {
               {/* Deadline - Moved here */}
               <div className="mt-4 space-y-3">
                 <h3 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                  <Clock size={14} className="text-brand-500" /> Deadline Project
+                  <Clock size={14} className="text-brand-500" /> Deadline
+                  Project
                 </h3>
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between">
                   <div className="text-white font-bold text-sm leading-none">
@@ -553,7 +588,8 @@ const OrderDetail = () => {
                                 const input = document.createElement("input");
                                 input.type = "file";
                                 input.accept = "image/*,.pdf";
-                                input.onchange = (e: any) => handleFileUpload(e);
+                                input.onchange = (e: any) =>
+                                  handleFileUpload(e);
                                 input.click();
                               }}
                               className="text-[10px] text-slate-500 hover:text-white transition-colors cursor-pointer underline underline-offset-2 font-medium"
@@ -719,19 +755,30 @@ const OrderDetail = () => {
                               Waktu Verifikasi
                             </span>
                             <span className="text-emerald-500 text-right">
-                              {new Date(order.paid_at).toLocaleString(
-                                "id-ID",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
+                              {new Date(order.paid_at).toLocaleString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </span>
                           </div>
                         )}
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-500">Invoice</span>
+                          <button
+                            onClick={handleDownloadInvoice}
+                            disabled={downloadingInvoice}
+                            className="text-emerald-500 flex items-center gap-1.5 hover:text-emerald-400 transition-colors group cursor-pointer disabled:opacity-50"
+                          >
+                            {downloadingInvoice ? "Downloading..." : "Download"}
+                            <FileDown
+                              size={14}
+                              className="group-hover:translate-y-0.5 transition-transform"
+                            />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -772,6 +819,20 @@ const OrderDetail = () => {
             &copy; 2024 Gous Studio. Elevated Visual Experience.
           </p>
         </div>
+      </div>
+
+      {/* Hidden Invoice Template for Capture */}
+      <div
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: "0",
+          zIndex: -100,
+        }}
+        aria-hidden="true"
+        className="light"
+      >
+        {order && <InvoiceTemplate order={order} packageData={packageData} />}
       </div>
     </div>
   );
