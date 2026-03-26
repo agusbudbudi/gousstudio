@@ -28,6 +28,7 @@ import {
   ChevronDown,
   CreditCard,
   FileDown,
+  Phone,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { InvoiceTemplate } from "../Invoice/InvoiceTemplate";
@@ -44,6 +45,7 @@ import CMSStatCard from "./Common/CMSStatCard";
 import CMSInfoItem from "./Common/CMSInfoItem";
 import CMSInput from "./Common/CMSInput";
 import CMSSelect from "./Common/CMSSelect";
+import CMSViewItem from "./Common/CMSViewItem";
 import {
   CMSTableContainer,
   CMSTableHeader,
@@ -690,128 +692,206 @@ Gous Studio`;
                       Detail Paket & Layanan
                     </h3>
                   </div>
-                  <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex-1">
-                        <CMSInput
-                          label="Kategori"
-                          leftIcon={<Tag size={14} />}
-                          error={validationErrors.design_category}
-                          placeholder="Kategori Desain"
-                          value={selectedOrder.design_category || ""}
-                          disabled={selectedOrder.status !== "DRAFT"}
-                          onChange={(e) =>
-                            handleOrderChange("design_category", e.target.value)
-                          }
-                        />
-                      </div>
+                  <div
+                    className={`p-5 ${
+                      selectedOrder.status === "DRAFT"
+                        ? "space-y-4"
+                        : "space-y-0.5"
+                    }`}
+                  >
+                    {selectedOrder.status === "DRAFT" ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex-1">
+                            <CMSInput
+                              label="Kategori"
+                              leftIcon={<Tag size={14} />}
+                              error={validationErrors.design_category}
+                              placeholder="Kategori Desain"
+                              value={selectedOrder.design_category || ""}
+                              disabled={selectedOrder.status !== "DRAFT"}
+                              onChange={(e) =>
+                                handleOrderChange(
+                                  "design_category",
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
 
-                      <CMSSelect
-                        icon={Package}
-                        label="Paket Terpilih"
-                        className={`${validationErrors.selected_package ? "border-rose-500" : "border-slate-200"} text-brand-600`}
-                        value={selectedOrder.selected_package || ""}
-                        disabled={selectedOrder.status !== "DRAFT"}
-                        onChange={(e) => {
-                          const newPkg = e.target.value;
-                          const pkgInfo = pricelists.find(
-                            (p) => p.servicename === newPkg,
-                          );
-                          if (pkgInfo) {
-                            setSelectedOrder({
-                              ...selectedOrder,
-                              selected_package: newPkg,
-                              design_category: pkgInfo.category,
-                              price: pkgInfo.finalprice,
-                              final_price: calculateFinalPrice(
-                                pkgInfo.finalprice,
-                                selectedOrder.discount_value,
-                                selectedOrder.discount_type || "fixed",
-                              ),
-                            });
-                          } else {
-                            handleOrderChange("selected_package", newPkg);
-                          }
-                        }}
-                      >
-                        <option value="">Pilih Paket...</option>
-                        {pricelists.map((p) => (
-                          <option key={p.servicename} value={p.servicename}>
-                            {p.servicename}
-                          </option>
-                        ))}
-                        <option value="Custom Package">Custom Package</option>
-                        <option value="Other">Other</option>
-                      </CMSSelect>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                      <CMSInput
-                        label="Harga Base"
-                        type="number"
-                        leftIcon={<span className="text-xs font-bold">Rp</span>}
-                        className="!bg-white"
-                        value={selectedOrder.price || ""}
-                        disabled={selectedOrder.status !== "DRAFT"}
-                        onChange={(e) =>
-                          handleOrderChange("price", e.target.value)
-                        }
-                      />
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">
-                          Discount
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <CMSInput
-                            type="number"
-                            min={0}
-                            max={
-                              selectedOrder.discount_type === "percentage"
-                                ? 100
-                                : selectedOrder.price || 0
-                            }
-                            className="text-rose-500 !bg-white"
-                            value={selectedOrder.discount_value || ""}
-                            disabled={selectedOrder.status !== "DRAFT"}
-                            onChange={(e) =>
-                              handleOrderChange(
-                                "discount_value",
-                                e.target.value,
-                              )
-                            }
-                          />
                           <CMSSelect
-                            containerClassName="shrink-0 w-[60px]"
-                            className="!pl-3 !pr-6 !text-[11px]"
-                            value={selectedOrder.discount_type || "fixed"}
+                            icon={Package}
+                            label="Paket Terpilih"
+                            className={`${validationErrors.selected_package ? "border-rose-500" : "border-slate-200"} text-brand-600`}
+                            value={selectedOrder.selected_package || ""}
                             disabled={selectedOrder.status !== "DRAFT"}
-                            onChange={(e) =>
-                              handleOrderChange("discount_type", e.target.value)
-                            }
+                            onChange={(e) => {
+                              const newPkg = e.target.value;
+                              const pkgInfo = pricelists.find(
+                                (p) => p.servicename === newPkg,
+                              );
+                              if (pkgInfo) {
+                                setSelectedOrder({
+                                  ...selectedOrder,
+                                  selected_package: newPkg,
+                                  design_category: pkgInfo.category,
+                                  price: pkgInfo.finalprice,
+                                  final_price: calculateFinalPrice(
+                                    pkgInfo.finalprice,
+                                    selectedOrder.discount_value,
+                                    selectedOrder.discount_type || "fixed",
+                                  ),
+                                });
+                              } else {
+                                handleOrderChange("selected_package", newPkg);
+                              }
+                            }}
                           >
-                            <option value="fixed">Rp</option>
-                            <option value="percentage">%</option>
+                            <option value="">Pilih Paket...</option>
+                            {pricelists.map((p) => (
+                              <option key={p.servicename} value={p.servicename}>
+                                {p.servicename}
+                              </option>
+                            ))}
+                            <option value="Custom Package">
+                              Custom Package
+                            </option>
+                            <option value="Other">Other</option>
                           </CMSSelect>
                         </div>
-                      </div>
-                      <CMSInput
-                        label="Final Amount"
-                        readOnly
-                        leftIcon={
-                          <span className="text-xs font-bold !text-emerald-500">
-                            Rp
-                          </span>
-                        }
-                        className="!bg-emerald-50 !border-emerald-200 !text-emerald-600 font-bold truncate"
-                        value={(() => {
-                          const fp =
-                            selectedOrder.final_price ?? selectedOrder.price;
-                          return Number(fp) === 0
-                            ? "GRATIS"
-                            : Number(fp || 0).toLocaleString("id-ID");
-                        })()}
-                      />
-                    </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                          <CMSInput
+                            label="Harga Base"
+                            type="number"
+                            leftIcon={
+                              <span className="text-xs font-bold">Rp</span>
+                            }
+                            className="!bg-white"
+                            value={selectedOrder.price || ""}
+                            disabled={selectedOrder.status !== "DRAFT"}
+                            onChange={(e) =>
+                              handleOrderChange("price", e.target.value)
+                            }
+                          />
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-400">
+                              Discount
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <CMSInput
+                                type="number"
+                                min={0}
+                                max={
+                                  selectedOrder.discount_type === "percentage"
+                                    ? 100
+                                    : selectedOrder.price || 0
+                                }
+                                className="text-rose-500 !bg-white"
+                                value={selectedOrder.discount_value || ""}
+                                disabled={selectedOrder.status !== "DRAFT"}
+                                onChange={(e) =>
+                                  handleOrderChange(
+                                    "discount_value",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                              <CMSSelect
+                                containerClassName="shrink-0 w-[60px]"
+                                className="!pl-3 !pr-6 !text-[11px]"
+                                value={selectedOrder.discount_type || "fixed"}
+                                disabled={selectedOrder.status !== "DRAFT"}
+                                onChange={(e) =>
+                                  handleOrderChange(
+                                    "discount_type",
+                                    e.target.value,
+                                  )
+                                }
+                              >
+                                <option value="fixed">Rp</option>
+                                <option value="percentage">%</option>
+                              </CMSSelect>
+                            </div>
+                          </div>
+                          <CMSInput
+                            label="Final Amount"
+                            readOnly
+                            leftIcon={
+                              <span className="text-xs font-bold !text-emerald-500">
+                                Rp
+                              </span>
+                            }
+                            className="!bg-emerald-50 !border-emerald-200 !text-emerald-600 font-bold truncate"
+                            value={(() => {
+                              const fp =
+                                selectedOrder.final_price ??
+                                selectedOrder.price;
+                              return Number(fp) === 0
+                                ? "GRATIS"
+                                : Number(fp || 0).toLocaleString("id-ID");
+                            })()}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <CMSViewItem
+                          label="Kategori"
+                          value={selectedOrder.design_category}
+                          icon={Tag}
+                        />
+                        <CMSViewItem
+                          label="Paket Terpilih"
+                          value={selectedOrder.selected_package}
+                          icon={Package}
+                        />
+                        <CMSViewItem
+                          label="Harga Base"
+                          value={
+                            selectedOrder.price
+                              ? `Rp ${selectedOrder.price.toLocaleString("id-ID")}`
+                              : "—"
+                          }
+                          icon={CreditCard}
+                        />
+                        <CMSViewItem
+                          label="Discount"
+                          value={
+                            selectedOrder.discount_value
+                              ? `${selectedOrder.discount_type === "percentage" ? "" : "Rp "}${selectedOrder.discount_value}${selectedOrder.discount_type === "percentage" ? "%" : ""}`
+                              : "Rp 0"
+                          }
+                          icon={Tag}
+                        />
+                        <CMSViewItem
+                          label="Final Amount"
+                          className="!border-0"
+                          value={
+                            <CMSBadge
+                              variant="status"
+                              status="DONE"
+                              className="!text-sm !py-1 px-2 gap-2"
+                            >
+                              <CreditCard
+                                size={14}
+                                className="text-emerald-600"
+                              />
+                              {Number(
+                                selectedOrder.final_price ||
+                                  selectedOrder.price,
+                              ) === 0
+                                ? "GRATIS"
+                                : `Rp ${Number(
+                                    selectedOrder.final_price ||
+                                      selectedOrder.price ||
+                                      0,
+                                  ).toLocaleString("id-ID")}`}
+                            </CMSBadge>
+                          }
+                        />
+                      </>
+                    )}
 
                     {/* Package Summary Card */}
                     {selectedPricelist && (
@@ -955,51 +1035,49 @@ Gous Studio`;
                       Status & Deadline
                     </h3>
                   </div>
-                  <div className="p-5 space-y-4">
-                    {/* Read-only status badge */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-400">
-                        Status Progres
-                      </label>
-                      <div
-                        className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider w-full
-                        ${
-                          selectedOrder.status === "DONE"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : selectedOrder.status === "IN PROGRESS"
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : selectedOrder.status === "REVISION"
-                                ? "bg-rose-50 text-rose-700 border border-rose-200"
-                                : selectedOrder.status === "REVIEWED"
-                                  ? "bg-purple-50 text-purple-700 border border-purple-200"
-                                  : selectedOrder.status ===
-                                      "WAITING FOR PAYMENT"
-                                    ? "bg-orange-50 text-orange-700 border border-orange-200"
-                                    : "bg-slate-100 text-slate-600 border border-slate-200"
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0
-                          ${
-                            selectedOrder.status === "DONE"
-                              ? "bg-emerald-500"
-                              : selectedOrder.status === "IN PROGRESS"
-                                ? "bg-blue-500"
-                                : selectedOrder.status === "REVISION"
-                                  ? "bg-rose-500"
-                                  : selectedOrder.status === "REVIEWED"
-                                    ? "bg-purple-500"
-                                    : selectedOrder.status ===
-                                        "WAITING FOR PAYMENT"
-                                      ? "bg-orange-500 animate-pulse"
-                                      : "bg-slate-400"
-                          }`}
-                        />
-                        {selectedOrder.status || "DRAFT"}
-                      </div>
-                    </div>
-
-                    <CMSInfoItem
+                  <div className="p-5 space-y-0.5">
+                    <CMSViewItem
+                      label="Status Progres"
+                      value={
+                        <div
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider
+                              ${
+                                selectedOrder.status === "DONE"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : selectedOrder.status === "IN PROGRESS"
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : selectedOrder.status === "REVISION"
+                                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                      : selectedOrder.status === "REVIEWED"
+                                        ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                        : selectedOrder.status ===
+                                            "WAITING FOR PAYMENT"
+                                          ? "bg-orange-50 text-orange-700 border border-orange-200"
+                                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                              }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full
+                                ${
+                                  selectedOrder.status === "DONE"
+                                    ? "bg-emerald-500"
+                                    : selectedOrder.status === "IN PROGRESS"
+                                      ? "bg-blue-500"
+                                      : selectedOrder.status === "REVISION"
+                                        ? "bg-rose-500"
+                                        : selectedOrder.status === "REVIEWED"
+                                          ? "bg-purple-500"
+                                          : selectedOrder.status ===
+                                              "WAITING FOR PAYMENT"
+                                            ? "bg-orange-500 animate-pulse"
+                                            : "bg-slate-400"
+                                }`}
+                          />
+                          {selectedOrder.status}
+                        </div>
+                      }
+                    />
+                    <CMSViewItem
                       label="Dibuat pada"
                       icon={Calendar}
                       value={
@@ -1007,84 +1085,140 @@ Gous Studio`;
                           ? new Date(selectedOrder.created_at).toLocaleString(
                               "id-ID",
                               {
-                                day: "2-digit",
+                                day: "numeric",
                                 month: "long",
                                 year: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
                               },
                             )
-                          : "-"
+                          : "—"
                       }
                     />
 
-                    <CMSInput
-                      label="Deadline Target"
-                      labelRight={
-                        selectedOrder.status !== "DONE" &&
-                        selectedOrder.deadline && (
-                          <CMSBadge
-                            variant={
-                              (calculateDaysLeft(selectedOrder.deadline) ?? 0) <
-                              0
-                                ? "status"
-                                : "brand"
-                            }
-                            status={
-                              (calculateDaysLeft(selectedOrder.deadline) ?? 0) <
-                              0
-                                ? "REVISION"
-                                : undefined
-                            }
-                            className="!rounded-md"
-                          >
-                            {(calculateDaysLeft(selectedOrder.deadline) ?? 0) >
-                            0
-                              ? `${calculateDaysLeft(selectedOrder.deadline)} Hari lagi`
-                              : (calculateDaysLeft(selectedOrder.deadline) ??
-                                    0) === 0
-                                ? "Deadline Hari Ini"
-                                : `Terlambat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} Hari`}
-                          </CMSBadge>
-                        )
-                      }
-                      type="date"
-                      leftIcon={<Calendar size={14} />}
-                      error={validationErrors.deadline}
-                      value={
-                        selectedOrder.deadline
-                          ? selectedOrder.deadline.split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleOrderChange("deadline", e.target.value)
-                      }
-                      disabled={selectedOrder.status === "DONE"}
-                    />
-                    <CMSInput
-                      label="Deliverables Link"
-                      labelRight={
-                        selectedOrder.deliverables_url && (
-                          <a
-                            href={selectedOrder.deliverables_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-[10px] font-bold"
-                          >
-                            <ExternalLink size={10} /> Link Buka
-                          </a>
-                        )
-                      }
-                      type="url"
-                      leftIcon={<FileText size={14} />}
-                      className="!text-brand-600 truncate"
-                      value={selectedOrder.deliverables_url || ""}
-                      onChange={(e) =>
-                        handleOrderChange("deliverables_url", e.target.value)
-                      }
-                      placeholder="Link Google Drive / URL Hasil Desain"
-                      disabled={selectedOrder.status === "DONE"}
-                    />
+                    {selectedOrder.status === "DRAFT" ? (
+                      <CMSInput
+                        label="Deadline Target"
+                        labelRight={
+                          selectedOrder.deadline && (
+                            <CMSBadge
+                              variant={
+                                (calculateDaysLeft(selectedOrder.deadline) ??
+                                  0) < 0
+                                  ? "status"
+                                  : "brand"
+                              }
+                              status={
+                                (calculateDaysLeft(selectedOrder.deadline) ??
+                                  0) < 0
+                                  ? "REVISION"
+                                  : undefined
+                              }
+                              className="!rounded-md"
+                            >
+                              {(calculateDaysLeft(selectedOrder.deadline) ??
+                                0) > 0
+                                ? `${calculateDaysLeft(selectedOrder.deadline)} Hari lagi`
+                                : (calculateDaysLeft(selectedOrder.deadline) ??
+                                      0) === 0
+                                  ? "Deadline Hari Ini"
+                                  : `Terlambat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} Hari`}
+                            </CMSBadge>
+                          )
+                        }
+                        type="date"
+                        leftIcon={<Calendar size={14} />}
+                        error={validationErrors.deadline}
+                        value={
+                          selectedOrder.deadline
+                            ? selectedOrder.deadline.split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleOrderChange("deadline", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <CMSViewItem
+                        label="Deadline Target"
+                        value={
+                          <div className="flex items-center gap-2">
+                            {selectedOrder.status !== "DONE" &&
+                              selectedOrder.deadline && (
+                                <CMSBadge
+                                  variant={
+                                    (calculateDaysLeft(
+                                      selectedOrder.deadline,
+                                    ) ?? 0) < 0
+                                      ? "status"
+                                      : "brand"
+                                  }
+                                  status={
+                                    (calculateDaysLeft(
+                                      selectedOrder.deadline,
+                                    ) ?? 0) < 0
+                                      ? "REVISION"
+                                      : undefined
+                                  }
+                                  className="!rounded-md"
+                                >
+                                  {(calculateDaysLeft(selectedOrder.deadline) ??
+                                    0) > 0
+                                    ? `${calculateDaysLeft(selectedOrder.deadline)} Hari lagi`
+                                    : (calculateDaysLeft(
+                                          selectedOrder.deadline,
+                                        ) ?? 0) === 0
+                                      ? "Deadline Hari Ini"
+                                      : `Terlambat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} Hari`}
+                                </CMSBadge>
+                              )}
+                            <Calendar size={12} className="text-slate-300" />
+                            <span>
+                              {selectedOrder.deadline
+                                ? new Date(
+                                    selectedOrder.deadline,
+                                  ).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                  })
+                                : "—"}
+                            </span>
+                          </div>
+                        }
+                      />
+                    )}
+                    {selectedOrder.status === "DONE" && (
+                      <div className="pt-2.5">
+                        <CMSInput
+                          label="Deliverables Link"
+                          labelRight={
+                            selectedOrder.deliverables_url && (
+                              <a
+                                href={selectedOrder.deliverables_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-xs font-bold"
+                              >
+                                <ExternalLink size={10} /> Buka Link
+                              </a>
+                            )
+                          }
+                          type="url"
+                          leftIcon={<FileText size={14} />}
+                          className="!text-brand-600 truncate"
+                          value={selectedOrder.deliverables_url || ""}
+                          onChange={(e) =>
+                            handleOrderChange(
+                              "deliverables_url",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Link Google Drive / URL Hasil Desain"
+                          disabled={selectedOrder.status === "DONE"}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Panel: Informasi Pelanggan */}
@@ -1105,114 +1239,147 @@ Gous Studio`;
                   </div>
 
                   <div className="p-5 space-y-4">
-                    <div className="space-y-4">
-                      <div
-                        className="space-y-1.5 relative"
-                        ref={clientDropdownRef}
-                      >
-                        <CMSInput
-                          label="Nama Lengkap"
-                          leftIcon={<User size={14} />}
-                          error={validationErrors.full_name}
-                          placeholder="Cari atau ketik nama..."
-                          disabled={selectedOrder.status !== "DRAFT"}
-                          value={
-                            showClientDropdown
-                              ? clientSearchQuery
-                              : selectedOrder.full_name || ""
-                          }
-                          onChange={(e) => {
-                            setClientSearchQuery(e.target.value);
-                            handleOrderChange("full_name", e.target.value);
-                            if (!showClientDropdown)
+                    {selectedOrder.status === "DRAFT" ? (
+                      <div className="space-y-4">
+                        <div
+                          className="space-y-1.5 relative"
+                          ref={clientDropdownRef}
+                        >
+                          <CMSInput
+                            label="Nama Lengkap"
+                            leftIcon={<User size={14} />}
+                            error={validationErrors.full_name}
+                            placeholder="Cari atau ketik nama..."
+                            disabled={selectedOrder.status !== "DRAFT"}
+                            value={
+                              showClientDropdown
+                                ? clientSearchQuery
+                                : selectedOrder.full_name || ""
+                            }
+                            onChange={(e) => {
+                              setClientSearchQuery(e.target.value);
+                              handleOrderChange("full_name", e.target.value);
+                              if (!showClientDropdown)
+                                setShowClientDropdown(true);
+                            }}
+                            onFocus={() => {
                               setShowClientDropdown(true);
-                          }}
-                          onFocus={() => {
-                            setShowClientDropdown(true);
-                            setClientSearchQuery(selectedOrder.full_name || "");
-                          }}
-                        />
-
-                        {/* Client Dropdown Results */}
-                        {showClientDropdown && (
-                          <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
-                            {(() => {
-                              const filtered = clients.filter((c) =>
-                                c.full_name
-                                  ?.toLowerCase()
-                                  .includes(clientSearchQuery.toLowerCase()),
+                              setClientSearchQuery(
+                                selectedOrder.full_name || "",
                               );
-                              if (filtered.length === 0) {
-                                return (
-                                  <div className="px-5 py-4 text-center">
-                                    <p className="text-[11px] text-slate-400 font-medium">
-                                      Pelanggan tidak ditemukan
-                                    </p>
-                                    <button
-                                      onClick={() => setIsClientModalOpen(true)}
-                                      className="mt-2 text-[10px] font-bold text-brand-500 cursor-pointer"
-                                    >
-                                      + Buat "{clientSearchQuery}"
-                                    </button>
-                                  </div>
+                            }}
+                          />
+
+                          {/* Client Dropdown Results */}
+                          {showClientDropdown && (
+                            <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
+                              {(() => {
+                                const filtered = clients.filter((c) =>
+                                  c.full_name
+                                    ?.toLowerCase()
+                                    .includes(clientSearchQuery.toLowerCase()),
                                 );
-                              }
-                              return filtered.map((client) => (
-                                <button
-                                  key={client.id}
-                                  onClick={() => handleSelectClient(client)}
-                                  className="w-full text-left px-5 py-3 hover:bg-brand-50 transition-all flex items-center justify-between group border-b border-slate-50 last:border-0"
-                                >
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-bold text-slate-700 group-hover:text-brand-600 transition-colors">
-                                        {client.full_name}
-                                      </span>
-                                      {client.client_no !== undefined && (
-                                        <span className="text-[9px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
-                                          {formatClientId(client.client_no)}
+                                if (filtered.length === 0) {
+                                  return (
+                                    <div className="px-5 py-4 text-center">
+                                      <p className="text-[11px] text-slate-400 font-medium">
+                                        Pelanggan tidak ditemukan
+                                      </p>
+                                      <button
+                                        onClick={() =>
+                                          setIsClientModalOpen(true)
+                                        }
+                                        className="mt-2 text-[10px] font-bold text-brand-500 cursor-pointer"
+                                      >
+                                        + Buat "{clientSearchQuery}"
+                                      </button>
+                                    </div>
+                                  );
+                                }
+                                return filtered.map((client) => (
+                                  <button
+                                    key={client.id}
+                                    onClick={() => handleSelectClient(client)}
+                                    className="w-full text-left px-5 py-3 hover:bg-brand-50 transition-all flex items-center justify-between group border-b border-slate-50 last:border-0"
+                                  >
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-700 group-hover:text-brand-600 transition-colors">
+                                          {client.full_name}
                                         </span>
+                                        {client.client_no !== undefined && (
+                                          <span className="text-[9px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
+                                            {formatClientId(client.client_no)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {client.company && (
+                                        <p className="text-[10px] text-slate-400 font-medium">
+                                          {client.company}
+                                        </p>
                                       )}
                                     </div>
-                                    {client.company && (
-                                      <p className="text-[10px] text-slate-400 font-medium">
-                                        {client.company}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <ChevronRight
-                                    size={14}
-                                    className="text-slate-200 group-hover:text-brand-400 transition-all group-hover:translate-x-0.5"
-                                  />
-                                </button>
-                              ));
+                                    <ChevronRight
+                                      size={14}
+                                      className="text-slate-200 group-hover:text-brand-400 transition-all group-hover:translate-x-0.5"
+                                    />
+                                  </button>
+                                ));
+                              })()}
+                            </div>
+                          )}
+                        </div>
+
+                        <CMSInput
+                          label="WhatsApp / Nomor HP"
+                          leftIcon={
+                            <span className="text-[11px] font-bold">WA</span>
+                          }
+                          error={validationErrors.phone_number}
+                          placeholder="08xxxxxxxx"
+                          disabled={selectedOrder.status !== "DRAFT"}
+                          value={selectedOrder.phone_number || ""}
+                          onChange={(e) =>
+                            handleOrderChange("phone_number", e.target.value)
+                          }
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5">
+                        <CMSViewItem
+                          label="Nama Pelanggan"
+                          value={selectedOrder.full_name}
+                          icon={User}
+                        />
+                        <CMSViewItem
+                          label="WhatsApp"
+                          value={selectedOrder.phone_number}
+                          icon={Phone}
+                        />
+                        {selectedOrder.client_id && (
+                          <CMSViewItem
+                            label="Client ID"
+                            value={(() => {
+                              const c = clients.find(
+                                (cl) => cl.id === selectedOrder.client_id,
+                              );
+                              return c?.client_no
+                                ? formatClientId(c.client_no)
+                                : "—";
                             })()}
-                          </div>
+                            icon={CreditCard}
+                          />
                         )}
                       </div>
+                    )}
 
-                      <CMSInput
-                        label="WhatsApp / Nomor HP"
-                        leftIcon={
-                          <span className="text-[11px] font-bold">WA</span>
-                        }
-                        error={validationErrors.phone_number}
-                        placeholder="08xxxxxxxx"
-                        disabled={selectedOrder.status !== "DRAFT"}
-                        value={selectedOrder.phone_number || ""}
-                        onChange={(e) =>
-                          handleOrderChange("phone_number", e.target.value)
-                        }
-                      />
-
-                      <button
-                        onClick={handleSendWhatsApp}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-xl font-bold text-[11px] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 cursor-pointer"
-                      >
-                        <MessageCircle size={16} className="!text-white" />
-                        Update Progres via WhatsApp
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleSendWhatsApp}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-xl font-bold text-[11px] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                    >
+                      <MessageCircle size={16} className="!text-white" />
+                      Update Progres via WhatsApp
+                    </button>
                   </div>
                 </div>
                 {/* Payment Info Section (Otomatis / Manual) */}
@@ -1495,7 +1662,7 @@ Gous Studio`;
                           onClick={() =>
                             navigate(`/cms/orders/${order.order_number}`)
                           }
-                          className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer"
+                          className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
                         >
                           #{order.order_number}
                         </button>

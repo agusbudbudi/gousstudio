@@ -84,6 +84,23 @@ export default async function handler(req, res) {
         return res.status(200).json({ status: isPaid ? "completed" : "pending", orderStatus: order.status });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 
+    case 'update-proof':
+      if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+      try {
+        const { orderNumber, paymentProofUrl } = req.body;
+        if (!orderNumber || !paymentProofUrl) {
+          return res.status(400).json({ message: 'Order number and proof URL are required' });
+        }
+        const { data, error } = await supabase
+          .from('orders')
+          .update({ payment_proof_url: paymentProofUrl })
+          .eq('order_number', orderNumber)
+          .select()
+          .single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, order: data });
+      } catch (e) { return res.status(500).json({ message: e.message }); }
+
     default:
       return res.status(400).json({ message: 'Invalid action' });
   }
