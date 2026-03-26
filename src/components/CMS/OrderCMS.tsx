@@ -27,7 +27,10 @@ import {
   Calendar,
   ChevronDown,
   CreditCard,
+  FileDown,
 } from "lucide-react";
+import { toPng } from "html-to-image";
+import { InvoiceTemplate } from "../Invoice/InvoiceTemplate";
 
 import { OrderItem, PricelistItem, ClientItem } from "../../types";
 import { z } from "zod";
@@ -380,6 +383,34 @@ const OrderCMS: React.FC = () => {
     }
 
     setSelectedOrder(newOrder);
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!selectedOrder) return;
+    const invoiceId = `invoice-${selectedOrder.order_number}`;
+    const element = document.getElementById(invoiceId);
+    if (!element) return;
+
+    try {
+      setUpdatingId(selectedOrder.id);
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        style: {
+          visibility: "visible",
+        },
+      });
+      const link = document.createElement("a");
+      link.download = `invoice-${selectedOrder.order_number}.png`;
+      link.href = dataUrl;
+      link.click();
+      addToast("Invoice berhasil diunduh.", "success");
+    } catch (err) {
+      console.error("Failed to generate invoice image", err);
+      addToast("Gagal mengunduh invoice.", "error");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const saveOrderDetails = async () => {
@@ -1241,6 +1272,22 @@ Gous Studio`;
                           </span>
                         </div>
                       )}
+
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-emerald-600/70 font-medium">
+                          Invoice
+                        </span>
+                        <button
+                          onClick={handleDownloadInvoice}
+                          disabled={updatingId === selectedOrder.id}
+                          className="text-emerald-700 font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        >
+                          {updatingId === selectedOrder.id
+                            ? "Downloading..."
+                            : "Download"}
+                          <FileDown size={14} className="text-emerald-600" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1850,6 +1897,25 @@ Gous Studio`;
           </div>
         </div>
       )}
+
+      {/* Hidden Invoice Template for Capture */}
+      <div
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: "0",
+          zIndex: -100,
+        }}
+        aria-hidden="true"
+        className="light"
+      >
+        {selectedOrder && selectedOrder.id !== "NEW" && (
+          <InvoiceTemplate
+            order={selectedOrder}
+            packageData={selectedOrder.package_details}
+          />
+        )}
+      </div>
     </div>
   );
 };
