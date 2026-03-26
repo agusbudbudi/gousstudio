@@ -374,7 +374,7 @@ const OrderDetail = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></div>
                     Order Tracking
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-none">
+                  <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none">
                     <span className="text-brand-500 italic block mt-2 font-['Neue_Machina']">
                       #{order.order_number}
                     </span>
@@ -802,19 +802,19 @@ const OrderDetail = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="inline-flex flex-col items-center"
+              className="w-full flex flex-col items-center"
             >
               <a
                 href={`https://wa.me/${CONFIG.WA_NUMBER}?text=Halo%20Gous%20Studio!%20Saya%20ingin%20tanya%20progres%20order%20${order.order_number}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-4 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl font-black text-sm tracking-widest shadow-lg shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group uppercase"
+                className="flex items-center justify-center gap-4 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl font-black text-sm tracking-widest shadow-lg shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group uppercase w-full md:w-auto md:min-w-[320px]"
               >
                 <MessageCircle
                   size={22}
                   className="transition-transform group-hover:rotate-12"
                 />
-                Hubungi Admin via WhatsApp
+                Hubungi Admin
               </a>
               <p className="mt-6 text-[11px] text-slate-400 ">
                 Jangkauan Layanan (09:00 - 21:00 WIB)
