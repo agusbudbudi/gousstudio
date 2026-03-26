@@ -14,6 +14,7 @@ import PricelistList from "./PricelistList";
 import PricelistModal from "./PricelistModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
+import CMSSelect from "./Common/CMSSelect";
 import CMSAlertBanner from "./Common/CMSAlertBanner";
 
 import { PricelistItem } from "../../types";
@@ -27,6 +28,7 @@ const PricelistCMS: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [pristineItems, setPristineItems] = useState<PricelistItem[]>([]);
 
   // Check if items have changed since last fetch/save
@@ -52,6 +54,24 @@ const PricelistCMS: React.FC = () => {
     
     return sanitize(items) !== sanitize(pristineItems);
   }, [items, pristineItems, loading]);
+
+  const categories = React.useMemo(() => {
+    const cats = new Set(items.map(item => item.category));
+    return ["All", ...Array.from(cats)].filter(Boolean);
+  }, [items]);
+
+  const filteredItems = React.useMemo(() => {
+    return items.filter(item => {
+      const matchesSearch = 
+        item.servicename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [items, searchQuery, categoryFilter]);
 
   useEffect(() => {
     fetchPricelist();
@@ -216,6 +236,18 @@ const PricelistCMS: React.FC = () => {
           placeholder="Cari pricelist..."
           className="w-full md:w-64"
         />
+        <CMSSelect
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="w-full md:w-48"
+          containerClassName="!w-auto"
+        >
+          {categories.map(cat => (
+            <option key={cat} value={cat}>
+              {cat === "All" ? "Semua Kategori" : cat}
+            </option>
+          ))}
+        </CMSSelect>
         <CMSButton
           variant="secondary"
           onClick={handleAddItem}
@@ -259,11 +291,12 @@ const PricelistCMS: React.FC = () => {
         ) : (
           <PricelistList
             items={items}
-            searchQuery={searchQuery}
+            filteredItems={filteredItems}
             onEdit={handleEditItem}
             onDelete={handleDeleteItem}
             onReorder={handleReorder}
             onToggleVisibility={handleToggleVisibility}
+            isSearchingOrFiltering={searchQuery.length > 0 || categoryFilter !== "All"}
           />
         )}
       </div>

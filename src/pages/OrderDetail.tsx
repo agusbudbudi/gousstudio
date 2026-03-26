@@ -23,6 +23,7 @@ import {
   Upload,
   Check,
   Image as ImageIcon,
+  CreditCard,
 } from "lucide-react";
 
 const formatPrice = (price: number) =>
@@ -45,26 +46,20 @@ const OrderDetail = () => {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const { data, error: fetchError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("order_number", orderNumber)
-          .single();
+        const res = await fetch(`/api/get-order?orderNumber=${orderNumber}`);
 
-        if (fetchError) throw fetchError;
+        if (!res.ok) {
+          throw new Error("Order tidak ditemukan atau terjadi kesalahan.");
+        }
+
+        const result = await res.json();
+        const data = result.order;
+        const priceData = result.priceData;
+
         if (!data) throw new Error("Order not found");
-
         setOrder(data as OrderItem);
 
-        // Fetch price automatically from pricelists
-        const { data: priceData } = await supabase
-          .from("pricelists")
-          .select("*")
-          .eq("servicename", data.selected_package)
-          .single();
-
         if (priceData) {
-          // Priority: 1. order.final_price, 2. order.price, 3. priceData.finalprice
           const displayPrice =
             data.final_price !== undefined && data.final_price !== null
               ? data.final_price
@@ -153,7 +148,10 @@ const OrderDetail = () => {
     }
   };
 
-  const calculateProjectDuration = (createdDateStr?: string, deadlineDateStr?: string) => {
+  const calculateProjectDuration = (
+    createdDateStr?: string,
+    deadlineDateStr?: string,
+  ) => {
     if (!createdDateStr || !deadlineDateStr) return null;
     const start = new Date(createdDateStr);
     const end = new Date(deadlineDateStr);
@@ -249,7 +247,7 @@ const OrderDetail = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md p-10 rounded-[35px] border border-[var(--color-border-adaptive)] glass text-center shadow-2xl relative overflow-hidden"
+          className="w-full max-w-md p-10 rounded-2xl border border-[var(--color-border-adaptive)] glass text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-transparent via-red-500/50 to-transparent"></div>
           <AlertCircle className="w-16 h-16 text-rose-500/50 mb-6 mx-auto" />
@@ -258,14 +256,14 @@ const OrderDetail = () => {
           </h2>
           <p className="text-slate-400 mb-10 text-sm leading-relaxed">
             Maaf, kami tidak dapat menemukan data untuk nomor order{" "}
-            <span className="font-bold bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-lg border border-[var(--color-border-adaptive)]">
+            <span className="font-bold bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md border border-[var(--color-border-adaptive)]">
               {orderNumber}
             </span>
             . Pastikan link yang Anda gunakan sudah benar.
           </p>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-white px-6 py-3 rounded-2xl border border-[var(--color-border-adaptive)] font-bold text-sm transition-all active:scale-95 group"
+            className="inline-flex items-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-white px-6 py-3 rounded-xl border border-[var(--color-border-adaptive)] font-bold text-sm transition-all active:scale-95 group"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             Kembali ke Beranda
@@ -297,9 +295,18 @@ const OrderDetail = () => {
     <div className="min-h-screen pt-24 pb-10 px-4 transition-colors duration-500 bg-[var(--color-bg)] selection:bg-brand-500/30">
       <Helmet>
         <title>Status Order #{orderNumber} | Gous Studio</title>
-        <meta name="description" content={`Pantau progres pesanan desain ${order.selected_package} Anda secara real-time di Gous Studio.`} />
-        <meta property="og:title" content={`Order #${orderNumber} - ${order.selected_package}`} />
-        <meta property="og:description" content={`Status: ${statusInfo.label}. Lacak detail pengerjaan desain Anda mulai dari pembayaran hingga file final.`} />
+        <meta
+          name="description"
+          content={`Pantau progres pesanan desain ${order.selected_package} Anda secara real-time di Gous Studio.`}
+        />
+        <meta
+          property="og:title"
+          content={`Order #${orderNumber} - ${order.selected_package}`}
+        />
+        <meta
+          property="og:description"
+          content={`Status: ${statusInfo.label}. Lacak detail pengerjaan desain Anda mulai dari pembayaran hingga file final.`}
+        />
         <meta property="og:type" content="website" />
         <meta name="theme-color" content="#6366f1" />
         <meta name="robots" content="noindex, nofollow" />
@@ -392,6 +399,41 @@ const OrderDetail = () => {
             </div>
           )}
 
+          {/* Payment Section - If WAITING FOR PAYMENT */}
+          {order.status === "WAITING FOR PAYMENT" &&
+            !order.payment_proof_url && (
+              <div className="px-6 py-8 md:px-8 border-b border-white/5 bg-emerald-500/[0.05] relative overflow-hidden">
+                {/* Subtle background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] -z-10"></div>
+
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+                  <div className="text-center md:text-left">
+                    <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center justify-center md:justify-start gap-2 tracking-tight">
+                      <CreditCard className="text-emerald-500" /> Tahap
+                      Pembayaran
+                    </h3>
+                    <p className="text-slate-400 text-xs md:text-sm max-w-[400px]">
+                      Siap untuk mahakarya Anda? Selesaikan pembayaran melalui
+                      payment gateway resmi kami agar proses desain dapat segera
+                      dimulai.
+                    </p>
+                  </div>
+                  <div className="w-full md:w-auto mt-2 md:mt-0">
+                    <Link
+                      to={`/order/${order.order_number}/payment`}
+                      className="w-full md:w-auto inline-flex items-center justify-center gap-3 bg-white dark:bg-emerald-500 text-emerald-600 dark:text-white px-8 py-4 rounded-xl font-bold text-sm tracking-widest transition-all active:scale-95 shadow-xl shadow-emerald-500/10 hover:scale-105 group border border-slate-100 dark:border-emerald-400"
+                    >
+                      <CreditCard
+                        size={18}
+                        className="transition-transform group-hover:scale-110"
+                      />
+                      BAYAR SEKARANG
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
           {/* Info Details Section */}
           <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-white/5">
             {/* Left Panel: Brief & Payment Proof */}
@@ -406,29 +448,62 @@ const OrderDetail = () => {
                 </p>
               </div>
 
+              {/* Deadline - Moved here */}
+              <div className="mt-4 space-y-3">
+                <h3 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                  <Clock size={14} className="text-brand-500" /> Deadline Project
+                </h3>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between">
+                  <div className="text-white font-bold text-sm leading-none">
+                    {order.deadline
+                      ? new Date(order.deadline).toLocaleDateString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </div>
+                  {order.status !== "DONE" && order.deadline && (
+                    <div
+                      className={`px-3 py-1.5 rounded-lg border font-black text-[9px] tracking-tight ${
+                        isLate
+                          ? "text-rose-600 bg-rose-50 border-rose-100 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/20"
+                          : "text-brand-600 bg-brand-50 border-brand-100 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20"
+                      }`}
+                    >
+                      {totalDuration}D WORK
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Compact Payment Proof Upload */}
               {(order.status === "WAITING FOR PAYMENT" ||
                 order.payment_proof_url) && (
-                <div className={`mt-4 bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group transition-all ${order.status !== "WAITING FOR PAYMENT" ? "hover:border-emerald-500/30" : "hover:border-brand-500/30"}`}>
+                <div
+                  className={`mt-4 bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden group transition-all ${order.status !== "WAITING FOR PAYMENT" ? "hover:border-emerald-500/30" : "hover:border-brand-500/30"}`}
+                >
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4 w-full md:w-auto text-left">
-                      <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
-                        order.status !== "WAITING FOR PAYMENT" 
-                        ? "bg-emerald-500/10 border-emerald-500/10 group-hover:border-emerald-500/30" 
-                        : "bg-brand-500/10 border-brand-500/10 group-hover:border-brand-500/30"
-                      }`}>
+                      <div
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                          order.status !== "WAITING FOR PAYMENT"
+                            ? "bg-emerald-500/10 border-emerald-500/10 group-hover:border-emerald-500/30"
+                            : "bg-brand-500/10 border-brand-500/10 group-hover:border-brand-500/30"
+                        }`}
+                      >
                         {order.status !== "WAITING FOR PAYMENT" ? (
                           <CheckCircle2
-                            size={22}
+                            size={18}
                             className="text-emerald-500"
                           />
                         ) : order.payment_proof_url ? (
                           <Clock
-                            size={22}
+                            size={18}
                             className="text-brand-500 animate-pulse"
                           />
                         ) : (
-                          <Upload size={22} className="text-brand-500" />
+                          <Upload size={18} className="text-brand-500" />
                         )}
                       </div>
                       <div className="flex-1">
@@ -449,16 +524,16 @@ const OrderDetail = () => {
                       </div>
                     </div>
 
-                    <div className="w-full md:w-auto">
+                    <div className="w-full md:w-auto flex flex-col lg:flex-row items-center gap-3">
                       {order.status === "WAITING FOR PAYMENT" ? (
                         !order.payment_proof_url ? (
-                          <label className="inline-flex items-center justify-center w-full px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98] cursor-pointer whitespace-nowrap">
+                          <label className="inline-flex items-center justify-center w-full lg:w-auto px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98] cursor-pointer whitespace-nowrap">
                             {uploading ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
                             ) : (
                               <Upload size={14} className="mr-2" />
                             )}
-                            {uploading ? "Uploading..." : "Pilih File Proof"}
+                            {uploading ? "Uploading..." : "Upload Manual"}
                             <input
                               type="file"
                               className="hidden"
@@ -478,7 +553,7 @@ const OrderDetail = () => {
                                 const input = document.createElement("input");
                                 input.type = "file";
                                 input.accept = "image/*,.pdf";
-                              onchange: handleFileUpload as any,
+                                input.onchange = (e: any) => handleFileUpload(e);
                                 input.click();
                               }}
                               className="text-[10px] text-slate-500 hover:text-white transition-colors cursor-pointer underline underline-offset-2 font-medium"
@@ -498,7 +573,7 @@ const OrderDetail = () => {
               )}
             </div>
 
-            {/* Right Panel: Pelanggan, Paket, Deadline */}
+            {/* Right Panel: Pelanggan, Paket, Rincian Pembayaran */}
             <div className="md:col-span-2 divide-y divide-white/5">
               {/* Customer Data */}
               <div className="p-4 space-y-3">
@@ -559,12 +634,19 @@ const OrderDetail = () => {
                       </>
                     )}
                   </div>
-                  {packageData && (
-                    <div className="mt-4">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2.5 ml-0.5">
-                        Rincian Pembayaran
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-3">
+                </div>
+              </div>
+
+              {/* Rincian Pembayaran - Standalone Section */}
+              {(packageData || order.payment_method) && (
+                <div className="p-4 space-y-3">
+                  <h3 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                    <CreditCard size={14} className="text-brand-500" /> Rincian
+                    Pembayaran
+                  </h3>
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-3">
+                    {packageData && (
+                      <>
                         <div className="flex items-center justify-between text-[11px] font-bold">
                           <span className="text-slate-400">Harga Awal</span>
                           <span className="text-slate-400">
@@ -586,7 +668,7 @@ const OrderDetail = () => {
                         </div>
                         <div className="pt-2 mt-2 border-t border-white/5 flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                            Total Bayar
+                            Total Tagihan
                           </span>
                           <div className="text-xl md:text-2xl font-black text-emerald-600 tracking-tight flex items-center gap-2">
                             {Number(packageData.finalprice) === 0
@@ -594,40 +676,67 @@ const OrderDetail = () => {
                               : formatPrice(packageData.finalprice)}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                      </>
+                    )}
 
-              {/* Deadline */}
-              <div className="p-4 space-y-3">
-                <h3 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                  <Clock size={14} className="text-brand-500" /> Deadline
-                </h3>
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between">
-                  <div className="text-white font-bold text-sm leading-none">
-                    {order.deadline
-                      ? new Date(order.deadline).toLocaleDateString("id-ID", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "-"}
+                    {/* Extra Payment Info if Paid */}
+                    {order.payment_method && (
+                      <div className="pt-3 mt-3 border-t border-white/5 space-y-2">
+                        {/* Label tipe pembayaran */}
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
+                          <span className="flex items-center gap-1.5 text-emerald-500">
+                            <CreditCard size={11} />
+                            {order.is_sandbox === null ||
+                            order.is_sandbox === undefined
+                              ? "Pembayaran Manual"
+                              : "Pembayaran Otomatis"}
+                          </span>
+                          {order.is_sandbox === true && (
+                            <span className="bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400 px-1.5 py-0.5 rounded text-[9px] tracking-widest">
+                              SANDBOX
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-500">
+                            Metode Pembayaran
+                          </span>
+                          <span className="text-emerald-500 uppercase">
+                            {order.payment_method.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-500">
+                            Nominal Dibayar
+                          </span>
+                          <span className="text-emerald-500">
+                            {formatPrice(order.paid_amount || 0)}
+                          </span>
+                        </div>
+                        {order.paid_at && (
+                          <div className="flex justify-between gap-4 text-[11px] font-bold">
+                            <span className="text-slate-500 shrink-0">
+                              Waktu Verifikasi
+                            </span>
+                            <span className="text-emerald-500 text-right">
+                              {new Date(order.paid_at).toLocaleString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {order.status !== "DONE" && order.deadline && (
-                    <div
-                      className={`px-3 py-1.5 rounded-lg border font-black text-[9px] tracking-tight ${
-                        isLate
-                          ? "text-rose-600 bg-rose-50 border-rose-100 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/20"
-                          : "text-brand-600 bg-brand-50 border-brand-100 dark:text-brand-400 dark:bg-brand-500/10 dark:border-brand-500/20"
-                      }`}
-                    >
-                      {totalDuration}D WORK
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

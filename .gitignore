@@ -35,3 +35,13 @@ tmp/
 .env
 .env.*
 !.env.example
+.vercel
+.env*.local
+
+# Dev and local scripts
+scripts/
+api/simulate-pakasir.js
+api/simulate-payment.js
+
+# Notes and temporary files
+notes.md

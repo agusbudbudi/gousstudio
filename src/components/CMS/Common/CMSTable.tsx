@@ -6,16 +6,16 @@ interface CMSTableProps {
 }
 
 export const CMSTableContainer: React.FC<CMSTableProps> = ({ children, className = "" }) => (
-  <div className={`bg-white border border-slate-200 rounded-xl overflow-hidden  ${className}`}>
-    <table className="w-full text-sm">
+  <div className={`bg-white border border-slate-200 rounded-xl overflow-x-auto custom-scrollbar ${className}`}>
+    <table className="w-full text-sm min-w-[800px]">
       {children}
     </table>
   </div>
 );
 
 export const CMSTableHeader: React.FC<CMSTableProps> = ({ children, className = "" }) => (
-  <thead>
-    <tr className={`border-b border-slate-100 bg-slate-50/80 ${className}`}>
+  <thead className="sticky top-0 z-20">
+    <tr className={`border-b border-slate-100 bg-slate-50 shadow-sm ${className}`}>
       {children}
     </tr>
   </thead>

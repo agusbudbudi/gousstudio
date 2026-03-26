@@ -13,29 +13,52 @@ const CMS: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [isChecking, setIsChecking] = useState<boolean>(true);
 
-  const envPassword = import.meta.env.VITE_CMS_PASSWORD;
-
   useEffect(() => {
-    const savedPass = localStorage.getItem("cms_token");
-    if (savedPass && savedPass === envPassword) {
-      setIsAuthenticated(true);
-    }
-    setIsChecking(false);
-  }, [envPassword]);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/cms/check-auth');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isAuthenticated) {
+            setIsAuthenticated(true);
+          }
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (password === envPassword) {
-      localStorage.setItem("cms_token", password);
-      setIsAuthenticated(true);
-      setError("");
-    } else {
-      setError("Password tidak valid. Silakan coba lagi.");
+    try {
+      const res = await fetch('/api/cms/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        setError("");
+      } else {
+        setError(data.message || "Password tidak valid. Silakan coba lagi.");
+      }
+    } catch (err: any) {
+      setError("Terjadi kesalahan koneksi server.");
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("cms_token");
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/cms/logout', { method: 'POST' });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     setIsAuthenticated(false);
     setPassword("");
   };

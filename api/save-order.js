@@ -1,8 +1,28 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+// Simple in-memory rate limiter per Serverless Function instance
+const ipRequests = new Map();
+function isRateLimited(ip) {
+  const windowMs = 60 * 1000; // 1 minute
+  const maxRequests = 5; // 5 orders per minute per IP
+  const now = Date.now();
+  if (!ipRequests.has(ip)) ipRequests.set(ip, []);
+  
+  const requests = ipRequests.get(ip).filter(t => now - t < windowMs);
+  requests.push(now);
+  ipRequests.set(ip, requests);
+  return requests.length > maxRequests;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ message: 'Too many requests. Please try again later.' });
   }
 
   const { orderData } = req.body;
@@ -25,12 +45,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Missing selected_package" });
     }
 
-    // Generate order number
+    // Generate SECURE UNGUESSABLE order number
     const now = new Date();
     const dateStr = now.toISOString().slice(2, 10).replace(/-/g, ''); // YYMMDD
-    const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, ''); // HHMMSS
-    const randomStr = Math.random().toString(36).substring(2, 5); // 3 random chars
-    const orderNumber = `GS-${dateStr}${randomStr}`;
+    const secureId = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 random hex chars
+    const orderNumber = `GS-${dateStr}-${secureId}`;
 
     // Fetch price details so DB is fully populated for admin CMS.
     const { data: priceRow, error: priceError } = await supabase

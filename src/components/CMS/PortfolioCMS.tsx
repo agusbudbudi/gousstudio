@@ -201,12 +201,11 @@ const PortfolioCMS: React.FC = () => {
     setSaving(true);
     try {
       const endpoint = "/api/save-portfolio";
-      const password = localStorage.getItem("cms_token");
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, password }),
+        body: JSON.stringify({ data }),
       });
 
       if (response.ok) {

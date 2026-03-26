@@ -1,0 +1,6 @@
+# Ignore development and simulation API endpoints from being deployed to production
+api/simulate-pakasir.js
+api/hit-pakasir.js
+scripts/
+notes.md
+clean-duplicate-urls.js

@@ -25,36 +25,30 @@ const formatPrice = (n: number | undefined) =>
 
 interface PricelistListProps {
   items: PricelistItem[];
-  searchQuery: string;
+  filteredItems: PricelistItem[];
   onEdit: (item: PricelistItem, index: number) => void;
   onDelete: (index: number) => void;
   onReorder: (index: number, direction: "up" | "down") => void;
   onToggleVisibility: (index: number) => void;
+  isSearchingOrFiltering: boolean;
 }
 
 const PricelistList: React.FC<PricelistListProps> = ({
   items,
-  searchQuery,
+  filteredItems,
   onEdit,
   onDelete,
   onReorder,
   onToggleVisibility,
+  isSearchingOrFiltering,
 }) => {
-  const filteredItems = items.filter(
-    (item) =>
-      item.servicename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const isSearching = searchQuery.length > 0;
 
   if (filteredItems.length === 0) {
     return (
       <div className="text-center py-16 text-slate-300">
         <Tag className="w-8 h-8 mx-auto mb-3 opacity-30" />
         <p className="text-sm font-medium text-slate-400">
-          {isSearching
+          {isSearchingOrFiltering
             ? "Tidak ada paket ditemukan."
             : "Belum ada paket harga. Klik Tambah untuk memulai."}
         </p>
@@ -84,7 +78,7 @@ const PricelistList: React.FC<PricelistListProps> = ({
               className="group flex items-start gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-4 transition-colors"
             >
               {/* Reorder */}
-              {!isSearching && (
+              {!isSearchingOrFiltering && (
                 <div className="flex flex-col items-center gap-0.5 min-w-[32px] border-r border-slate-50 pr-3 pt-1">
                   <button
                     disabled={index === 0}
