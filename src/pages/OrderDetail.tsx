@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../utils/supabase";
+import { CONFIG } from "../config/constants";
 import { OrderItem, PricelistItem } from "../types";
 import {
   Loader2,
@@ -796,7 +797,7 @@ const OrderDetail = () => {
               className="inline-flex flex-col items-center"
             >
               <a
-                href={`https://wa.me/6281234567890?text=Halo%20Gous%20Studio!%20Saya%20ingin%20tanya%20progres%20order%20${order.order_number}`}
+                href={`https://wa.me/${CONFIG.WA_NUMBER}?text=Halo%20Gous%20Studio!%20Saya%20ingin%20tanya%20progres%20order%20${order.order_number}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-4 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl font-black text-sm tracking-widest shadow-lg shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group uppercase"
