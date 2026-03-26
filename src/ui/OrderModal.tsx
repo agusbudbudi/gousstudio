@@ -16,11 +16,8 @@ import { useAppStore } from "../store/useAppStore";
 import { orderSchema, OrderFormData } from "../utils/formSchemas";
 import { PricelistItem, OrderItem } from "../types";
 import { supabase } from "../utils/supabase";
+import { CONFIG } from "../config/constants";
 
-// Mock CONFIG if not imported from elsewhere
-const CONFIG = {
-  WA_NUMBER: "6289524036666", // Fallback to provided studio number
-};
 
 const OrderModal = () => {
   const {
