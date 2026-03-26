@@ -43,7 +43,7 @@ const CMSSelect = forwardRef<HTMLSelectElement, CMSSelectProps>(
             id={id}
             ref={ref}
             className={`
-              w-full h-[42px] bg-slate-50 border rounded-lg text-sm font-bold py-2
+              w-full h-[34px] bg-slate-50 border rounded-lg text-xs font-bold py-2
               focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 
               transition-all appearance-none cursor-pointer
               ${Icon ? "pl-8" : "pl-4"} pr-10

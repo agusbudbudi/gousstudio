@@ -1,0 +1,5 @@
+# Ignore development and simulation API endpoints from being deployed to production
+api/simulate-payment.js
+scripts/
+notes.md
+clean-duplicate-urls.js

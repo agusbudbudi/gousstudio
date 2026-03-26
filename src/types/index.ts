@@ -51,6 +51,11 @@ export interface OrderItem {
   internal_notes?: string;
   created_at: string;
   source_order?: string;
+  payment_method?: string;
+  paid_amount?: number;
+  paid_at?: string;
+  is_sandbox?: boolean;
+  package_details?: PricelistItem;
 }
 
 export interface AppState {

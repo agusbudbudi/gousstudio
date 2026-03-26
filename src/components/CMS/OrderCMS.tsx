@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Loader2,
   Search,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Infinity,
@@ -25,6 +26,7 @@ import {
   Users,
   Calendar,
   ChevronDown,
+  CreditCard,
 } from "lucide-react";
 
 import { OrderItem, PricelistItem, ClientItem } from "../../types";
@@ -83,6 +85,8 @@ const OrderCMS: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
 
@@ -120,6 +124,12 @@ const OrderCMS: React.FC = () => {
   }, [orderNumber, orders, loading]);
   const [savingDetails, setSavingDetails] = useState(false);
   const [pricelists, setPricelists] = useState<PricelistItem[]>([]);
+  const selectedPricelist =
+    selectedOrder?.status !== "DRAFT" && selectedOrder?.package_details
+      ? selectedOrder.package_details
+      : pricelists.find(
+          (p) => p.servicename === selectedOrder?.selected_package,
+        );
   const briefTextareaRef = React.useRef<HTMLTextAreaElement>(null);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -130,6 +140,16 @@ const OrderCMS: React.FC = () => {
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Selesai confirmation modal state
+  const [isSelesaiModalOpen, setIsSelesaiModalOpen] = useState(false);
+  const [deliverablesInput, setDeliverablesInput] = useState("");
+
+  // Manual payment verification modal state
+  const [isVerifyPaymentModalOpen, setIsVerifyPaymentModalOpen] =
+    useState(false);
+  const [verifyPaymentMethod, setVerifyPaymentMethod] = useState("");
+  const [verifyPaidAmount, setVerifyPaidAmount] = useState<number | "">("");
 
   const calculateDaysLeft = (deadlineDateStr?: string) => {
     if (!deadlineDateStr) return null;
@@ -165,11 +185,15 @@ const OrderCMS: React.FC = () => {
       if (data) setPricelists(data as PricelistItem[]);
     };
     const fetchClients = async () => {
-      const { data } = await supabase
-        .from("clients")
-        .select("*")
-        .order("full_name");
-      if (data) setClients(data as ClientItem[]);
+      try {
+        const res = await fetch("/api/cms/clients?action=get");
+        if (res.ok) {
+          const result = await res.json();
+          setClients((result.data as ClientItem[]) || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch clients:", err);
+      }
     };
     fetchPricelists();
     fetchClients();
@@ -190,12 +214,13 @@ const OrderCMS: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (fetchError) throw fetchError;
-      setOrders((data as OrderItem[]) || []);
+      const res = await fetch("/api/cms/orders?action=get");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to fetch orders");
+      }
+      const result = await res.json();
+      setOrders((result.data as OrderItem[]) || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -240,11 +265,13 @@ const OrderCMS: React.FC = () => {
 
     setUpdatingId(id);
     try {
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", id);
-      if (updateError) throw updateError;
+      const res = await fetch("/api/cms/orders?action=update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, updates: { status: newStatus } }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to update order");
 
       setOrders((prev) =>
         prev.map((order) =>
@@ -282,12 +309,13 @@ const OrderCMS: React.FC = () => {
 
     try {
       setUpdatingId(id);
-      const { error: deleteError } = await supabase
-        .from("orders")
-        .delete()
-        .eq("id", id);
-
-      if (deleteError) throw deleteError;
+      const res = await fetch("/api/cms/orders?action=delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to delete order");
 
       setOrders((prev) => prev.filter((o) => o.id !== id));
       addToast(`Order #${orderNumber} berhasil dihapus.`, "success");
@@ -426,44 +454,53 @@ const OrderCMS: React.FC = () => {
           source_order: selectedOrder.source_order || "web-ops",
           deliverables_url: selectedOrder.deliverables_url || null,
           internal_notes: selectedOrder.internal_notes || null,
+          package_details: selectedPricelist || null,
         };
 
-        const { data, error: insertError } = await supabase
-          .from("orders")
-          .insert(payload)
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
+        const res = await fetch("/api/cms/orders?action=create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payload }),
+        });
+        const result = await res.json();
+        if (!res.ok)
+          throw new Error(result.message || "Failed to create order");
+        const data = result.data;
 
         setOrders((prev) => [data as OrderItem, ...prev]);
         navigate(`/cms/orders/${data.order_number}`);
         addToast("Order baru berhasil dibuat.", "success");
       } else {
-        const { error: updateError } = await supabase
-          .from("orders")
-          .update({
-            client_id: selectedOrder.client_id || null,
-            full_name: selectedOrder.full_name,
-            phone_number: selectedOrder.phone_number,
-            design_category: selectedOrder.design_category,
-            selected_package: selectedOrder.selected_package,
-            price: selectedOrder.price || 0,
-            discount_value: selectedOrder.discount_value || 0,
-            discount_type: selectedOrder.discount_type || "fixed",
-            final_price:
-              selectedOrder.final_price !== undefined &&
-              selectedOrder.final_price !== null
-                ? selectedOrder.final_price
-                : selectedOrder.price || 0,
-            brief_detail: selectedOrder.brief_detail,
-            deadline: selectedOrder.deadline || null,
-            deliverables_url: selectedOrder.deliverables_url || null,
-            internal_notes: selectedOrder.internal_notes || null,
-          })
-          .eq("id", selectedOrder.id);
-
-        if (updateError) throw updateError;
+        const res = await fetch("/api/cms/orders?action=update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: selectedOrder.id,
+            updates: {
+              client_id: selectedOrder.client_id || null,
+              full_name: selectedOrder.full_name,
+              phone_number: selectedOrder.phone_number,
+              design_category: selectedOrder.design_category,
+              selected_package: selectedOrder.selected_package,
+              price: selectedOrder.price || 0,
+              discount_value: selectedOrder.discount_value || 0,
+              discount_type: selectedOrder.discount_type || "fixed",
+              final_price:
+                selectedOrder.final_price !== undefined &&
+                selectedOrder.final_price !== null
+                  ? selectedOrder.final_price
+                  : selectedOrder.price || 0,
+              brief_detail: selectedOrder.brief_detail,
+              deadline: selectedOrder.deadline || null,
+              deliverables_url: selectedOrder.deliverables_url || null,
+              internal_notes: selectedOrder.internal_notes || null,
+              package_details: selectedPricelist || null,
+            },
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok)
+          throw new Error(result.message || "Failed to update order");
 
         setOrders((prev) =>
           prev.map((o) => (o.id === selectedOrder.id ? selectedOrder : o)),
@@ -489,6 +526,16 @@ const OrderCMS: React.FC = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   const handleSendWhatsApp = () => {
     if (!selectedOrder) return;
@@ -520,10 +567,6 @@ Gous Studio`;
     addToast(`Membuka WhatsApp untuk ${selectedOrder.full_name}...`, "info");
     window.open(whatsappUrl, "_blank");
   };
-
-  const selectedPricelist = pricelists.find(
-    (p) => p.servicename === selectedOrder?.selected_package,
-  );
 
   return (
     <div className="flex flex-col h-full">
@@ -563,7 +606,7 @@ Gous Studio`;
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               containerClassName="shrink-0 w-[160px]"
-              className="!h-[38px] !rounded-lg text-xs"
+              className="!h-[34px] !rounded-lg text-xs"
             >
               <option value="ALL">Semua Status</option>
               {STATUSES.map((s) => (
@@ -625,6 +668,7 @@ Gous Studio`;
                           error={validationErrors.design_category}
                           placeholder="Kategori Desain"
                           value={selectedOrder.design_category || ""}
+                          disabled={selectedOrder.status !== "DRAFT"}
                           onChange={(e) =>
                             handleOrderChange("design_category", e.target.value)
                           }
@@ -636,6 +680,7 @@ Gous Studio`;
                         label="Paket Terpilih"
                         className={`${validationErrors.selected_package ? "border-rose-500" : "border-slate-200"} text-brand-600`}
                         value={selectedOrder.selected_package || ""}
+                        disabled={selectedOrder.status !== "DRAFT"}
                         onChange={(e) => {
                           const newPkg = e.target.value;
                           const pkgInfo = pricelists.find(
@@ -676,6 +721,7 @@ Gous Studio`;
                         leftIcon={<span className="text-xs font-bold">Rp</span>}
                         className="!bg-white"
                         value={selectedOrder.price || ""}
+                        disabled={selectedOrder.status !== "DRAFT"}
                         onChange={(e) =>
                           handleOrderChange("price", e.target.value)
                         }
@@ -695,6 +741,7 @@ Gous Studio`;
                             }
                             className="text-rose-500 !bg-white"
                             value={selectedOrder.discount_value || ""}
+                            disabled={selectedOrder.status !== "DRAFT"}
                             onChange={(e) =>
                               handleOrderChange(
                                 "discount_value",
@@ -706,6 +753,7 @@ Gous Studio`;
                             containerClassName="shrink-0 w-[60px]"
                             className="!pl-3 !pr-6 !text-[11px]"
                             value={selectedOrder.discount_type || "fixed"}
+                            disabled={selectedOrder.status !== "DRAFT"}
                             onChange={(e) =>
                               handleOrderChange("discount_type", e.target.value)
                             }
@@ -877,39 +925,48 @@ Gous Studio`;
                     </h3>
                   </div>
                   <div className="p-5 space-y-4">
-                    <CMSSelect
-                      label="Status Progres"
-                      className={`w-full text-xs font-bold transition-all !pr-10
-                                 ${
-                                   selectedOrder.status === "DONE"
-                                     ? "!bg-emerald-50 !text-emerald-700 !border-emerald-200 focus:!ring-emerald-500/10 focus:!border-emerald-500"
-                                     : selectedOrder.status === "IN PROGRESS"
-                                       ? "!bg-blue-50 !text-blue-700 !border-blue-200 focus:!ring-blue-500/10 focus:!border-blue-500"
-                                       : selectedOrder.status === "REVISION"
-                                         ? "!bg-rose-50 !text-rose-700 !border-rose-200 focus:!ring-rose-500/10 focus:!border-rose-500"
-                                         : selectedOrder.status === "REVIEWED"
-                                           ? "!bg-purple-50 !text-purple-700 !border-purple-200 focus:!ring-purple-500/10 focus:!border-purple-500"
-                                           : selectedOrder.status ===
-                                               "WAITING FOR PAYMENT"
-                                             ? "!bg-orange-50 !text-orange-700 !border-orange-200 focus:!ring-orange-500/10 focus:!border-orange-500"
-                                             : "!bg-slate-100 !text-slate-600 !border-slate-200 focus:!ring-slate-500/10"
-                                 }`}
-                      value={selectedOrder.status || "DRAFT"}
-                      onChange={(e) => {
-                        updateOrderStatus(selectedOrder.id, e.target.value);
-                        setSelectedOrder({
-                          ...selectedOrder,
-                          status: e.target.value as OrderItem["status"],
-                        });
-                      }}
-                      disabled={updatingId === selectedOrder.id}
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </CMSSelect>
+                    {/* Read-only status badge */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-400">
+                        Status Progres
+                      </label>
+                      <div
+                        className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider w-full
+                        ${
+                          selectedOrder.status === "DONE"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : selectedOrder.status === "IN PROGRESS"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : selectedOrder.status === "REVISION"
+                                ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                : selectedOrder.status === "REVIEWED"
+                                  ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                  : selectedOrder.status ===
+                                      "WAITING FOR PAYMENT"
+                                    ? "bg-orange-50 text-orange-700 border border-orange-200"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0
+                          ${
+                            selectedOrder.status === "DONE"
+                              ? "bg-emerald-500"
+                              : selectedOrder.status === "IN PROGRESS"
+                                ? "bg-blue-500"
+                                : selectedOrder.status === "REVISION"
+                                  ? "bg-rose-500"
+                                  : selectedOrder.status === "REVIEWED"
+                                    ? "bg-purple-500"
+                                    : selectedOrder.status ===
+                                        "WAITING FOR PAYMENT"
+                                      ? "bg-orange-500 animate-pulse"
+                                      : "bg-slate-400"
+                          }`}
+                        />
+                        {selectedOrder.status || "DRAFT"}
+                      </div>
+                    </div>
 
                     <CMSInfoItem
                       label="Dibuat pada"
@@ -971,6 +1028,7 @@ Gous Studio`;
                       onChange={(e) =>
                         handleOrderChange("deadline", e.target.value)
                       }
+                      disabled={selectedOrder.status === "DONE"}
                     />
                     <CMSInput
                       label="Deliverables Link"
@@ -994,6 +1052,7 @@ Gous Studio`;
                         handleOrderChange("deliverables_url", e.target.value)
                       }
                       placeholder="Link Google Drive / URL Hasil Desain"
+                      disabled={selectedOrder.status === "DONE"}
                     />
                   </div>
                 </div>
@@ -1004,12 +1063,14 @@ Gous Studio`;
                       <Users size={12} className="text-slate-300" />
                       Pelanggan
                     </h3>
-                    <button
-                      onClick={() => setIsClientModalOpen(true)}
-                      className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-[10px] font-bold transition-all cursor-pointer"
-                    >
-                      <Plus size={10} /> Client Baru
-                    </button>
+                    {selectedOrder.status === "DRAFT" && (
+                      <button
+                        onClick={() => setIsClientModalOpen(true)}
+                        className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-[10px] font-bold transition-all cursor-pointer"
+                      >
+                        <Plus size={10} /> Client Baru
+                      </button>
+                    )}
                   </div>
 
                   <div className="p-5 space-y-4">
@@ -1023,6 +1084,7 @@ Gous Studio`;
                           leftIcon={<User size={14} />}
                           error={validationErrors.full_name}
                           placeholder="Cari atau ketik nama..."
+                          disabled={selectedOrder.status !== "DRAFT"}
                           value={
                             showClientDropdown
                               ? clientSearchQuery
@@ -1105,6 +1167,7 @@ Gous Studio`;
                         }
                         error={validationErrors.phone_number}
                         placeholder="08xxxxxxxx"
+                        disabled={selectedOrder.status !== "DRAFT"}
                         value={selectedOrder.phone_number || ""}
                         onChange={(e) =>
                           handleOrderChange("phone_number", e.target.value)
@@ -1121,6 +1184,66 @@ Gous Studio`;
                     </div>
                   </div>
                 </div>
+                {/* Payment Info Section (Otomatis / Manual) */}
+                {selectedOrder.payment_method && (
+                  <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-5 space-y-3">
+                    <h3 className="text-xs font-bold text-emerald-600 flex items-center justify-between uppercase tracking-wider mb-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard size={14} />
+                        {selectedOrder.is_sandbox === null ||
+                        selectedOrder.is_sandbox === undefined
+                          ? "Pembayaran Manual"
+                          : "Pembayaran Otomatis"}
+                      </div>
+                      {selectedOrder.is_sandbox && (
+                        <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-widest">
+                          Sandbox
+                        </span>
+                      )}
+                    </h3>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-emerald-600/70 font-medium">
+                          Metode Pembayaran
+                        </span>
+                        <span className="text-emerald-700 font-bold uppercase">
+                          {selectedOrder.payment_method.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-emerald-600/70 font-medium">
+                          Nominal Dibayar
+                        </span>
+                        <span className="text-emerald-700 font-bold tracking-wide">
+                          Rp{" "}
+                          {(selectedOrder.paid_amount || 0).toLocaleString(
+                            "id-ID",
+                          )}
+                        </span>
+                      </div>
+                      {selectedOrder.paid_at && (
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-emerald-600/70 font-medium">
+                            Waktu Verifikasi
+                          </span>
+                          <span className="text-emerald-700 font-bold">
+                            {new Date(selectedOrder.paid_at).toLocaleString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Proof of Payment Section */}
                 {selectedOrder.payment_proof_url && (
@@ -1149,13 +1272,19 @@ Gous Studio`;
                     </div>
                     {selectedOrder.status === "WAITING FOR PAYMENT" && (
                       <CMSButton
-                        onClick={() =>
-                          updateOrderStatus(selectedOrder.id, "IN PROGRESS")
-                        }
+                        onClick={() => {
+                          setVerifyPaymentMethod("");
+                          setVerifyPaidAmount(
+                            selectedOrder.final_price ??
+                              selectedOrder.price ??
+                              "",
+                          );
+                          setIsVerifyPaymentModalOpen(true);
+                        }}
                         loading={updatingId === selectedOrder.id}
                         className="w-full mt-2 py-3"
                       >
-                        Konfirmasi Pembayaran & Kerjakan
+                        Konfirmasi Pembayaran &amp; Kerjakan
                       </CMSButton>
                     )}
                   </div>
@@ -1169,6 +1298,105 @@ Gous Studio`;
             <CMSButton variant="ghost" onClick={() => setSelectedOrder(null)}>
               Batal
             </CMSButton>
+            {selectedOrder.status === "DRAFT" && selectedOrder.id !== "NEW" && (
+              <CMSButton
+                className="!bg-orange-500 text-white hover:!bg-orange-600 font-bold border-none"
+                onClick={() => {
+                  updateOrderStatus(selectedOrder.id, "WAITING FOR PAYMENT");
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    status: "WAITING FOR PAYMENT",
+                  });
+                  let phone = (selectedOrder.phone_number || "").replace(
+                    /\D/g,
+                    "",
+                  );
+                  if (phone.startsWith("0")) phone = "62" + phone.slice(1);
+                  const publicUrl = `${window.location.origin}/order/${selectedOrder.order_number}`;
+                  const msg = `Halo ${selectedOrder.full_name},\n\nPesanan Anda #${selectedOrder.order_number} telah masuk ke sistem kami. Silakan cek detail pesanan dan lakukan pembayaran melalui link berikut:\n\n${publicUrl}\n\nTerima kasih,\nGous Studio`;
+                  window.open(
+                    `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`,
+                    "_blank",
+                  );
+                }}
+                icon={CreditCard}
+              >
+                Minta Pembayaran
+              </CMSButton>
+            )}
+            {selectedOrder.status === "IN PROGRESS" &&
+              selectedOrder.id !== "NEW" && (
+                <CMSButton
+                  className="!bg-purple-500 text-white hover:!bg-purple-600 font-bold border-none"
+                  onClick={() => {
+                    updateOrderStatus(selectedOrder.id, "REVIEWED");
+                    setSelectedOrder({ ...selectedOrder, status: "REVIEWED" });
+                  }}
+                  loading={updatingId === selectedOrder.id}
+                >
+                  Send for Review
+                </CMSButton>
+              )}
+            {selectedOrder.status === "REVIEWED" &&
+              selectedOrder.id !== "NEW" && (
+                <>
+                  <CMSButton
+                    className="!bg-rose-500 text-white hover:!bg-rose-600 font-bold border-none"
+                    onClick={() => {
+                      updateOrderStatus(selectedOrder.id, "REVISION");
+                      setSelectedOrder({
+                        ...selectedOrder,
+                        status: "REVISION",
+                      });
+                    }}
+                    loading={updatingId === selectedOrder.id}
+                  >
+                    Revision
+                  </CMSButton>
+                  <CMSButton
+                    className="!bg-emerald-500 text-white hover:!bg-emerald-600 font-bold border-none"
+                    onClick={() => {
+                      setDeliverablesInput(
+                        selectedOrder.deliverables_url || "",
+                      );
+                      setIsSelesaiModalOpen(true);
+                    }}
+                    loading={updatingId === selectedOrder.id}
+                  >
+                    Selesai
+                  </CMSButton>
+                </>
+              )}
+            {selectedOrder.status === "REVISION" &&
+              selectedOrder.id !== "NEW" && (
+                <>
+                  <CMSButton
+                    className="!bg-purple-500 text-white hover:!bg-purple-600 font-bold border-none"
+                    onClick={() => {
+                      updateOrderStatus(selectedOrder.id, "REVIEWED");
+                      setSelectedOrder({
+                        ...selectedOrder,
+                        status: "REVIEWED",
+                      });
+                    }}
+                    loading={updatingId === selectedOrder.id}
+                  >
+                    Send for Review
+                  </CMSButton>
+                  <CMSButton
+                    className="!bg-emerald-500 text-white hover:!bg-emerald-600 font-bold border-none"
+                    onClick={() => {
+                      setDeliverablesInput(
+                        selectedOrder.deliverables_url || "",
+                      );
+                      setIsSelesaiModalOpen(true);
+                    }}
+                    loading={updatingId === selectedOrder.id}
+                  >
+                    Selesai
+                  </CMSButton>
+                </>
+              )}
             <CMSButton
               onClick={saveOrderDetails}
               loading={savingDetails}
@@ -1179,7 +1407,7 @@ Gous Studio`;
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-hidden pt-4">
+        <div className="flex-1 min-h-0 flex flex-col pt-4">
           {filteredOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 text-center">
               <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
@@ -1197,135 +1425,194 @@ Gous Studio`;
               </p>
             </div>
           ) : (
-            <CMSTableContainer>
-              <CMSTableHeader>
-                <CMSTableHeaderCell>Order ID & Tanggal</CMSTableHeaderCell>
-                <CMSTableHeaderCell>Pelanggan</CMSTableHeaderCell>
-                <CMSTableHeaderCell>Paket / Kategori</CMSTableHeaderCell>
-                <CMSTableHeaderCell align="right">
-                  Final Price
-                </CMSTableHeaderCell>
-                <CMSTableHeaderCell className="hidden md:table-cell">
-                  Deadline
-                </CMSTableHeaderCell>
-                <CMSTableHeaderCell>Status</CMSTableHeaderCell>
-                <CMSTableHeaderCell />
-              </CMSTableHeader>
-              <tbody className="divide-y divide-slate-50">
-                {filteredOrders.map((order) => (
-                  <CMSTableRow key={order.id}>
-                    <CMSTableCell>
+            <div className="flex-1 flex flex-col min-h-0">
+              <CMSTableContainer className="flex-1 !overflow-y-auto custom-scrollbar">
+                <CMSTableHeader>
+                  <CMSTableHeaderCell>Order ID & Tanggal</CMSTableHeaderCell>
+                  <CMSTableHeaderCell>Pelanggan</CMSTableHeaderCell>
+                  <CMSTableHeaderCell>Paket / Kategori</CMSTableHeaderCell>
+                  <CMSTableHeaderCell align="right">
+                    Final Price
+                  </CMSTableHeaderCell>
+                  <CMSTableHeaderCell className="hidden md:table-cell">
+                    Deadline
+                  </CMSTableHeaderCell>
+                  <CMSTableHeaderCell>Status</CMSTableHeaderCell>
+                  <CMSTableHeaderCell />
+                </CMSTableHeader>
+                <tbody className="divide-y divide-slate-50">
+                  {paginatedOrders.map((order) => (
+                    <CMSTableRow key={order.id}>
+                      <CMSTableCell>
+                        <button
+                          onClick={() =>
+                            navigate(`/cms/orders/${order.order_number}`)
+                          }
+                          className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          #{order.order_number}
+                        </button>
+                        <div className="text-[10px] text-slate-400 mt-1 whitespace-nowrap">
+                          {new Date(order.created_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </div>
+                      </CMSTableCell>
+                      <CMSTableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="font-bold text-slate-700 text-sm">
+                            {order.full_name}
+                          </div>
+                          {order.payment_proof_url && (
+                            <div
+                              className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[8px] font-bold flex items-center gap-1"
+                              title="Bukti Bayar Tersedia"
+                            >
+                              <ImageIcon size={8} /> BUKTI
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5 font-medium">
+                          {order.phone_number}
+                        </div>
+                      </CMSTableCell>
+                      <CMSTableCell>
+                        <div className="font-bold text-slate-700 text-xs">
+                          {order.selected_package}
+                        </div>
+                        <div className="text-[10px] text-brand-500 font-bold mt-0.5">
+                          {order.design_category}
+                        </div>
+                      </CMSTableCell>
+                      <CMSTableCell align="right">
+                        <span className="text-emerald-700 font-bold text-xs">
+                          {Number(order.final_price || 0) === 0
+                            ? "GRATIS"
+                            : `Rp ${(order.final_price || 0).toLocaleString("id-ID")}`}
+                        </span>
+                      </CMSTableCell>
+                      <CMSTableCell className="hidden md:table-cell">
+                        {order.deadline ? (
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                            <Calendar size={12} className="text-slate-400" />
+                            {new Date(order.deadline).toLocaleDateString(
+                              "id-ID",
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </CMSTableCell>
+                      <CMSTableCell>
+                        <CMSBadge variant="status" status={order.status}>
+                          {order.status}
+                        </CMSBadge>
+                      </CMSTableCell>
+                      <CMSTableCell align="right">
+                        <CMSButton
+                          variant="danger"
+                          onClick={() =>
+                            deleteOrder(order.id, order.order_number)
+                          }
+                          loading={updatingId === order.id}
+                          icon={Trash2}
+                          iconSize={14}
+                          title="Hapus Order"
+                        />
+                      </CMSTableCell>
+                    </CMSTableRow>
+                  ))}
+                </tbody>
+              </CMSTableContainer>
+
+              {/* Pagination Controls - Sticky/Pinned at bottom */}
+              {totalPages > 1 && (
+                <div className="flex-shrink-0 mt-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-xs font-medium text-slate-500 text-center sm:text-left">
+                      Menampilkan{" "}
+                      <span className="font-bold text-slate-700">
+                        {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                      </span>{" "}
+                      -{" "}
+                      <span className="font-bold text-slate-700">
+                        {Math.min(
+                          currentPage * ITEMS_PER_PAGE,
+                          filteredOrders.length,
+                        )}
+                      </span>{" "}
+                      dari{" "}
+                      <span className="font-bold text-slate-700">
+                        {filteredOrders.length}
+                      </span>{" "}
+                      order
+                    </div>
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() =>
-                          navigate(`/cms/orders/${order.order_number}`)
+                          setCurrentPage((prev) => Math.max(1, prev - 1))
                         }
-                        className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer"
+                        disabled={currentPage === 1}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:hover:bg-transparent transition-all cursor-pointer"
                       >
-                        #{order.order_number}
+                        <ChevronLeft size={16} />
                       </button>
-                      <div className="text-[10px] text-slate-400 mt-1 whitespace-nowrap">
-                        {new Date(order.created_at).toLocaleDateString(
-                          "id-ID",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )}
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(
+                            (p) =>
+                              p === 1 ||
+                              p === totalPages ||
+                              Math.abs(p - currentPage) <= 1,
+                          )
+                          .map((p, i, arr) => {
+                            const showEllipsis = i > 0 && p - arr[i - 1] > 1;
+                            return (
+                              <React.Fragment key={p}>
+                                {showEllipsis && (
+                                  <span className="text-slate-300 px-1">
+                                    ...
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => setCurrentPage(p)}
+                                  className={`min-w-[30px] h-[30px] rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                    currentPage === p
+                                      ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
+                                      : "text-slate-500 hover:bg-slate-50 border border-transparent hover:border-slate-200"
+                                  }`}
+                                >
+                                  {p}
+                                </button>
+                              </React.Fragment>
+                            );
+                          })}
                       </div>
-                    </CMSTableCell>
-                    <CMSTableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="font-bold text-slate-700 text-sm">
-                          {order.full_name}
-                        </div>
-                        {order.payment_proof_url && (
-                          <div
-                            className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[8px] font-bold flex items-center gap-1"
-                            title="Bukti Bayar Tersedia"
-                          >
-                            <ImageIcon size={8} /> BUKTI
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5 font-medium">
-                        {order.phone_number}
-                      </div>
-                    </CMSTableCell>
-                    <CMSTableCell>
-                      <div className="font-bold text-slate-700 text-xs">
-                        {order.selected_package}
-                      </div>
-                      <div className="text-[10px] text-brand-500 font-bold mt-0.5">
-                        {order.design_category}
-                      </div>
-                    </CMSTableCell>
-                    <CMSTableCell align="right">
-                      <span className="text-emerald-700 font-bold text-xs">
-                        {Number(order.final_price || 0) === 0
-                          ? "GRATIS"
-                          : `Rp ${(order.final_price || 0).toLocaleString("id-ID")}`}
-                      </span>
-                    </CMSTableCell>
-                    <CMSTableCell className="hidden md:table-cell">
-                      {order.deadline ? (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                          <Calendar size={12} className="text-slate-400" />
-                          {new Date(order.deadline).toLocaleDateString("id-ID")}
-                        </div>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </CMSTableCell>
-                    <CMSTableCell>
-                      <CMSSelect
-                        containerClassName="max-w-[180px]"
-                        className={`w-full text-[10px] !h-auto py-1 font-bold transition-all rounded-lg
-                                   ${
-                                     order.status === "DONE"
-                                       ? "!bg-emerald-50 !text-emerald-700 !border-emerald-200 focus:!ring-emerald-500/10"
-                                       : order.status === "IN PROGRESS"
-                                         ? "!bg-blue-50 !text-blue-700 !border-blue-200 focus:!ring-blue-500/10"
-                                         : order.status === "REVISION"
-                                           ? "!bg-rose-50 !text-rose-700 !border-rose-200 focus:!ring-rose-500/10"
-                                           : order.status === "REVIEWED"
-                                             ? "!bg-purple-50 !text-purple-700 !border-purple-200 focus:!ring-purple-500/10"
-                                             : order.status ===
-                                                 "WAITING FOR PAYMENT"
-                                               ? "!bg-orange-50 !text-orange-700 !border-orange-200 focus:!ring-orange-500/10"
-                                               : "!bg-slate-100 !text-slate-600 !border-slate-200 focus:!ring-slate-500/10"
-                                   }`}
-                        value={order.status || "DRAFT"}
-                        onChange={(e) =>
-                          updateOrderStatus(order.id, e.target.value)
-                        }
-                        disabled={updatingId === order.id}
-                      >
-                        {STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </CMSSelect>
-                    </CMSTableCell>
-                    <CMSTableCell align="right">
-                      <CMSButton
-                        variant="danger"
+
+                      <button
                         onClick={() =>
-                          deleteOrder(order.id, order.order_number)
+                          setCurrentPage((prev) =>
+                            Math.min(totalPages, prev + 1),
+                          )
                         }
-                        loading={updatingId === order.id}
-                        icon={Trash2}
-                        iconSize={14}
-                        title="Hapus Order"
-                      />
-                    </CMSTableCell>
-                  </CMSTableRow>
-                ))}
-              </tbody>
-            </CMSTableContainer>
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:hover:bg-transparent transition-all cursor-pointer"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -1340,6 +1627,229 @@ Gous Studio`;
             : null
         }
       />
+
+      {/* Selesai Confirmation Modal */}
+      {isSelesaiModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                <CheckCircle2 size={20} className="text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="font-black text-slate-800 text-base tracking-tight">
+                  Selesaikan Pesanan
+                </h2>
+                <p className="text-xs text-slate-400 font-medium">
+                  Tambahkan link Google Drive dengan file deliverables.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Deliverables Link (Google Drive){" "}
+                <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="url"
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 placeholder:text-slate-300 transition-all ${
+                  !deliverablesInput.trim()
+                    ? "border-rose-300 focus:ring-rose-500/20 focus:border-rose-500"
+                    : (() => {
+                          try {
+                            new URL(deliverablesInput.trim());
+                            return true;
+                          } catch {
+                            return false;
+                          }
+                        })()
+                      ? "border-emerald-300 focus:ring-emerald-500/20 focus:border-emerald-500"
+                      : "border-rose-300 focus:ring-rose-500/20 focus:border-rose-500"
+                }`}
+                placeholder="https://drive.google.com/..."
+                value={deliverablesInput}
+                onChange={(e) => setDeliverablesInput(e.target.value)}
+                autoFocus
+              />
+              {deliverablesInput.trim() &&
+                (() => {
+                  try {
+                    new URL(deliverablesInput.trim());
+                    return false;
+                  } catch {
+                    return true;
+                  }
+                })() && (
+                  <p className="text-rose-500 text-[10px] font-medium mt-1">
+                    URL tidak valid, pastikan dimulai dengan https://
+                  </p>
+                )}
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setIsSelesaiModalOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={async () => {
+                  if (!deliverablesInput.trim()) return;
+                  try {
+                    new URL(deliverablesInput.trim());
+                  } catch {
+                    return;
+                  }
+                  await updateOrderStatus(selectedOrder.id, "DONE");
+                  if (deliverablesInput.trim()) {
+                    const { createClient } =
+                      await import("@supabase/supabase-js");
+                    const supabase = createClient(
+                      import.meta.env.VITE_SUPABASE_URL,
+                      import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    );
+                    await supabase
+                      .from("orders")
+                      .update({ deliverables_url: deliverablesInput.trim() })
+                      .eq("id", selectedOrder.id);
+                  }
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    status: "DONE",
+                    deliverables_url:
+                      deliverablesInput.trim() ||
+                      selectedOrder.deliverables_url,
+                  });
+                  setIsSelesaiModalOpen(false);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-[0.98] cursor-pointer ${
+                  (() => {
+                    if (!deliverablesInput.trim()) return false;
+                    try {
+                      new URL(deliverablesInput.trim());
+                      return true;
+                    } catch {
+                      return false;
+                    }
+                  })()
+                    ? "bg-emerald-500 hover:bg-emerald-600 !text-white"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed active:scale-100"
+                }`}
+              >
+                ✓ Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Manual Payment Verification Modal */}
+      {isVerifyPaymentModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center shrink-0">
+                <CreditCard size={20} className="text-brand-600" />
+              </div>
+              <div>
+                <h2 className="font-black text-slate-800 text-base tracking-tight">
+                  Konfirmasi Pembayaran
+                </h2>
+                <p className="text-xs text-slate-400 font-medium">
+                  Verifikasi pembayaran manual klien sebelum mulai kerjakan.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Metode Pembayaran <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 placeholder:text-slate-300 transition-all"
+                  placeholder="Transfer BCA, QRIS, Cash, dll."
+                  value={verifyPaymentMethod}
+                  onChange={(e) => setVerifyPaymentMethod(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Nominal Dibayar <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
+                  <span className="px-3 text-xs font-bold text-slate-400 bg-slate-50 border-r border-slate-200 py-3">
+                    Rp
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none"
+                    placeholder="0"
+                    value={verifyPaidAmount}
+                    onChange={(e) =>
+                      setVerifyPaidAmount(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setIsVerifyPaymentModalOpen(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={async () => {
+                  if (!verifyPaymentMethod.trim() || verifyPaidAmount === "")
+                    return;
+                  const { createClient } =
+                    await import("@supabase/supabase-js");
+                  const supabase = createClient(
+                    import.meta.env.VITE_SUPABASE_URL,
+                    import.meta.env.VITE_SUPABASE_ANON_KEY,
+                  );
+                  const paidAt = new Date().toISOString();
+                  await supabase
+                    .from("orders")
+                    .update({
+                      payment_method: verifyPaymentMethod.trim(),
+                      paid_amount: Number(verifyPaidAmount),
+                      paid_at: paidAt,
+                      is_sandbox: null, // Manual verification → reset to null
+                    })
+                    .eq("id", selectedOrder.id);
+                  await updateOrderStatus(selectedOrder.id, "IN PROGRESS");
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    status: "IN PROGRESS",
+                    payment_method: verifyPaymentMethod.trim(),
+                    paid_amount: Number(verifyPaidAmount),
+                    paid_at: paidAt,
+                    is_sandbox: undefined,
+                  });
+                  setIsVerifyPaymentModalOpen(false);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-[0.98] cursor-pointer ${
+                  verifyPaymentMethod.trim() && verifyPaidAmount !== ""
+                    ? "bg-brand-500 hover:bg-brand-600 !text-white"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed active:scale-100"
+                }`}
+              >
+                ✓ Verifikasi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

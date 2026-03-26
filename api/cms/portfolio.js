@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { data, password } = req.body;
+  const { data } = req.body;
   const { 
     SUPABASE_URL, 
     VITE_SUPABASE_URL,
@@ -17,7 +17,17 @@ export default async function handler(req, res) {
   const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
   const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
 
-  if (!effectivePassword || password !== effectivePassword) {
+  const cookies = (req.headers.cookie || '').split(';');
+  let cmsToken = null;
+  for (const cookie of cookies) {
+    const [name, ...rest] = cookie.trim().split('=');
+    if (name === 'cms_token') {
+      cmsToken = decodeURIComponent(rest.join('='));
+      break;
+    }
+  }
+
+  if (!effectivePassword || cmsToken !== effectivePassword) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 

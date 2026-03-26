@@ -88,12 +88,13 @@ const ClientCMS: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (fetchError) throw fetchError;
-      setClients((data as ClientItem[]) || []);
+      const res = await fetch('/api/cms/clients?action=get');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to fetch clients');
+      }
+      const result = await res.json();
+      setClients((result.data as ClientItem[]) || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -125,13 +126,12 @@ const ClientCMS: React.FC = () => {
   const fetchClientOrders = async (clientId: string) => {
     try {
       setLoadingOrders(true);
-      const { data, error: fetchError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false });
-      if (fetchError) throw fetchError;
-      setClientOrders((data as OrderItem[]) || []);
+      const res = await fetch(`/api/cms/orders?action=get&clientId=${clientId}`);
+      if (!res.ok) throw new Error('Failed to fetch client orders');
+      const result = await res.json();
+      const allOrders = (result.data as OrderItem[]) || [];
+      // Filter client orders client-side since get-orders returns all
+      setClientOrders(allOrders.filter(o => o.client_id === clientId));
     } catch (err: any) {
       addToast(`Gagal memuat history order: ${err.message}`, "error");
     } finally {
@@ -161,19 +161,16 @@ const ClientCMS: React.FC = () => {
   };
 
   const deleteClient = async (id: string, name: string) => {
-    if (
-      !window.confirm(
-        `Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`,
-      )
-    )
-      return;
+    if (!window.confirm(`Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
     setDeletingId(id);
     try {
-      const { error: deleteError } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", id);
-      if (deleteError) throw deleteError;
+      const res = await fetch('/api/cms/clients?action=delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || 'Failed to delete client');
       setClients((prev) => prev.filter((c) => c.id !== id));
       setSelectedClient(null);
       addToast(`Client "${name}" berhasil dihapus.`, "success");

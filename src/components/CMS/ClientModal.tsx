@@ -96,30 +96,23 @@ const ClientModal: React.FC<ClientModalProps> = ({
       };
 
       if (!initialData || initialData.id === "NEW") {
-        const { data, error } = await supabase
-          .from("clients")
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw error;
+        const res = await fetch('/api/cms/clients?action=create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || 'Failed to create client');
         addToast("Client berhasil ditambahkan.", "success");
-        onSuccess(data as ClientItem);
+        onSuccess(result.data as ClientItem);
       } else {
-        const { error } = await supabase
-          .from("clients")
-          .update(payload)
-          .eq("id", initialData.id);
-        if (error) throw error;
-
-        // Cascade name & phone changes to all linked orders
-        await supabase
-          .from("orders")
-          .update({
-            full_name: payload.full_name,
-            phone_number: payload.phone_number,
-          })
-          .eq("client_id", initialData.id);
-
+        const res = await fetch('/api/cms/clients?action=update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: initialData.id, updates: payload })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || 'Failed to update client');
         addToast("Data client berhasil diperbarui.", "success");
         onSuccess({ ...initialData, ...payload } as ClientItem);
       }

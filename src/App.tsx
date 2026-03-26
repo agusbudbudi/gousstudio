@@ -16,6 +16,7 @@ const PricelistPage = lazy(() => import('./pages/PricelistPage'));
 const CMS = lazy(() => import('./pages/CMS'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 const PricelistDetailPage = lazy(() => import('./pages/PricelistDetailPage'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
 
 // CMS Components
 const OrderCMS = lazy(() => import('./components/CMS/OrderCMS'));
@@ -134,6 +135,7 @@ const AnimatedRoutes = () => {
           <Route path="fastwork" element={<FastworkCMS />} />
         </Route>
         <Route path="/order/:orderNumber" element={<OrderDetail />} />
+        <Route path="/order/:orderNumber/payment" element={<PaymentPage />} />
       </Routes>
     </AnimatePresence>
   );
