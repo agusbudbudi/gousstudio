@@ -259,11 +259,19 @@ const OrderCMS: React.FC = () => {
     setIsClientModalOpen(false);
   };
 
-  const updateOrderStatus = async (id: string, newStatus: string) => {
+  const updateOrderStatus = async (
+    id: string,
+    newStatus: string,
+    additionalUpdates: any = {},
+  ) => {
     // If it's a new draft, just update local state
     if (id === "NEW") {
       if (selectedOrder) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus } as OrderItem);
+        setSelectedOrder({
+          ...selectedOrder,
+          status: newStatus,
+          ...additionalUpdates,
+        } as OrderItem);
       }
       return;
     }
@@ -273,7 +281,10 @@ const OrderCMS: React.FC = () => {
       const res = await fetch("/api/cms/orders?action=update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, updates: { status: newStatus } }),
+        body: JSON.stringify({
+          id,
+          updates: { status: newStatus, ...additionalUpdates },
+        }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Failed to update order");
@@ -281,7 +292,11 @@ const OrderCMS: React.FC = () => {
       setOrders((prev) =>
         prev.map((order) =>
           order.id === id
-            ? ({ ...order, status: newStatus } as OrderItem)
+            ? ({
+                ...order,
+                status: newStatus,
+                ...additionalUpdates,
+              } as OrderItem)
             : order,
         ),
       );
@@ -289,7 +304,13 @@ const OrderCMS: React.FC = () => {
       // Also update selectedOrder if it's the one being updated
       if (selectedOrder && selectedOrder.id === id) {
         setSelectedOrder((prev) =>
-          prev ? ({ ...prev, status: newStatus } as OrderItem) : null,
+          prev
+            ? ({
+                ...prev,
+                status: newStatus,
+                ...additionalUpdates,
+              } as OrderItem)
+            : null,
         );
       }
       const orderNumber = orders.find((o) => o.id === id)?.order_number || id;
@@ -1916,25 +1937,9 @@ Gous Studio`;
                   } catch {
                     return;
                   }
-                  await updateOrderStatus(selectedOrder.id, "DONE");
-                  if (deliverablesInput.trim()) {
-                    const { createClient } =
-                      await import("@supabase/supabase-js");
-                    const supabase = createClient(
-                      import.meta.env.VITE_SUPABASE_URL,
-                      import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    );
-                    await supabase
-                      .from("orders")
-                      .update({ deliverables_url: deliverablesInput.trim() })
-                      .eq("id", selectedOrder.id);
-                  }
-                  setSelectedOrder({
-                    ...selectedOrder,
-                    status: "DONE",
-                    deliverables_url:
-                      deliverablesInput.trim() ||
-                      selectedOrder.deliverables_url,
+
+                  await updateOrderStatus(selectedOrder.id, "DONE", {
+                    deliverables_url: deliverablesInput.trim(),
                   });
                   setIsSelesaiModalOpen(false);
                 }}
