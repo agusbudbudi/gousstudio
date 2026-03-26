@@ -138,13 +138,21 @@ const OrderDetail = () => {
         data: { publicUrl },
       } = supabase.storage.from("payment-proofs").getPublicUrl(filePath);
 
-      // Update order in database
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ payment_proof_url: publicUrl })
-        .eq("id", order.id);
+      // Update order in database via API to bypass RLS
+      const updateRes = await fetch("/api/orders?action=update-proof", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNumber: order.order_number,
+          paymentProofUrl: publicUrl,
+        }),
+      });
 
-      if (updateError) throw updateError;
+      if (!updateRes.ok) {
+        throw new Error("Gagal memperbarui data order di database");
+      }
 
       setOrder((prev: any) => ({ ...prev, payment_proof_url: publicUrl }));
       setUploadSuccess(true);

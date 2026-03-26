@@ -45,7 +45,7 @@ const CMSInput = forwardRef<
             {label && (
               <label
                 htmlFor={id}
-                className="text-xs font-bold text-slate-500 block"
+                className="text-xs font-medium text-slate-400 block"
               >
                 {label}
               </label>

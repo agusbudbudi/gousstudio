@@ -88,10 +88,10 @@ const ClientCMS: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/cms/clients?action=get');
+      const res = await fetch("/api/cms/clients?action=get");
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Failed to fetch clients');
+        throw new Error(err.message || "Failed to fetch clients");
       }
       const result = await res.json();
       setClients((result.data as ClientItem[]) || []);
@@ -126,12 +126,14 @@ const ClientCMS: React.FC = () => {
   const fetchClientOrders = async (clientId: string) => {
     try {
       setLoadingOrders(true);
-      const res = await fetch(`/api/cms/orders?action=get&clientId=${clientId}`);
-      if (!res.ok) throw new Error('Failed to fetch client orders');
+      const res = await fetch(
+        `/api/cms/orders?action=get&clientId=${clientId}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch client orders");
       const result = await res.json();
       const allOrders = (result.data as OrderItem[]) || [];
       // Filter client orders client-side since get-orders returns all
-      setClientOrders(allOrders.filter(o => o.client_id === clientId));
+      setClientOrders(allOrders.filter((o) => o.client_id === clientId));
     } catch (err: any) {
       addToast(`Gagal memuat history order: ${err.message}`, "error");
     } finally {
@@ -146,7 +148,10 @@ const ClientCMS: React.FC = () => {
 
   const handleModalSuccess = (client: ClientItem) => {
     fetchClients();
-    if (
+    // Redirect to the new client's details page if it was a new creation
+    if (selectedClient?.id === "NEW") {
+      navigate(`/cms/clients/${formatClientId(client.client_no)}`);
+    } else if (
       viewMode === "DETAILS" &&
       (selectedClient?.id === client.id ||
         (clientNo && formatClientId(client.client_no) === clientNo))
@@ -161,16 +166,21 @@ const ClientCMS: React.FC = () => {
   };
 
   const deleteClient = async (id: string, name: string) => {
-    if (!window.confirm(`Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (
+      !window.confirm(
+        `Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`,
+      )
+    )
+      return;
     setDeletingId(id);
     try {
-      const res = await fetch('/api/cms/clients?action=delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
+      const res = await fetch("/api/cms/clients?action=delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to delete client');
+      if (!res.ok) throw new Error(result.message || "Failed to delete client");
       setClients((prev) => prev.filter((c) => c.id !== id));
       setSelectedClient(null);
       addToast(`Client "${name}" berhasil dihapus.`, "success");
@@ -222,7 +232,7 @@ const ClientCMS: React.FC = () => {
               className="w-full md:w-64"
             />
             <CMSButton
-              onClick={() => navigate("/cms/clients/new")}
+              onClick={handleAddClient}
               icon={Plus}
               className="shrink-0"
             >
@@ -293,7 +303,7 @@ const ClientCMS: React.FC = () => {
 
                   {/* List Data */}
                   <div className="flex flex-col">
-                    <div className="flex items-center justify-between py-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between py-2.5 border-t border-slate-100">
                       <span className="text-sm text-slate-500">
                         Phone Number
                       </span>
@@ -302,7 +312,7 @@ const ClientCMS: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between py-2.5 border-t border-slate-100">
                       <span className="text-sm text-slate-500">Company</span>
                       <span className="text-sm font-medium text-slate-800 text-right">
                         {selectedClient.company || "-"}
