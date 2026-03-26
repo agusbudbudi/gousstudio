@@ -209,7 +209,7 @@ const OrderModal = () => {
   const onSubmit = async (data: OrderFormData) => {
     try {
       // First, save to database
-      const response = await fetch("/api/save-order", {
+      const response = await fetch("/api/orders?action=create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

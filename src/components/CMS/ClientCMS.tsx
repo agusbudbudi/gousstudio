@@ -88,7 +88,7 @@ const ClientCMS: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/cms/get-clients');
+      const res = await fetch('/api/cms/clients?action=get');
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Failed to fetch clients');
@@ -126,7 +126,7 @@ const ClientCMS: React.FC = () => {
   const fetchClientOrders = async (clientId: string) => {
     try {
       setLoadingOrders(true);
-      const res = await fetch(`/api/cms/get-orders?clientId=${clientId}`);
+      const res = await fetch(`/api/cms/orders?action=get&clientId=${clientId}`);
       if (!res.ok) throw new Error('Failed to fetch client orders');
       const result = await res.json();
       const allOrders = (result.data as OrderItem[]) || [];
@@ -164,7 +164,7 @@ const ClientCMS: React.FC = () => {
     if (!window.confirm(`Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
     setDeletingId(id);
     try {
-      const res = await fetch('/api/cms/delete-client', {
+      const res = await fetch('/api/cms/clients?action=delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })

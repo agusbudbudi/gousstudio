@@ -67,15 +67,11 @@ const PaymentPage = () => {
     setErrorMsg("");
 
     try {
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .select(
-          "order_number, final_price, price, status, selected_package, package_details",
-        )
-        .eq("order_number", orderNumber)
-        .single();
+      const res = await fetch(`/api/orders?action=get&orderNumber=${orderNumber}`);
+      if (!res.ok) throw new Error("Order tidak ditemukan.");
+      const { order, priceData } = await res.json();
 
-      if (orderErr || !order) throw new Error("Order tidak ditemukan.");
+      if (!order) throw new Error("Order tidak ditemukan.");
       if (order.status !== "WAITING FOR PAYMENT") {
         // Already paid or irrelevant state — redirect back
         navigate(`/order/${orderNumber}`, { replace: true });
@@ -85,35 +81,29 @@ const PaymentPage = () => {
       const amount: number = order.final_price ?? order.price ?? 0;
       setOrderAmount(amount);
 
-      // Snapshot priority: 1. order.package_details, 2. fetch from pricelists
       if (order.package_details) {
         setPackageData(order.package_details);
-      } else if (order.selected_package) {
-        const { data: priceData } = await supabase
-          .from("pricelists")
-          .select("*")
-          .eq("servicename", order.selected_package)
-          .single();
-        if (priceData) setPackageData(priceData);
+      } else if (priceData) {
+        setPackageData(priceData);
       }
 
       // Call our secure server-side endpoint
-      const res = await fetch("/api/create-qris", {
+      const qrisRes = await fetch("/api/payments?action=create-qris", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order_id: orderNumber, amount }),
       });
 
-      const data = await res.json();
+      const qrisJson = await qrisRes.json();
 
-      if (!res.ok || !data.payment_number) {
-        throw new Error(data.message || "Gagal membuat transaksi QRIS.");
+      if (!qrisRes.ok || !qrisJson.payment_number) {
+        throw new Error(qrisJson.message || "Gagal membuat transaksi QRIS.");
       }
 
-      setQrisData(data);
+      setQrisData(qrisJson);
 
       // Calculate time left in seconds
-      const expiryMs = new Date(data.expired_at).getTime() - Date.now();
+      const expiryMs = new Date(qrisJson.expired_at).getTime() - Date.now();
       setTimeLeft(Math.max(0, Math.floor(expiryMs / 1000)));
 
       setStatus("ready");
@@ -130,7 +120,7 @@ const PaymentPage = () => {
     const poll = async () => {
       try {
         const res = await fetch(
-          `/api/transaction-status?order_id=${orderNumber}`,
+          `/api/orders?action=status&order_id=${orderNumber}`,
         );
         const data = await res.json();
 

@@ -200,7 +200,7 @@ const PortfolioCMS: React.FC = () => {
   const persistData = async () => {
     setSaving(true);
     try {
-      const endpoint = "/api/save-portfolio";
+      const endpoint = "/api/cms/portfolio";
 
       const response = await fetch(endpoint, {
         method: "POST",

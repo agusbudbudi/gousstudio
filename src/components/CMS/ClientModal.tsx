@@ -96,7 +96,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
       };
 
       if (!initialData || initialData.id === "NEW") {
-        const res = await fetch('/api/cms/create-client', {
+        const res = await fetch('/api/cms/clients?action=create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payload })
@@ -106,7 +106,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
         addToast("Client berhasil ditambahkan.", "success");
         onSuccess(result.data as ClientItem);
       } else {
-        const res = await fetch('/api/cms/update-client', {
+        const res = await fetch('/api/cms/clients?action=update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: initialData.id, updates: payload })

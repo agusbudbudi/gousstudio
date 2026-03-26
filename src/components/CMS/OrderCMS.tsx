@@ -186,13 +186,13 @@ const OrderCMS: React.FC = () => {
     };
     const fetchClients = async () => {
       try {
-        const res = await fetch('/api/cms/get-clients');
+        const res = await fetch("/api/cms/clients?action=get");
         if (res.ok) {
           const result = await res.json();
           setClients((result.data as ClientItem[]) || []);
         }
       } catch (err) {
-        console.error('Failed to fetch clients:', err);
+        console.error("Failed to fetch clients:", err);
       }
     };
     fetchPricelists();
@@ -214,10 +214,10 @@ const OrderCMS: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/cms/get-orders');
+      const res = await fetch("/api/cms/orders?action=get");
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Failed to fetch orders');
+        throw new Error(err.message || "Failed to fetch orders");
       }
       const result = await res.json();
       setOrders((result.data as OrderItem[]) || []);
@@ -265,13 +265,13 @@ const OrderCMS: React.FC = () => {
 
     setUpdatingId(id);
     try {
-      const res = await fetch('/api/cms/update-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, updates: { status: newStatus } })
+      const res = await fetch("/api/cms/orders?action=update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, updates: { status: newStatus } }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to update order');
+      if (!res.ok) throw new Error(result.message || "Failed to update order");
 
       setOrders((prev) =>
         prev.map((order) =>
@@ -309,13 +309,13 @@ const OrderCMS: React.FC = () => {
 
     try {
       setUpdatingId(id);
-      const res = await fetch('/api/cms/delete-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
+      const res = await fetch("/api/cms/orders?action=delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to delete order');
+      if (!res.ok) throw new Error(result.message || "Failed to delete order");
 
       setOrders((prev) => prev.filter((o) => o.id !== id));
       addToast(`Order #${orderNumber} berhasil dihapus.`, "success");
@@ -457,22 +457,23 @@ const OrderCMS: React.FC = () => {
           package_details: selectedPricelist || null,
         };
 
-        const res = await fetch('/api/cms/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload })
+        const res = await fetch("/api/cms/orders?action=create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ payload }),
         });
         const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Failed to create order');
+        if (!res.ok)
+          throw new Error(result.message || "Failed to create order");
         const data = result.data;
 
         setOrders((prev) => [data as OrderItem, ...prev]);
         navigate(`/cms/orders/${data.order_number}`);
         addToast("Order baru berhasil dibuat.", "success");
       } else {
-        const res = await fetch('/api/cms/update-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/cms/orders?action=update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: selectedOrder.id,
             updates: {
@@ -494,11 +495,12 @@ const OrderCMS: React.FC = () => {
               deliverables_url: selectedOrder.deliverables_url || null,
               internal_notes: selectedOrder.internal_notes || null,
               package_details: selectedPricelist || null,
-            }
-          })
+            },
+          }),
         });
         const result = await res.json();
-        if (!res.ok) throw new Error(result.message || 'Failed to update order');
+        if (!res.ok)
+          throw new Error(result.message || "Failed to update order");
 
         setOrders((prev) =>
           prev.map((o) => (o.id === selectedOrder.id ? selectedOrder : o)),

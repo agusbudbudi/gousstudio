@@ -46,7 +46,7 @@ const OrderDetail = () => {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/get-order?orderNumber=${orderNumber}`);
+        const res = await fetch(`/api/orders?action=get&orderNumber=${orderNumber}`);
 
         if (!res.ok) {
           throw new Error("Order tidak ditemukan atau terjadi kesalahan.");

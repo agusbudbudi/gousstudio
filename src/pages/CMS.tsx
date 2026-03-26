@@ -16,7 +16,7 @@ const CMS: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/cms/check-auth');
+        const res = await fetch('/api/cms/auth?action=check');
         if (res.ok) {
           const data = await res.json();
           if (data.isAuthenticated) {
@@ -35,7 +35,7 @@ const CMS: React.FC = () => {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/cms/login', {
+      const res = await fetch('/api/cms/auth?action=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
@@ -55,7 +55,7 @@ const CMS: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/cms/logout', { method: 'POST' });
+      await fetch('/api/cms/auth?action=logout', { method: 'POST' });
     } catch (err) {
       console.error("Logout error:", err);
     }
