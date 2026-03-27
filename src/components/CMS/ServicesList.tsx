@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { ServiceItem } from "../../types";
 import CMSButton from "./Common/CMSButton";
+import CMSEmptyState from "./Common/CMSEmptyState";
 
 // Map icon name string → Lucide component
 const ICON_MAP: Record<string, any> = {
@@ -58,12 +59,11 @@ const ServicesList: React.FC<ServicesListProps> = ({ items, searchQuery, onEdit,
 
   if (filteredItems.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Shapes className="w-8 h-8 mx-auto mb-3 opacity-20 text-slate-300" />
-        <p className="text-sm font-medium text-slate-400">
-          {isSearching ? "Tidak ada layanan ditemukan." : "Belum ada layanan. Klik Tambah untuk memulai."}
-        </p>
-      </div>
+      <CMSEmptyState
+        icon={Layers}
+        title={isSearching ? "Tidak ada hasil ditemukan" : "Belum ada Layanan"}
+        description={isSearching ? "Coba gunakan kata kunci pencarian yang lain." : "Klik tombol 'Tambah' untuk menambahkan layanan pertama."}
+      />
     );
   }
 

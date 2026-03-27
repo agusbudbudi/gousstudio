@@ -23,7 +23,7 @@ const CMSInput = forwardRef<
       error,
       isTextArea = false,
       leftIcon,
-      isBold = true,
+      isBold = false,
       className = "",
       id,
       ...props
@@ -31,7 +31,7 @@ const CMSInput = forwardRef<
     ref,
   ) => {
     const inputStyles = `
-      w-full ${leftIcon ? "pl-10 pr-4" : "px-4"} ${isTextArea ? "py-2.5" : "h-[42px] py-0"} bg-slate-50 border rounded-lg text-sm ${isBold ? "font-bold" : "font-normal"} 
+      w-full ${leftIcon ? "pl-10 pr-4" : "px-4"} ${isTextArea ? "py-2.5" : "h-[42px] py-0"} bg-slate-50 border rounded-lg text-sm ${isBold ? "font-bold" : "font-medium"} 
       focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 
       transition-all placeholder:text-slate-300
       ${error ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/10" : "border-slate-200"}
@@ -45,7 +45,7 @@ const CMSInput = forwardRef<
             {label && (
               <label
                 htmlFor={id}
-                className="text-xs font-medium text-slate-400 block"
+                className="text-sm font-medium text-slate-500 block"
               >
                 {label}
               </label>

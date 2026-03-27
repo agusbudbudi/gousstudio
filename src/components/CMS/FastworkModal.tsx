@@ -34,7 +34,12 @@ interface FastworkModalProps {
   initialData: any;
 }
 
-const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
+const FastworkModal: React.FC<FastworkModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -55,7 +60,8 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
         title: initialData.title || "",
         url: initialData.url || "",
         image: initialData.image || "",
-        rating: initialData.rating !== undefined ? Number(initialData.rating) : 5.0,
+        rating:
+          initialData.rating !== undefined ? Number(initialData.rating) : 5.0,
         rehire: initialData.rehire || false,
         installment: initialData.installment || false,
         delay: initialData.delay || "0",
@@ -170,7 +176,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
 
         {/* Toggles */}
         <div className="grid grid-cols-2 gap-4">
-          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
+          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
             <input
               type="checkbox"
               {...register("rehire")}
@@ -178,12 +184,12 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
             />
             <div>
               <p className="text-sm font-bold text-slate-700">Rehire Rate</p>
-              <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+              <p className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
                 Klien pernah order ulang
               </p>
             </div>
           </label>
-          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
+          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
             <input
               type="checkbox"
               {...register("installment")}
@@ -191,7 +197,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({ isOpen, onClose, onSave, 
             />
             <div>
               <p className="text-sm font-bold text-slate-700">Cicilan</p>
-              <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+              <p className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
                 Tersedia opsi cicilan
               </p>
             </div>

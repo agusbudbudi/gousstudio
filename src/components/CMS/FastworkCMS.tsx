@@ -35,7 +35,7 @@ const FastworkCMS: React.FC = () => {
           rehire: item.rehire,
           installment: item.installment,
           delay: item.delay,
-        }))
+        })),
       );
 
     return sanitize(items) !== sanitize(pristineItems);
@@ -124,11 +124,13 @@ const FastworkCMS: React.FC = () => {
         order_index: index,
       }));
 
-      const currentIds = items.filter(item => item.id).map(item => item.id);
-      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
+      const currentIds = items.filter((item) => item.id).map((item) => item.id);
+      const deletedIds = pristineItems
+        .filter((item) => item.id && !currentIds.includes(item.id))
+        .map((item) => item.id);
 
-      const itemsToUpdate = flatData.filter(item => item.id);
-      const itemsToInsert = flatData.filter(item => !item.id);
+      const itemsToUpdate = flatData.filter((item) => item.id);
+      const itemsToInsert = flatData.filter((item) => !item.id);
 
       if (deletedIds.length > 0) {
         const { error: delError } = await supabase
@@ -206,11 +208,13 @@ const FastworkCMS: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="pt-4">
+      <div className="pt-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-            <p className="text-slate-400 font-medium">Memuat fastwork items...</p>
+            <p className="text-slate-400 font-medium">
+              Memuat fastwork items...
+            </p>
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">

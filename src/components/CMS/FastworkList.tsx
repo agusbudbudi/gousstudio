@@ -1,7 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Edit3, Trash2, ChevronUp, ChevronDown, Star, ExternalLink, RefreshCw, CreditCard, Zap } from "lucide-react";
+import { Edit3, Trash2, ChevronUp, ChevronDown, Star, ExternalLink, RefreshCw, CreditCard, Zap, Target } from "lucide-react";
 import CMSButton from "./Common/CMSButton";
+import CMSEmptyState from "./Common/CMSEmptyState";
 
 import { FastworkItem } from "../../types";
 
@@ -24,12 +25,11 @@ const FastworkList: React.FC<FastworkListProps> = ({ items, searchQuery, onEdit,
 
   if (filteredItems.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-300">
-        <Zap className="w-8 h-8 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium text-slate-400">
-          {isSearching ? "Tidak ada item ditemukan." : "Belum ada Fastwork item. Klik Tambah untuk memulai."}
-        </p>
-      </div>
+      <CMSEmptyState
+        icon={Target}
+        title={isSearching ? "Tidak ada hasil ditemukan" : "Belum ada item Fastwork"}
+        description={isSearching ? "Coba gunakan kata kunci pencarian yang lain." : "Klik tombol 'Tambah' untuk menambahkan item pertama."}
+      />
     );
   }
 

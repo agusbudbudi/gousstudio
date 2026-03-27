@@ -42,7 +42,7 @@ const ServicesCMS: React.FC = () => {
           category: item.category,
           color: item.color,
           included: [...(item.included || [])].sort(),
-        }))
+        })),
       );
 
     return sanitize(items) !== sanitize(pristineItems);
@@ -62,9 +62,9 @@ const ServicesCMS: React.FC = () => {
       if (fetchError) throw fetchError;
 
       // Ensure 'included' is always an array for consistency with isDirty logic
-      const processedData = (data as ServiceItem[] || []).map(item => ({
+      const processedData = ((data as ServiceItem[]) || []).map((item) => ({
         ...item,
-        included: item.included || []
+        included: item.included || [],
       }));
 
       setItems(processedData);
@@ -137,11 +137,13 @@ const ServicesCMS: React.FC = () => {
         order_index: index,
       }));
 
-      const currentIds = items.filter(item => item.id).map(item => item.id);
-      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
+      const currentIds = items.filter((item) => item.id).map((item) => item.id);
+      const deletedIds = pristineItems
+        .filter((item) => item.id && !currentIds.includes(item.id))
+        .map((item) => item.id);
 
-      const itemsToUpdate = flatData.filter(item => item.id);
-      const itemsToInsert = flatData.filter(item => !item.id);
+      const itemsToUpdate = flatData.filter((item) => item.id);
+      const itemsToInsert = flatData.filter((item) => !item.id);
 
       if (deletedIds.length > 0) {
         const { error: delError } = await supabase
@@ -220,7 +222,7 @@ const ServicesCMS: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="pt-4">
+      <div className="pt-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />

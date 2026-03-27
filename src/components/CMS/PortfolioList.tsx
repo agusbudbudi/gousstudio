@@ -7,9 +7,11 @@ import {
   ChevronUp,
   ChevronDown,
   ImageOff,
+  LayoutGrid,
 } from "lucide-react";
 import { resolveImageUrl } from "../../utils/imageResolver";
 import CMSButton from "./Common/CMSButton";
+import CMSEmptyState from "./Common/CMSEmptyState";
 
 import { PortfolioItem, PricelistItem } from "../../types";
 
@@ -46,6 +48,16 @@ const PortfolioList: React.FC<PortfolioListProps> = ({
   );
 
   const isSearching = searchQuery.length > 0;
+
+  if (filteredItems.length === 0) {
+    return (
+      <CMSEmptyState
+        icon={LayoutGrid}
+        title={isSearching ? "Tidak ada hasil ditemukan" : "Belum ada Portfolio"}
+        description={isSearching ? "Coba gunakan kata kunci pencarian yang lain." : "Klik tombol 'Tambah' untuk menambahkan portfolio pertama."}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">

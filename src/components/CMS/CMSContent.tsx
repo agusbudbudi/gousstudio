@@ -21,6 +21,10 @@ import {
   ShoppingCart,
   Shuffle,
   Users,
+  Tags,
+  LayoutGrid,
+  Layers,
+  Target,
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PortfolioList from "./PortfolioList";
@@ -71,19 +75,20 @@ const MenuItem = ({
     <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
       <button
         onClick={onClick}
-        className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-2.5 px-4 py-2.5"} rounded-lg font-bold transition-all text-[11px] cursor-pointer border ${
+        className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer border ${
           isActive
-            ? "bg-brand-500 border-brand-500 text-white shadow-md shadow-brand-500/20"
-            : "text-slate-500 border-transparent hover:text-slate-800 hover:bg-slate-100/50"
+            ? "bg-brand-50/70 border-brand-500/50 text-brand-700"
+            : "text-slate-600 border-transparent hover:text-brand-600 hover:bg-slate-50"
         }`}
       >
         <Icon
-          className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600"}`}
+          className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-brand-600" : "text-slate-400 group-hover:text-brand-500"}`}
+          strokeWidth={isActive ? 2.5 : 2}
         />
         {!isCollapsed && <span className="truncate">{label}</span>}
 
         {isCollapsed && (
-          <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-[10px] rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
+          <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
             {label}
             <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
           </div>
@@ -140,7 +145,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} hover:opacity-80 transition-opacity cursor-pointer group w-full`}
+            className={`flex items-center ${isCollapsed ? "justify-center" : "gap-1"} hover:opacity-80 transition-opacity cursor-pointer group w-full`}
           >
             <img
               src="/img/gous-logo.png"
@@ -149,10 +154,10 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
             />
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-slate-900 leading-tight text-sm group-hover:text-brand-500 transition-colors truncate">
+                <h2 className="font-bold text-slate-900 leading-tight text-lg group-hover:text-brand-700 transition-colors truncate">
                   Gous Studio
                 </h2>
-                <p className="text-[9px] text-slate-400 font-bold truncate">
+                <p className="text-[10px] text-slate-400 font-bold truncate">
                   Operation Dashboard
                 </p>
               </div>
@@ -160,7 +165,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
           </a>
         </div>
 
-        <nav className={`flex-1 ${isCollapsed ? "p-2" : "p-4"} space-y-4`}>
+        <nav className={`flex-1 ${isCollapsed ? "p-2" : "p-4"} space-y-4 pt-0`}>
           {/* Operation Group */}
           <div>
             {!isCollapsed ? (
@@ -168,12 +173,12 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
                 Project Ops
               </div>
             ) : (
-              <div className="h-px bg-slate-100 mx-2 mb-3 mt-1"></div>
+              <div className="h-px bg-slate-100 mx-2 mb-3 mt-0"></div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <MenuItem
                 id="orders"
-                icon={ShoppingCart}
+                icon={ShoppingBag}
                 label="Orders"
                 activePage={activePage}
                 isCollapsed={isCollapsed}
@@ -189,7 +194,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
               />
               <MenuItem
                 id="pricelist"
-                icon={DollarSign}
+                icon={Tags}
                 label="Pricelist"
                 activePage={activePage}
                 isCollapsed={isCollapsed}
@@ -207,10 +212,10 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
             ) : (
               <div className="h-px bg-slate-100 mx-2 mb-3 mt-4"></div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <MenuItem
                 id="portfolio"
-                icon={ImageIcon}
+                icon={LayoutGrid}
                 label="Portfolio"
                 activePage={activePage}
                 isCollapsed={isCollapsed}
@@ -218,7 +223,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
               />
               <MenuItem
                 id="services"
-                icon={Shapes}
+                icon={Layers}
                 label="Services"
                 activePage={activePage}
                 isCollapsed={isCollapsed}
@@ -226,8 +231,8 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
               />
               <MenuItem
                 id="fastwork"
-                icon={Zap}
-                label="Fastwork"
+                icon={Target}
+                label="Fastwork Sales"
                 activePage={activePage}
                 isCollapsed={isCollapsed}
                 onClick={() => navigate("/cms/fastwork")}
@@ -242,16 +247,16 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
           <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
             <button
               onClick={toggleSidebar}
-              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-2.5 px-4 py-2.5"} rounded-lg font-bold transition-all text-[11px] cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-50`}
+              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer text-slate-500 hover:text-slate-700 hover:bg-slate-100`}
             >
               {isCollapsed ? (
-                <ChevronRight className="w-4 h-4 shrink-0 transition-transform" />
+                <ChevronRight className="w-5 h-5 shrink-0 transition-transform" />
               ) : (
-                <ChevronLeft className="w-4 h-4 shrink-0 transition-transform" />
+                <ChevronLeft className="w-5 h-5 shrink-0 transition-transform" />
               )}
               {!isCollapsed && <span className="truncate">Collapse Menu</span>}
               {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-[10px] rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
+                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
                   Expand Menu
                   <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
                 </div>
@@ -262,12 +267,12 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
           <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
             <button
               onClick={onLogout}
-              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-2.5 px-4 py-2.5"} rounded-lg font-bold transition-all text-[11px] cursor-pointer text-slate-400 hover:text-red-500 hover:bg-red-50/50`}
+              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer text-slate-500 hover:text-red-500 hover:bg-red-50/50`}
             >
-              <LogOut className="w-4 h-4 shrink-0" />
+              <LogOut className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="truncate">Sign Out</span>}
               {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-[10px] rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
+                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
                   Sign Out
                   <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
                 </div>
