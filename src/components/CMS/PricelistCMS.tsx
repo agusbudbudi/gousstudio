@@ -14,7 +14,6 @@ import PricelistList from "./PricelistList";
 import PricelistModal from "./PricelistModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
-import CMSSelect from "./Common/CMSSelect";
 import CMSAlertBanner from "./Common/CMSAlertBanner";
 
 import { PricelistItem } from "../../types";
@@ -34,7 +33,7 @@ const PricelistCMS: React.FC = () => {
   // Check if items have changed since last fetch/save
   const isDirty = React.useMemo(() => {
     if (loading) return false;
-    
+
     const sanitize = (list: PricelistItem[]) =>
       JSON.stringify(
         list.map((item) => ({
@@ -49,26 +48,27 @@ const PricelistCMS: React.FC = () => {
           totalrevision: Number(item.totalrevision) || 0,
           deliverables: [...(item.deliverables || [])].sort(),
           isShowToCustomer: Boolean(item.isShowToCustomer),
-        }))
+        })),
       );
-    
+
     return sanitize(items) !== sanitize(pristineItems);
   }, [items, pristineItems, loading]);
 
   const categories = React.useMemo(() => {
-    const cats = new Set(items.map(item => item.category));
+    const cats = new Set(items.map((item) => item.category));
     return ["All", ...Array.from(cats)].filter(Boolean);
   }, [items]);
 
   const filteredItems = React.useMemo(() => {
-    return items.filter(item => {
-      const matchesSearch = 
+    return items.filter((item) => {
+      const matchesSearch =
         item.servicename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
-      
+
+      const matchesCategory =
+        categoryFilter === "All" || item.category === categoryFilter;
+
       return matchesSearch && matchesCategory;
     });
   }, [items, searchQuery, categoryFilter]);
@@ -122,8 +122,8 @@ const PricelistCMS: React.FC = () => {
       prev.map((item, i) =>
         i === index
           ? { ...item, isShowToCustomer: !item.isShowToCustomer }
-          : item
-      )
+          : item,
+      ),
     );
     addToast(
       "Visibility diubah (lokal). Klik 'Simpan' untuk memperbarui database.",
@@ -178,12 +178,14 @@ const PricelistCMS: React.FC = () => {
         is_show_to_customer: item.isShowToCustomer ?? false,
       }));
 
-      const currentIds = items.filter(item => item.id).map(item => item.id);
-      const deletedIds = pristineItems.filter(item => item.id && !currentIds.includes(item.id)).map(item => item.id);
+      const currentIds = items.filter((item) => item.id).map((item) => item.id);
+      const deletedIds = pristineItems
+        .filter((item) => item.id && !currentIds.includes(item.id))
+        .map((item) => item.id);
 
       // Separate items to update vs insert
-      const itemsToUpdate = flatData.filter(item => item.id);
-      const itemsToInsert = flatData.filter(item => !item.id);
+      const itemsToUpdate = flatData.filter((item) => item.id);
+      const itemsToInsert = flatData.filter((item) => !item.id);
 
       // Explicitly delete removed items
       if (deletedIds.length > 0) {
@@ -236,18 +238,7 @@ const PricelistCMS: React.FC = () => {
           placeholder="Cari pricelist..."
           className="w-full md:w-64"
         />
-        <CMSSelect
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="w-full md:w-48"
-          containerClassName="!w-auto"
-        >
-          {categories.map(cat => (
-            <option key={cat} value={cat}>
-              {cat === "All" ? "Semua Kategori" : cat}
-            </option>
-          ))}
-        </CMSSelect>
+
         <CMSButton
           variant="secondary"
           onClick={handleAddItem}
@@ -277,7 +268,42 @@ const PricelistCMS: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="pt-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
+          {categories.map((cat) => {
+            const count =
+              cat === "All"
+                ? items.length
+                : items.filter((i) => i.category === cat).length;
+
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  categoryFilter === cat
+                    ? "bg-brand-50 border-brand-500/50 text-brand-700"
+                    : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300"
+                }`}
+              >
+                <span className="text-xs font-bold">
+                  {cat === "All" ? "Semua Kategori" : cat}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    categoryFilter === cat
+                      ? "bg-brand-500 text-white"
+                      : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
@@ -296,7 +322,9 @@ const PricelistCMS: React.FC = () => {
             onDelete={handleDeleteItem}
             onReorder={handleReorder}
             onToggleVisibility={handleToggleVisibility}
-            isSearchingOrFiltering={searchQuery.length > 0 || categoryFilter !== "All"}
+            isSearchingOrFiltering={
+              searchQuery.length > 0 || categoryFilter !== "All"
+            }
           />
         )}
       </div>

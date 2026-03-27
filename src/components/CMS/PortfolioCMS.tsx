@@ -41,13 +41,15 @@ const PortfolioCMS: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [saving, setSaving] = useState(false);
-  const [pristineData, setPristineData] = useState<Record<string, PortfolioItem[]>>({});
+  const [pristineData, setPristineData] = useState<
+    Record<string, PortfolioItem[]>
+  >({});
   const [pricelists, setPricelists] = useState<PricelistItem[]>([]);
 
   // Deep comparison for grouped data
   const isDirty = React.useMemo(() => {
     if (loading) return false;
-    
+
     const sanitizeData = (d: Record<string, PortfolioItem[]>) => {
       const cleaned: any = {};
       Object.keys(d).forEach((cat) => {
@@ -276,68 +278,69 @@ const PortfolioCMS: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
-
-      {/* Category Tabs */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveTab(cat.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-              activeTab === cat.id
-                ? "bg-brand-50 border-brand-500/50 text-brand-700 "
-                : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300"
-            }`}
-          >
-            <cat.icon
-              className={`w-4 h-4 ${activeTab === cat.id ? "text-brand-500" : "text-slate-400"}`}
-            />
-            <span className="text-xs font-bold">{cat.label}</span>
-            <span
-              className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveTab(cat.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === cat.id
-                  ? "bg-brand-500 text-white"
-                  : "bg-slate-100 text-slate-400"
+                  ? "bg-brand-50 border-brand-500/50 text-brand-700 "
+                  : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300"
               }`}
             >
-              {(data[cat.id] || []).length}
-            </span>
-          </button>
-        ))}
-      </div>
+              <cat.icon
+                className={`w-4 h-4 ${activeTab === cat.id ? "text-brand-500" : "text-slate-400"}`}
+              />
+              <span className="text-xs font-bold">{cat.label}</span>
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                  activeTab === cat.id
+                    ? "bg-brand-500 text-white"
+                    : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                {(data[cat.id] || []).length}
+              </span>
+            </button>
+          ))}
+        </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-40">
-          <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-          <p className="text-slate-400 font-medium">Memuat data dari Supabase...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-          <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-          <p className="text-slate-500 text-sm">{error}</p>
-        </div>
-      ) : (
-        <PortfolioList
-          items={data[activeTab] || []}
-          category={activeTab}
-          searchQuery={searchQuery}
-          onEdit={handleEditItem}
-          onDelete={handleDeleteItem}
-          onReorder={handleReorder}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40">
+            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
+            <p className="text-slate-400 font-medium">
+              Memuat data dari Supabase...
+            </p>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
+            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
+            <p className="text-slate-500 text-sm">{error}</p>
+          </div>
+        ) : (
+          <PortfolioList
+            items={data[activeTab] || []}
+            category={activeTab}
+            searchQuery={searchQuery}
+            onEdit={handleEditItem}
+            onDelete={handleDeleteItem}
+            onReorder={handleReorder}
+            pricelists={pricelists}
+          />
+        )}
+
+        <PortfolioModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveItem}
+          initialData={editingItem}
+          categories={CATEGORIES}
+          activeTab={activeTab}
           pricelists={pricelists}
         />
-      )}
-
-      <PortfolioModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveItem}
-        initialData={editingItem}
-        categories={CATEGORIES}
-        activeTab={activeTab}
-        pricelists={pricelists}
-      />
       </div>
     </div>
   );

@@ -10,9 +10,11 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
+  Tags,
 } from "lucide-react";
 import CMSButton from "./Common/CMSButton";
 import CMSBadge from "./Common/CMSBadge";
+import CMSEmptyState from "./Common/CMSEmptyState";
 
 import { PricelistItem } from "../../types";
 
@@ -45,14 +47,12 @@ const PricelistList: React.FC<PricelistListProps> = ({
 
   if (filteredItems.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-300">
-        <Tag className="w-8 h-8 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium text-slate-400">
-          {isSearchingOrFiltering
-            ? "Tidak ada paket ditemukan."
-            : "Belum ada paket harga. Klik Tambah untuk memulai."}
-        </p>
-      </div>
+      <CMSEmptyState
+        icon={Tags}
+        title={isSearchingOrFiltering ? "Tidak ada paket ditemukan" : "Belum ada paket harga"}
+        description={isSearchingOrFiltering ? "Coba gunakan kata kunci pencarian yang lain." : "Klik tombol 'Tambah' untuk membuat paket harga pertama."}
+        containerClassName="py-16"
+      />
     );
   }
 

@@ -27,6 +27,7 @@ import {
   Calendar,
   ChevronDown,
   CreditCard,
+  ShoppingBag,
   FileDown,
   Phone,
 } from "lucide-react";
@@ -45,7 +46,9 @@ import CMSStatCard from "./Common/CMSStatCard";
 import CMSInfoItem from "./Common/CMSInfoItem";
 import CMSInput from "./Common/CMSInput";
 import CMSSelect from "./Common/CMSSelect";
+import CMSCombobox from "./Common/CMSCombobox";
 import CMSViewItem from "./Common/CMSViewItem";
+import CMSEmptyState from "./Common/CMSEmptyState";
 import {
   CMSTableContainer,
   CMSTableHeader,
@@ -659,8 +662,8 @@ Gous Studio`;
               icon={Filter}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              containerClassName="shrink-0 w-[160px]"
-              className="!h-[34px] !rounded-lg text-xs"
+              containerClassName="shrink-0 w-[200px]"
+              className="!font-bold"
             >
               <option value="ALL">Semua Status</option>
               {STATUSES.map((s) => (
@@ -701,13 +704,13 @@ Gous Studio`;
       ) : selectedOrder ? (
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar pt-4 pb-16">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 pb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 max-w-7xl mx-auto">
               {/* Left Column (Main Details) - 8 Cols */}
               <div className="lg:col-span-8 space-y-4">
                 {/* Section: Detail Paket */}
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="bg-white border border-slate-200 rounded-2xl">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
                     <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
                       <Package size={12} className="text-slate-300" />
                       Detail Paket & Layanan
@@ -740,45 +743,49 @@ Gous Studio`;
                             />
                           </div>
 
-                          <CMSSelect
-                            icon={Package}
+                          <CMSCombobox
+                            leftIcon={<Package size={14} />}
                             label="Paket Terpilih"
-                            className={`${validationErrors.selected_package ? "border-rose-500" : "border-slate-200"} text-brand-600`}
+                            error={validationErrors.selected_package}
+                            placeholder="Ketik atau pilih paket..."
                             value={selectedOrder.selected_package || ""}
                             disabled={selectedOrder.status !== "DRAFT"}
-                            onChange={(e) => {
-                              const newPkg = e.target.value;
+                            onChange={(val) => {
+                              handleOrderChange("selected_package", val);
+                            }}
+                            onSelectOption={(opt) => {
                               const pkgInfo = pricelists.find(
-                                (p) => p.servicename === newPkg,
+                                (p) => p.servicename === opt.value
                               );
                               if (pkgInfo) {
                                 setSelectedOrder({
                                   ...selectedOrder,
-                                  selected_package: newPkg,
+                                  selected_package: opt.value,
                                   design_category: pkgInfo.category,
                                   price: pkgInfo.finalprice,
                                   final_price: calculateFinalPrice(
                                     pkgInfo.finalprice,
                                     selectedOrder.discount_value,
-                                    selectedOrder.discount_type || "fixed",
+                                    selectedOrder.discount_type || "fixed"
                                   ),
                                 });
-                              } else {
-                                handleOrderChange("selected_package", newPkg);
                               }
                             }}
-                          >
-                            <option value="">Pilih Paket...</option>
-                            {pricelists.map((p) => (
-                              <option key={p.servicename} value={p.servicename}>
-                                {p.servicename}
-                              </option>
-                            ))}
-                            <option value="Custom Package">
-                              Custom Package
-                            </option>
-                            <option value="Other">Other</option>
-                          </CMSSelect>
+                            options={[
+                              ...pricelists.map((p) => ({
+                                label: p.servicename,
+                                value: p.servicename,
+                                description: p.category,
+                                rightElement: (
+                                  <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 whitespace-nowrap mt-0.5">
+                                    Rp {Number(p.finalprice).toLocaleString("id-ID")}
+                                  </span>
+                                )
+                              })),
+                              { label: "Custom Package", value: "Custom Package" },
+                              { label: "Other", value: "Other" }
+                            ].filter((v, i, a) => a.findIndex(t => (t.value === v.value)) === i)}
+                          />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
@@ -796,7 +803,7 @@ Gous Studio`;
                             }
                           />
                           <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-slate-400">
+                            <label className="text-sm font-medium text-slate-500 block ml-1">
                               Discount
                             </label>
                             <div className="flex items-center gap-2">
@@ -820,7 +827,7 @@ Gous Studio`;
                               />
                               <CMSSelect
                                 containerClassName="shrink-0 w-[60px]"
-                                className="!pl-3 !pr-6 !text-[11px]"
+                                className="!pl-3 !pr-6 !text-sm !h-[42px]"
                                 value={selectedOrder.discount_type || "fixed"}
                                 disabled={selectedOrder.status !== "DRAFT"}
                                 onChange={(e) =>
@@ -843,7 +850,7 @@ Gous Studio`;
                                 Rp
                               </span>
                             }
-                            className="!bg-emerald-50 !border-emerald-200 !text-emerald-600 font-bold truncate"
+                            className="!bg-emerald-50 !border-emerald-200 !text-emerald-600 truncate !font-bold"
                             value={(() => {
                               const fp =
                                 selectedOrder.final_price ??
@@ -879,9 +886,31 @@ Gous Studio`;
                         <CMSViewItem
                           label="Discount"
                           value={
-                            selectedOrder.discount_value
-                              ? `${selectedOrder.discount_type === "percentage" ? "" : "Rp "}${selectedOrder.discount_value}${selectedOrder.discount_type === "percentage" ? "%" : ""}`
-                              : "Rp 0"
+                            selectedOrder.discount_value &&
+                            selectedOrder.discount_value > 0 ? (
+                              <div className="flex items-center gap-2">
+                                {selectedOrder.discount_type ===
+                                  "percentage" && (
+                                  <CMSBadge
+                                    variant="brand"
+                                    className="!rounded-md"
+                                  >
+                                    {selectedOrder.discount_value}%
+                                  </CMSBadge>
+                                )}
+                                <span className="font-bold text-rose-600">
+                                  Rp{" "}
+                                  {(selectedOrder.discount_type === "percentage"
+                                    ? (Number(selectedOrder.price || 0) *
+                                        Number(selectedOrder.discount_value)) /
+                                      100
+                                    : Number(selectedOrder.discount_value)
+                                  ).toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            ) : (
+                              "Rp 0"
+                            )
                           }
                           icon={Tag}
                         />
@@ -1005,8 +1034,8 @@ Gous Studio`;
                 </div>
 
                 {/* Section: Brief & Catatan Project */}
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="bg-white border border-slate-200 rounded-2xl">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
                     <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
                       <FileText size={12} className="text-slate-300" />
                       Brief & Catatan Project
@@ -1049,8 +1078,8 @@ Gous Studio`;
               {/* Right Column (Sidebar Controls) - 4 Cols */}
               <div className="lg:col-span-4 space-y-4">
                 {/* Panel: Status & Deadline */}
-                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div className="bg-white border border-slate-200 rounded-2xl">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
                     <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
                       <Clock size={12} className="text-slate-300" />
                       Status & Deadline
@@ -1118,50 +1147,54 @@ Gous Studio`;
                     />
 
                     {selectedOrder.status === "DRAFT" ? (
-                      <CMSInput
-                        label="Deadline Target"
-                        labelRight={
-                          selectedOrder.deadline && (
-                            <CMSBadge
-                              variant={
-                                (calculateDaysLeft(selectedOrder.deadline) ??
-                                  0) < 0
-                                  ? "status"
-                                  : "brand"
-                              }
-                              status={
-                                (calculateDaysLeft(selectedOrder.deadline) ??
-                                  0) < 0
-                                  ? "REVISION"
-                                  : undefined
-                              }
-                              className="!rounded-md"
-                            >
-                              {(calculateDaysLeft(selectedOrder.deadline) ??
-                                0) > 0
-                                ? `${calculateDaysLeft(selectedOrder.deadline)} Hari lagi`
-                                : (calculateDaysLeft(selectedOrder.deadline) ??
-                                      0) === 0
-                                  ? "Deadline Hari Ini"
-                                  : `Terlambat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} Hari`}
-                            </CMSBadge>
-                          )
-                        }
-                        type="date"
-                        leftIcon={<Calendar size={14} />}
-                        error={validationErrors.deadline}
-                        value={
-                          selectedOrder.deadline
-                            ? selectedOrder.deadline.split("T")[0]
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleOrderChange("deadline", e.target.value)
-                        }
-                      />
+                      <div className="pt-2">
+                        <CMSInput
+                          label="Deadline Target"
+                          labelRight={
+                            selectedOrder.deadline && (
+                              <CMSBadge
+                                variant={
+                                  (calculateDaysLeft(selectedOrder.deadline) ??
+                                    0) < 0
+                                    ? "status"
+                                    : "brand"
+                                }
+                                status={
+                                  (calculateDaysLeft(selectedOrder.deadline) ??
+                                    0) < 0
+                                    ? "REVISION"
+                                    : undefined
+                                }
+                                className="!rounded-md"
+                              >
+                                {(calculateDaysLeft(selectedOrder.deadline) ??
+                                  0) > 0
+                                  ? `${calculateDaysLeft(selectedOrder.deadline)} Hari lagi`
+                                  : (calculateDaysLeft(
+                                        selectedOrder.deadline,
+                                      ) ?? 0) === 0
+                                    ? "Deadline Hari Ini"
+                                    : `Terlambat ${Math.abs(calculateDaysLeft(selectedOrder.deadline) ?? 0)} Hari`}
+                              </CMSBadge>
+                            )
+                          }
+                          type="date"
+                          leftIcon={<Calendar size={14} />}
+                          error={validationErrors.deadline}
+                          value={
+                            selectedOrder.deadline
+                              ? selectedOrder.deadline.split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleOrderChange("deadline", e.target.value)
+                          }
+                        />
+                      </div>
                     ) : (
                       <CMSViewItem
                         label="Deadline Target"
+                        className="!border-0"
                         value={
                           <div className="flex items-center gap-2">
                             {selectedOrder.status !== "DONE" &&
@@ -1211,33 +1244,29 @@ Gous Studio`;
                     )}
                     {selectedOrder.status === "DONE" && (
                       <div className="pt-2.5">
-                        <CMSInput
-                          label="Deliverables Link"
-                          labelRight={
-                            selectedOrder.deliverables_url && (
-                              <a
-                                href={selectedOrder.deliverables_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-xs font-bold"
-                              >
-                                <ExternalLink size={10} /> Buka Link
-                              </a>
-                            )
-                          }
-                          type="url"
-                          leftIcon={<FileText size={14} />}
-                          className="!text-brand-600 truncate"
-                          value={selectedOrder.deliverables_url || ""}
-                          onChange={(e) =>
-                            handleOrderChange(
-                              "deliverables_url",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Link Google Drive / URL Hasil Desain"
-                          disabled={selectedOrder.status === "DONE"}
-                        />
+                        <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
+                          <label className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+                            <FileText size={14} className="text-slate-400" />
+                            Deliverables Link
+                          </label>
+                          {selectedOrder.deliverables_url ? (
+                            <a
+                              href={selectedOrder.deliverables_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-brand-500 hover:text-brand-600 hover:underline flex items-center gap-1 font-bold text-sm w-full"
+                            >
+                              <span className="truncate">
+                                {selectedOrder.deliverables_url}
+                              </span>
+                              <ExternalLink size={14} className="shrink-0" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 font-medium text-sm">
+                              Belum ada link
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1252,7 +1281,7 @@ Gous Studio`;
                     {selectedOrder.status === "DRAFT" && (
                       <button
                         onClick={() => setIsClientModalOpen(true)}
-                        className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-[10px] font-bold transition-all cursor-pointer"
+                        className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer"
                       >
                         <Plus size={10} /> Client Baru
                       </button>
@@ -1262,94 +1291,34 @@ Gous Studio`;
                   <div className="p-5 space-y-4">
                     {selectedOrder.status === "DRAFT" ? (
                       <div className="space-y-4">
-                        <div
-                          className="space-y-1.5 relative"
-                          ref={clientDropdownRef}
-                        >
-                          <CMSInput
-                            label="Nama Lengkap"
-                            leftIcon={<User size={14} />}
-                            error={validationErrors.full_name}
-                            placeholder="Cari atau ketik nama..."
-                            disabled={selectedOrder.status !== "DRAFT"}
-                            value={
-                              showClientDropdown
-                                ? clientSearchQuery
-                                : selectedOrder.full_name || ""
-                            }
-                            onChange={(e) => {
-                              setClientSearchQuery(e.target.value);
-                              handleOrderChange("full_name", e.target.value);
-                              if (!showClientDropdown)
-                                setShowClientDropdown(true);
-                            }}
-                            onFocus={() => {
-                              setShowClientDropdown(true);
-                              setClientSearchQuery(
-                                selectedOrder.full_name || "",
-                              );
-                            }}
-                          />
-
-                          {/* Client Dropdown Results */}
-                          {showClientDropdown && (
-                            <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
-                              {(() => {
-                                const filtered = clients.filter((c) =>
-                                  c.full_name
-                                    ?.toLowerCase()
-                                    .includes(clientSearchQuery.toLowerCase()),
-                                );
-                                if (filtered.length === 0) {
-                                  return (
-                                    <div className="px-5 py-4 text-center">
-                                      <p className="text-[11px] text-slate-400 font-medium">
-                                        Pelanggan tidak ditemukan
-                                      </p>
-                                      <button
-                                        onClick={() =>
-                                          setIsClientModalOpen(true)
-                                        }
-                                        className="mt-2 text-[10px] font-bold text-brand-500 cursor-pointer"
-                                      >
-                                        + Buat "{clientSearchQuery}"
-                                      </button>
-                                    </div>
-                                  );
-                                }
-                                return filtered.map((client) => (
-                                  <button
-                                    key={client.id}
-                                    onClick={() => handleSelectClient(client)}
-                                    className="w-full text-left px-5 py-3 hover:bg-brand-50 transition-all flex items-center justify-between group border-b border-slate-50 last:border-0"
-                                  >
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-700 group-hover:text-brand-600 transition-colors">
-                                          {client.full_name}
-                                        </span>
-                                        {client.client_no !== undefined && (
-                                          <span className="text-[9px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
-                                            {formatClientId(client.client_no)}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {client.company && (
-                                        <p className="text-[10px] text-slate-400 font-medium">
-                                          {client.company}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <ChevronRight
-                                      size={14}
-                                      className="text-slate-200 group-hover:text-brand-400 transition-all group-hover:translate-x-0.5"
-                                    />
-                                  </button>
-                                ));
-                              })()}
-                            </div>
-                          )}
-                        </div>
+                        <CMSCombobox
+                          label="Nama Lengkap"
+                          leftIcon={<User size={14} />}
+                          error={validationErrors.full_name}
+                          placeholder="Cari atau ketik nama..."
+                          disabled={selectedOrder.status !== "DRAFT"}
+                          value={selectedOrder.full_name || ""}
+                          onChange={(val) => {
+                            handleOrderChange("full_name", val);
+                          }}
+                          onSelectOption={(opt) => {
+                            const client = clients.find(c => c.id === opt.value);
+                            if (client) handleSelectClient(client);
+                          }}
+                          options={clients.map((client) => ({
+                            label: client.full_name || "",
+                            value: client.id,
+                            description: client.company || undefined,
+                            rightElement: client.client_no !== undefined ? (
+                              <span className="text-[9px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
+                                {formatClientId(client.client_no)}
+                              </span>
+                            ) : undefined
+                          }))}
+                          onCreateNew={(val) => setIsClientModalOpen(true)}
+                          createNewText={(val) => `+ Buat "${val}"`}
+                          notFoundText="Pelanggan tidak ditemukan"
+                        />
 
                         <CMSInput
                           label="WhatsApp / Nomor HP"
@@ -1384,9 +1353,22 @@ Gous Studio`;
                               const c = clients.find(
                                 (cl) => cl.id === selectedOrder.client_id,
                               );
-                              return c?.client_no
-                                ? formatClientId(c.client_no)
-                                : "—";
+                              return c?.client_no ? (
+                                <a
+                                  href={`/cms/clients/${formatClientId(c.client_no)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-brand-500 hover:text-brand-600 hover:underline flex items-center gap-1 font-bold"
+                                >
+                                  {formatClientId(c.client_no)}
+                                  <ExternalLink
+                                    size={12}
+                                    className="shrink-0"
+                                  />
+                                </a>
+                              ) : (
+                                "—"
+                              );
                             })()}
                             icon={CreditCard}
                           />
@@ -1396,7 +1378,7 @@ Gous Studio`;
 
                     <button
                       onClick={handleSendWhatsApp}
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-xl font-bold text-[11px] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-lg font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-2 cursor-pointer"
                     >
                       <MessageCircle size={16} className="!text-white" />
                       Update Progres via WhatsApp
@@ -1406,7 +1388,7 @@ Gous Studio`;
                 {/* Payment Info Section (Otomatis / Manual) */}
                 {selectedOrder.payment_method && (
                   <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-5 space-y-3">
-                    <h3 className="text-xs font-bold text-emerald-600 flex items-center justify-between uppercase tracking-wider mb-2">
+                    <h3 className="text-xs font-bold text-emerald-600 flex items-center justify-between uppercase tracking-wider mb-4">
                       <div className="flex items-center gap-2">
                         <CreditCard size={14} />
                         {selectedOrder.is_sandbox === null ||
@@ -1421,61 +1403,64 @@ Gous Studio`;
                       )}
                     </h3>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-emerald-600/70 font-medium">
-                          Metode Pembayaran
-                        </span>
-                        <span className="text-emerald-700 font-bold uppercase">
-                          {selectedOrder.payment_method.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-emerald-600/70 font-medium">
-                          Nominal Dibayar
-                        </span>
-                        <span className="text-emerald-700 font-bold tracking-wide">
-                          Rp{" "}
-                          {(selectedOrder.paid_amount || 0).toLocaleString(
-                            "id-ID",
-                          )}
-                        </span>
-                      </div>
-                      {selectedOrder.paid_at && (
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-emerald-600/70 font-medium">
-                            Waktu Verifikasi
+                    <div className="flex flex-col border-t border-emerald-100/50 pt-2 opacity-90">
+                      <CMSViewItem
+                        label="Metode Pembayaran"
+                        className="!border-emerald-100/50"
+                        value={
+                          <span className="uppercase text-emerald-800">
+                            {selectedOrder.payment_method.replace(/_/g, " ")}
                           </span>
-                          <span className="text-emerald-700 font-bold">
-                            {new Date(selectedOrder.paid_at).toLocaleString(
+                        }
+                      />
+                      <CMSViewItem
+                        label="Nominal Dibayar"
+                        className="!border-emerald-100/50"
+                        value={
+                          <span className="tracking-wide text-emerald-800">
+                            Rp{" "}
+                            {(selectedOrder.paid_amount || 0).toLocaleString(
                               "id-ID",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
                             )}
                           </span>
-                        </div>
+                        }
+                      />
+                      {selectedOrder.paid_at && (
+                        <CMSViewItem
+                          label="Waktu Verifikasi"
+                          className="!border-emerald-100/50"
+                          value={
+                            <span className="text-emerald-800">
+                              {new Date(selectedOrder.paid_at).toLocaleString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </span>
+                          }
+                        />
                       )}
-
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-emerald-600/70 font-medium">
-                          Invoice
-                        </span>
-                        <button
-                          onClick={handleDownloadInvoice}
-                          disabled={updatingId === selectedOrder.id}
-                          className="text-emerald-700 font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          {updatingId === selectedOrder.id
-                            ? "Downloading..."
-                            : "Download"}
-                          <FileDown size={14} className="text-emerald-600" />
-                        </button>
-                      </div>
+                      <CMSViewItem
+                        label="Invoice"
+                        className="!border-0"
+                        value={
+                          <button
+                            onClick={handleDownloadInvoice}
+                            disabled={updatingId === selectedOrder.id}
+                            className="text-emerald-700 font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            {updatingId === selectedOrder.id
+                              ? "Downloading..."
+                              : "Download"}
+                            <FileDown size={14} className="text-emerald-600" />
+                          </button>
+                        }
+                      />
                     </div>
                   </div>
                 )}
@@ -1519,7 +1504,7 @@ Gous Studio`;
                         loading={updatingId === selectedOrder.id}
                         className="w-full mt-2 py-3"
                       >
-                        Konfirmasi Pembayaran &amp; Kerjakan
+                        Konfirmasi Pembayaran
                       </CMSButton>
                     )}
                   </div>
@@ -1642,23 +1627,22 @@ Gous Studio`;
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col pt-4">
+        <div className="flex-1 min-h-0 flex flex-col pt-6">
           {filteredOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
-                <Package className="w-8 h-8 text-slate-300" />
-              </div>
-              <p className="text-slate-500 font-bold mb-1">
-                {searchQuery
+            <CMSEmptyState
+              icon={ShoppingBag}
+              title={
+                searchQuery
                   ? "Tidak ada hasil ditemukan"
-                  : "Belum ada data order"}
-              </p>
-              <p className="text-slate-400 text-sm">
-                {searchQuery
-                  ? "Coba kata kunci lain"
-                  : "Klik tombol 'Tambah' untuk membuat order pertama"}
-              </p>
-            </div>
+                  : "Belum ada data order"
+              }
+              description={
+                searchQuery
+                  ? "Coba gunakan kata kunci pencarian yang lain."
+                  : "Klik tombol 'Tambah' untuk membuat order pertama."
+              }
+              containerClassName="py-32"
+            />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
               <CMSTableContainer className="flex-1 !overflow-y-auto custom-scrollbar">

@@ -242,7 +242,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             <label className="text-xs font-bold text-slate-500 ml-1">
               Revisi Unlimited?
             </label>
-            <label className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-400 transition-all group">
+            <label className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
               <input
                 type="checkbox"
                 {...register("isrevisionunlimited")}
@@ -260,7 +260,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
           <label className="text-xs font-bold text-slate-500 ml-1">
             Tampilkan ke Customer?
           </label>
-          <div className="flex items-center gap-2 p-1 bg-slate-100 border border-slate-200 rounded-xl w-fit">
+          <div className="flex items-center gap-2 p-1 bg-slate-100 border border-slate-200 rounded-lg w-fit">
             <button
               type="button"
               onClick={() =>
@@ -329,7 +329,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             {deliverables.map((d: any, i: number) => (
               <div
                 key={i}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-xl group hover:border-brand-200 transition-all"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-lg group hover:border-brand-200 transition-all"
               >
                 <span className="text-sm font-medium text-slate-700 flex-1">
                   {d}

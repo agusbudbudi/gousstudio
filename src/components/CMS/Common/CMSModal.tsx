@@ -47,7 +47,7 @@ const CMSModal: React.FC<CMSModalProps> = ({
         {/* Header */}
         <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 z-10">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">{title}</h2>
+            <h2 className="text-md font-bold text-slate-800">{title}</h2>
           </div>
           <button
             onClick={onClose}

@@ -152,8 +152,20 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CMSSelect
+            {/* Link Gallery - full width below category row */}
+            <div className="space-y-1.5 w-full">
+              <label className="text-xs font-bold text-slate-500 block ml-1">
+                Link Gallery / Drive <span className="text-rose-500">*</span>
+              </label>
+              <CMSInput
+                type="text"
+                placeholder="https://drive.google.com/..."
+                {...register("linkurl")}
+                error={errors.linkurl?.message}
+              />
+            </div>
+
+            <CMSSelect
                 label="Link ke Pricelist (Optional)"
                 icon={Link2}
                 error={errors.pricelist_id?.message}
@@ -168,8 +180,6 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                   </option>
                 ))}
               </CMSSelect>
-              <div className="hidden md:block" /> {/* Spacer */}
-            </div>
 
             <CMSInput
               isTextArea
@@ -196,31 +206,19 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5 w-full">
-                <label className="text-xs font-bold text-slate-500 block ml-1">
-                  Link Gallery / Drive <span className="text-rose-500">*</span>
-                </label>
-                <CMSInput
-                  type="text"
-                  placeholder="https://drive.google.com/..."
-                  {...register("linkurl")}
-                  error={errors.linkurl?.message}
-                />
-              </div>
               <CMSInput
                 label="Tools (Pisahkan koma)"
                 placeholder="Photoshop, Illustrator"
                 {...register("tools")}
                 error={errors.tools?.message}
               />
+              <CMSInput
+                label="Image Alt Text (SEO)"
+                placeholder="e.g. Modern logo design showcase"
+                {...register("imgalt")}
+                error={errors.imgalt?.message}
+              />
             </div>
-
-            <CMSInput
-              label="Image Alt Text (SEO)"
-              placeholder="e.g. Modern logo design showcase"
-              {...register("imgalt")}
-              error={errors.imgalt?.message}
-            />
           </form>
 
     </CMSModal>

@@ -20,11 +20,11 @@ const CMSViewItem: React.FC<CMSViewItemProps> = ({
     <div
       className={`flex justify-between py-2.5 px-1 border-b border-slate-50 last:border-0 ${className}`}
     >
-      <span className="text-xs font-medium text-slate-400">{label}</span>
+      <span className="text-sm font-medium text-slate-500">{label}</span>
       <div className="flex flex-col items-end gap-1 text-right">
         <div className="flex items-center gap-2">
-          {Icon && <Icon size={12} className="text-slate-300" />}
-          <span className="text-xs font-bold text-slate-700 whitespace-normal">
+          {Icon && <Icon size={14} className="text-slate-400" />}
+          <span className="text-sm font-bold text-slate-800 whitespace-normal">
             {value || "—"}
           </span>
         </div>

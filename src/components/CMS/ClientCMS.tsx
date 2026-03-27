@@ -7,7 +7,7 @@ import {
   Plus,
   Users,
   Calendar,
-  Package,
+  ShoppingBag,
   Clock,
   ExternalLink,
   Phone,
@@ -27,6 +27,8 @@ import CMSBadge from "./Common/CMSBadge";
 import CMSSearchBar from "./Common/CMSSearchBar";
 import CMSStatCard from "./Common/CMSStatCard";
 import CMSInfoItem from "./Common/CMSInfoItem";
+import CMSViewItem from "./Common/CMSViewItem";
+import CMSEmptyState from "./Common/CMSEmptyState";
 import {
   CMSTableContainer,
   CMSTableHeader,
@@ -208,11 +210,12 @@ const ClientCMS: React.FC = () => {
       <CMSHeader
         title={
           viewMode === "DETAILS" && selectedClient ? (
-            <div className="flex items-center gap-3">
-              Detail Client
-              <CMSBadge variant="brand" className="text-[10px] px-2.5 py-1">
+            <div className="flex items-center gap-2">
+              <span>Detail Client</span>
+              <span className="text-slate-300 mx-1">-</span>
+              <span className="text-brand-600 text-xl font-bold">
                 {formatClientId(selectedClient.client_no)}
-              </CMSBadge>
+              </span>
             </div>
           ) : (
             "Data Clients"
@@ -242,7 +245,7 @@ const ClientCMS: React.FC = () => {
         )}
       </CMSHeader>
 
-      <div className="flex-1 min-h-0 overflow-hidden pt-4">
+      <div className="flex-1 min-h-0 overflow-hidden pt-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
@@ -254,7 +257,7 @@ const ClientCMS: React.FC = () => {
             <p className="text-slate-500 text-sm">{error}</p>
           </div>
         ) : viewMode === "DETAILS" && selectedClient ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0 overflow-hidden pb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full min-h-0 overflow-hidden pb-4">
             {/* Left Panel: Client Info */}
             <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar pr-1">
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col relative">
@@ -287,7 +290,7 @@ const ClientCMS: React.FC = () => {
 
                 <div className="p-6">
                   {/* Top: Avatar & Name */}
-                  <div className="flex items-center gap-4 mb-6 pr-20">
+                  <div className="flex items-center gap-4 mb-4 pr-20">
                     <div className="w-[42px] h-[42px] rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
                       <span className="text-brand-500 font-bold text-lg leading-none">
                         {selectedClient.full_name?.charAt(0).toUpperCase() ||
@@ -302,30 +305,28 @@ const ClientCMS: React.FC = () => {
                   </div>
 
                   {/* List Data */}
-                  <div className="flex flex-col">
-                    <div className="flex items-center justify-between py-2.5 border-t border-slate-100">
-                      <span className="text-sm text-slate-500">
-                        Phone Number
-                      </span>
-                      <span className="text-sm font-medium text-slate-800 text-right">
-                        {selectedClient.phone_number || "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5 border-t border-slate-100">
-                      <span className="text-sm text-slate-500">Company</span>
-                      <span className="text-sm font-medium text-slate-800 text-right">
-                        {selectedClient.company || "-"}
-                      </span>
-                    </div>
-
-                    <div className="py-4 border-t border-slate-100">
-                      <span className="text-sm text-slate-500 block mb-2">
-                        Customer Notes
-                      </span>
-                      <p className="text-sm font-medium text-slate-800 leading-relaxed">
-                        {selectedClient.notes || "-"}
-                      </p>
+                  <div className="flex flex-col mt-4 border-t border-slate-100 pt-2">
+                    <CMSViewItem
+                      label="Phone Number"
+                      value={selectedClient.phone_number || "—"}
+                      icon={Phone}
+                    />
+                    <CMSViewItem
+                      label="Company"
+                      value={selectedClient.company || "—"}
+                      icon={Building2}
+                      className="!border-0"
+                    />
+                    <div className="pt-2">
+                      <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
+                        <label className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+                          <FileText size={14} className="text-slate-400" />
+                          Customer Notes
+                        </label>
+                        <span className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
+                          {selectedClient.notes || "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -344,7 +345,7 @@ const ClientCMS: React.FC = () => {
                 return (
                   <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col shrink-0">
                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-                      <Package size={12} className="text-slate-300" />
+                      <ShoppingBag size={12} className="text-slate-300" />
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                         Customer Value
                       </h3>
@@ -418,15 +419,12 @@ const ClientCMS: React.FC = () => {
                     </p>
                   </div>
                 ) : clientOrders.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                    <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-                      <Package size={24} className="text-slate-300" />
-                    </div>
-                    <p className="text-slate-400 text-[10px] font-bold text-center">
-                      Client "{selectedClient.full_name}" <br />
-                      Belum memiliki order
-                    </p>
-                  </div>
+                  <CMSEmptyState
+                    icon={ShoppingBag}
+                    title={`Client "${selectedClient.full_name}"`}
+                    description="Belum memiliki riwayat transaksi atau order saat ini."
+                    containerClassName="py-20"
+                  />
                 ) : (
                   <CMSTableContainer>
                     <CMSTableHeader>
@@ -475,7 +473,7 @@ const ClientCMS: React.FC = () => {
                             </CMSBadge>
                           </CMSTableCell>
                           <CMSTableCell align="right">
-                            <div className="text-xs font-bold text-slate-800">
+                            <div className="text-xs font-bold text-emerald-600">
                               Rp{" "}
                               {(order.final_price || 0).toLocaleString("id-ID")}
                             </div>
@@ -492,21 +490,19 @@ const ClientCMS: React.FC = () => {
           /* ─── List Table View ─── */
           <>
             {filteredClients.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-32 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
-                  <Users className="w-8 h-8 text-slate-300" />
-                </div>
-                <p className="text-slate-500 font-bold mb-1">
-                  {searchQuery
+              <CMSEmptyState
+                icon={Users}
+                title={
+                  searchQuery
                     ? "Tidak ada hasil ditemukan"
-                    : "Belum ada data client"}
-                </p>
-                <p className="text-slate-400 text-sm">
-                  {searchQuery
-                    ? "Coba kata kunci lain"
-                    : "Klik tombol 'Tambah' untuk menambahkan client pertama"}
-                </p>
-              </div>
+                    : "Belum ada data client"
+                }
+                description={
+                  searchQuery
+                    ? "Coba gunakan kata kunci pencarian yang lain."
+                    : "Klik tombol 'Tambah' untuk mendaftarkan client pertama."
+                }
+              />
             ) : (
               <CMSTableContainer>
                 <CMSTableHeader>
