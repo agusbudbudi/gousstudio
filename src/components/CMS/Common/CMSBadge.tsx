@@ -31,7 +31,7 @@ const CMSBadge: React.FC<CMSBadgeProps> = ({
   };
 
   const baseStyles =
-    "text-[10px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap inline-flex items-center justify-center";
+    "text-xs font-bold px-2 py-0.5 rounded-md border whitespace-nowrap inline-flex items-center justify-center";
 
   const variantStyles = {
     status: status

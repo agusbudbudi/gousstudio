@@ -16,6 +16,7 @@ import {
 interface InvoiceTemplateProps {
   order: OrderItem;
   packageData?: any;
+  type?: "INVOICE" | "PROFORMA";
 }
 
 const formatPrice = (price: number) =>
@@ -28,6 +29,7 @@ const formatPrice = (price: number) =>
 export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
   order,
   packageData,
+  type = "INVOICE",
 }) => {
   const displayPackageData = packageData || order.package_details;
 
@@ -73,7 +75,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
         <div className="text-right">
           <h2 className="text-4xl font-black text-slate-200 tracking-tighter mb-2">
-            INVOICE
+            {type === "PROFORMA" ? "PROFORMA INVOICE" : "INVOICE"}
           </h2>
           <div className="space-y-1">
             <p className="text-sm font-bold text-brand-600">
@@ -203,14 +205,23 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
           {Number(order.discount_value) > 0 && (
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+              <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                 Diskon
+                {order.discount_type === "percentage" && (
+                  <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black">
+                    {order.discount_value}%
+                  </span>
+                )}
               </span>
               <span className="text-rose-500 font-black">
                 -{" "}
-                {order.discount_type === "percentage"
-                  ? `${order.discount_value}%`
-                  : formatPrice(order.discount_value || 0)}
+                {formatPrice(
+                  order.discount_type === "percentage"
+                    ? ((order.price || displayPackageData?.original_price || 0) *
+                        (order.discount_value || 0)) /
+                        100
+                    : order.discount_value || 0,
+                )}
               </span>
             </div>
           )}
@@ -248,9 +259,15 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                   Status
                 </p>
-                <div className="flex items-center gap-2 text-emerald-600 font-black text-sm">
-                  <CheckCircle2 size={16} /> LUNAS
-                </div>
+                {type === "PROFORMA" ? (
+                  <div className="flex items-center gap-2 text-rose-500 font-black text-sm uppercase">
+                    UNPAID
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-600 font-black text-sm">
+                    <CheckCircle2 size={16} /> LUNAS
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
@@ -265,7 +282,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                   Waktu Verifikasi
                 </p>
                 <p className="text-sm font-bold text-slate-700">
-                  {order.paid_at
+                  {type === "PROFORMA" ? "-" : (order.paid_at
                     ? new Date(order.paid_at).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "short",
@@ -273,13 +290,13 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                         hour: "2-digit",
                         minute: "2-digit",
                       })
-                    : "-"}
+                    : "-")}
                 </p>
               </div>
             </div>
           </div>
 
-          {CONFIG.COMPANY_STAMP && (
+          {CONFIG.COMPANY_STAMP && type === "INVOICE" && (
             <div className="w-32 h-32 relative -rotate-12 opacity-80">
               <img
                 src={CONFIG.COMPANY_STAMP}
