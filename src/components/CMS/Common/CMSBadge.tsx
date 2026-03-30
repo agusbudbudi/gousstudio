@@ -24,14 +24,14 @@ const CMSBadge: React.FC<CMSBadgeProps> = ({
       case "REVIEWED":
         return "bg-purple-50 text-purple-700 border-purple-200";
       case "REVISION":
-        return "bg-rose-50 text-rose-700 border-rose-200";
+        return "bg-rose-50 text-rose-500 border-rose-200";
       default:
         return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
   const baseStyles =
-    "text-[10px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap inline-flex items-center justify-center";
+    "text-xs font-bold px-2 py-0.5 rounded-md border whitespace-nowrap inline-flex items-center justify-center";
 
   const variantStyles = {
     status: status

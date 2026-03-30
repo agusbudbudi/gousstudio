@@ -240,7 +240,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
 
         {/* Included Features */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-slate-500 ml-1">
+          <label className="text-sm font-medium text-slate-600 ml-1">
             Fitur yang Disertakan
           </label>
           <div className="flex items-start gap-2">
@@ -280,13 +280,13 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
                   type="button"
                   onClick={() => removeIncluded(i)}
                   icon={Trash2}
-                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-300 hover:!text-rose-500 hover:!bg-rose-50"
+                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:!text-rose-500 hover:!bg-rose-50"
                 />
               </div>
             ))}
           </div>
           {included.length === 0 && (
-            <p className="text-xs text-slate-300 italic px-2">
+            <p className="text-xs text-slate-400 italic px-2">
               Belum ada fitur ditambahkan.
             </p>
           )}

@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel": "npx vercel dev",
+    "start": "npx vercel dev"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +29,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.99.3",
+    "@tanstack/react-query": "^5.95.2",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.38.0",
     "html-to-image": "^1.11.13",

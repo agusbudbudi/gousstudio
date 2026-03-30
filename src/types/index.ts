@@ -54,7 +54,7 @@ export interface OrderItem {
   payment_method?: string;
   paid_amount?: number;
   paid_at?: string;
-  is_sandbox?: boolean;
+  is_sandbox?: boolean | null;
   package_details?: PricelistItem;
 }
 

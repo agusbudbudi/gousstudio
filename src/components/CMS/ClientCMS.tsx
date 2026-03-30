@@ -212,7 +212,7 @@ const ClientCMS: React.FC = () => {
           viewMode === "DETAILS" && selectedClient ? (
             <div className="flex items-center gap-2">
               <span>Detail Client</span>
-              <span className="text-slate-300 mx-1">-</span>
+              <span className="text-slate-400 mx-1">-</span>
               <span className="text-brand-600 text-xl font-bold">
                 {formatClientId(selectedClient.client_no)}
               </span>
@@ -319,8 +319,8 @@ const ClientCMS: React.FC = () => {
                     />
                     <div className="pt-2">
                       <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
-                        <label className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-                          <FileText size={14} className="text-slate-400" />
+                        <label className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
+                          <FileText size={14} className="text-slate-500" />
                           Customer Notes
                         </label>
                         <span className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
@@ -345,8 +345,8 @@ const ClientCMS: React.FC = () => {
                 return (
                   <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col shrink-0">
                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-                      <ShoppingBag size={12} className="text-slate-300" />
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <ShoppingBag size={12} className="text-slate-400" />
+                      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
                         Customer Value
                       </h3>
                     </div>
@@ -356,7 +356,7 @@ const ClientCMS: React.FC = () => {
                       <div className="absolute left-1/2 top-5 bottom-5 w-px bg-slate-100 hidden sm:block"></div>
 
                       <div className="pr-2">
-                        <span className="text-sm font-medium text-slate-500 block mb-1">
+                        <span className="text-sm font-medium text-slate-600 block mb-1">
                           Total Transactions
                         </span>
                         <span className="text-lg font-bold text-slate-800">
@@ -365,7 +365,7 @@ const ClientCMS: React.FC = () => {
                       </div>
 
                       <div className="sm:pl-4">
-                        <span className="text-sm font-medium text-slate-500 block mb-1">
+                        <span className="text-sm font-medium text-slate-600 block mb-1">
                           Total Spend
                         </span>
                         <span className="text-lg font-bold text-slate-800">
@@ -379,7 +379,7 @@ const ClientCMS: React.FC = () => {
                     </div>
 
                     <div className="p-5 bg-slate-50/20">
-                      <span className="text-sm font-medium text-slate-500 block mb-1">
+                      <span className="text-sm font-medium text-slate-600 block mb-1">
                         Average Spend per Purchase
                       </span>
                       <span className="text-lg font-bold text-slate-800">
@@ -398,8 +398,8 @@ const ClientCMS: React.FC = () => {
             {/* Right Panel: Order History */}
             <div className="lg:col-span-8 flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col h-full">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-                  <Clock size={12} className="text-slate-300" />
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <Clock size={12} className="text-slate-400" />
                   History Order
                 </h3>
                 {loadingOrders && (
@@ -447,7 +447,7 @@ const ClientCMS: React.FC = () => {
                             >
                               #{order.order_number}
                             </button>
-                            <div className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
                               <Calendar size={10} />
                               {new Date(order.created_at).toLocaleDateString(
                                 "id-ID",
@@ -529,7 +529,7 @@ const ClientCMS: React.FC = () => {
                         >
                           {formatClientId(client.client_no)}
                         </button>
-                        <div className="text-[10px] text-slate-400 mt-1 whitespace-nowrap">
+                        <div className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">
                           {new Date(client.created_at).toLocaleDateString(
                             "id-ID",
                             {
@@ -555,23 +555,23 @@ const ClientCMS: React.FC = () => {
                         </div>
                       </CMSTableCell>
                       <CMSTableCell>
-                        <span className="text-slate-500 text-sm font-medium">
+                        <span className="text-slate-600 text-sm font-medium">
                           {client.company || (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </span>
                       </CMSTableCell>
                       <CMSTableCell className="hidden md:table-cell">
-                        <span className="text-slate-500 text-sm font-medium">
+                        <span className="text-slate-600 text-sm font-medium">
                           {client.phone_number || (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </span>
                       </CMSTableCell>
                       <CMSTableCell className="hidden lg:table-cell max-w-[200px]">
-                        <span className="text-slate-400 text-xs truncate block">
+                        <span className="text-slate-500 text-xs truncate block">
                           {client.notes || (
-                            <span className="text-slate-200">—</span>
+                            <span className="text-slate-300">—</span>
                           )}
                         </span>
                       </CMSTableCell>

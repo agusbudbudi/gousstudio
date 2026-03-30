@@ -27,7 +27,7 @@ const CMSSelect = forwardRef<HTMLSelectElement, CMSSelectProps>(
         {label && (
           <label
             htmlFor={id}
-            className="text-sm font-medium text-slate-500 block ml-1"
+            className="text-sm font-medium text-slate-600 block ml-1"
           >
             {label}
           </label>
@@ -36,7 +36,7 @@ const CMSSelect = forwardRef<HTMLSelectElement, CMSSelectProps>(
           {Icon && (
             <Icon
               size={14}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors pointer-events-none"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none"
             />
           )}
           <select
@@ -54,7 +54,7 @@ const CMSSelect = forwardRef<HTMLSelectElement, CMSSelectProps>(
           >
             {children}
           </select>
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-brand-500 transition-colors">
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-focus-within:text-brand-500 transition-colors">
             <ChevronDown size={14} />
           </div>
         </div>

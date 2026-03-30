@@ -193,8 +193,12 @@ const OrderDetail = () => {
           visibility: "visible",
         },
       });
+      if (!order) return;
       const link = document.createElement("a");
-      link.download = `invoice-${orderNumber}.png`;
+      const isProforma = ["DRAFT", "WAITING FOR PAYMENT"].includes(
+        order.status,
+      );
+      link.download = `${isProforma ? "proforma-" : "invoice-"}${orderNumber}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -229,7 +233,7 @@ const OrderDetail = () => {
         return {
           label: "Revisi",
           color:
-            "text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/20",
+            "text-rose-500 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/20",
           icon: <RefreshCw size={16} className="animate-spin-slow" />,
           desc: "Desain sedang dalam proses revisi sesuai feedback Anda.",
           step: 3,
@@ -461,10 +465,10 @@ const OrderDetail = () => {
                       dimulai.
                     </p>
                   </div>
-                  <div className="w-full md:w-auto mt-2 md:mt-0">
+                  <div className="w-full md:w-auto mt-4 md:mt-0">
                     <Link
                       to={`/order/${order.order_number}/payment`}
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-3 bg-white dark:bg-emerald-500 text-emerald-600 dark:text-white px-8 py-4 rounded-xl font-bold text-sm tracking-widest transition-all active:scale-95 shadow-xl shadow-emerald-500/10 hover:scale-105 group border border-slate-100 dark:border-emerald-400"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-white dark:bg-emerald-500 text-emerald-600 dark:text-white px-8 py-4 rounded-xl font-bold text-sm tracking-widest transition-all active:scale-95 shadow-xl shadow-emerald-500/10 hover:scale-105 group border border-slate-100 dark:border-emerald-400"
                     >
                       <CreditCard
                         size={18}
@@ -699,13 +703,25 @@ const OrderDetail = () => {
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-slate-400">Diskon</span>
+                          <span className="text-slate-400 flex items-center gap-1.5">
+                            Diskon
+                            {Number(packageData.discount_value) > 0 &&
+                              packageData.discount_type === "percentage" && (
+                                <span className="text-brand-400 bg-brand-500/10 border border-brand-500/20 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider">
+                                  {packageData.discount_value}%
+                                </span>
+                              )}
+                          </span>
                           {Number(packageData.discount_value) > 0 ? (
-                            <span className="text-rose-400 bg-rose-400/10 px-2 py-0.5 rounded border border-rose-400/20">
+                            <span className="text-rose-500">
                               -
-                              {packageData.discount_type === "percentage"
-                                ? `${packageData.discount_value}%`
-                                : formatPrice(packageData.discount_value)}
+                              {formatPrice(
+                                packageData.discount_type === "percentage"
+                                  ? (packageData.original_price *
+                                      packageData.discount_value) /
+                                      100
+                                  : packageData.discount_value,
+                              )}
                             </span>
                           ) : (
                             <span className="text-slate-400">-</span>
@@ -726,15 +742,15 @@ const OrderDetail = () => {
 
                     {/* Extra Payment Info if Paid */}
                     {order.payment_method && (
-                      <div className="pt-3 mt-3 border-t border-white/5 space-y-2">
+                      <div className="pt-3 mt-3 border-t border-white/5 space-y-3">
                         {/* Label tipe pembayaran */}
-                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-3">
                           <span className="flex items-center gap-1.5 text-emerald-500">
                             <CreditCard size={11} />
                             {order.is_sandbox === null ||
                             order.is_sandbox === undefined
-                              ? "Pembayaran Manual"
-                              : "Pembayaran Otomatis"}
+                              ? "Manual Verification"
+                              : "Otomatis (Pakasir)"}
                           </span>
                           {order.is_sandbox === true && (
                             <span className="bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400 px-1.5 py-0.5 rounded text-[9px] tracking-widest">
@@ -774,20 +790,38 @@ const OrderDetail = () => {
                             </span>
                           </div>
                         )}
-                        <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-slate-500">Invoice</span>
-                          <button
-                            onClick={handleDownloadInvoice}
-                            disabled={downloadingInvoice}
-                            className="text-emerald-500 flex items-center gap-1.5 hover:text-emerald-400 transition-colors group cursor-pointer disabled:opacity-50"
-                          >
-                            {downloadingInvoice ? "Downloading..." : "Download"}
-                            <FileDown
-                              size={14}
-                              className="group-hover:translate-y-0.5 transition-transform"
-                            />
-                          </button>
-                        </div>
+                      </div>
+                    )}
+
+                    {/* Download Invoice button for paid orders */}
+                    {order.payment_method && (
+                      <div className="pt-3 mt-3">
+                        <button
+                          onClick={handleDownloadInvoice}
+                          disabled={downloadingInvoice}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 hover:border-emerald-400 rounded-lg font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <FileDown size={14} />
+                          {downloadingInvoice
+                            ? "Proses..."
+                            : "Unduh Invoice Resmi"}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Download button for unpaid orders */}
+                    {!order.payment_method && (
+                      <div className="pt-3 mt-3">
+                        <button
+                          onClick={handleDownloadInvoice}
+                          disabled={downloadingInvoice}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 hover:border-emerald-400 rounded-lg font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          <FileDown size={14} />
+                          {downloadingInvoice
+                            ? "Proses..."
+                            : "Unduh Proforma Invoice"}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -841,7 +875,17 @@ const OrderDetail = () => {
         aria-hidden="true"
         className="light"
       >
-        {order && <InvoiceTemplate order={order} packageData={packageData} />}
+        {order && (
+          <InvoiceTemplate
+            order={order}
+            packageData={packageData}
+            type={
+              ["DRAFT", "WAITING FOR PAYMENT"].includes(order.status)
+                ? "PROFORMA"
+                : "INVOICE"
+            }
+          />
+        )}
       </div>
     </div>
   );

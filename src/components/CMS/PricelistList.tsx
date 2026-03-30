@@ -87,7 +87,7 @@ const PricelistList: React.FC<PricelistListProps> = ({
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
-                  <span className="text-[10px] font-bold text-slate-300 font-mono">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono">
                     {(index + 1).toString().padStart(2, "0")}
                   </span>
                   <button
@@ -129,14 +129,14 @@ const PricelistList: React.FC<PricelistListProps> = ({
                     <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-500 transition-colors leading-tight">
                       {item.servicename || "Untitled"}
                     </h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Pricing */}
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-slate-300 line-through">
+                    <p className="text-[10px] text-slate-400 line-through">
                       {formatPrice(item.retailprice)}
                     </p>
                     <p className="text-sm font-bold text-brand-500">
@@ -147,17 +147,17 @@ const PricelistList: React.FC<PricelistListProps> = ({
 
                 {/* Meta */}
                 <div className="flex items-center gap-4 mt-2">
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1 text-[10px] text-slate-500">
                     <Clock className="w-3 h-3" />
                     {item.duration} hari
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1 text-[10px] text-slate-500">
                     <RefreshCw className="w-3 h-3" />
                     {item.isrevisionunlimited
                       ? "Unlimited revisi"
                       : `${item.totalrevision}x revisi`}
                   </span>
-                  <span className="text-[10px] text-slate-300">
+                  <span className="text-[10px] text-slate-400">
                     {(item.deliverables || []).length} deliverables
                   </span>
                 </div>
