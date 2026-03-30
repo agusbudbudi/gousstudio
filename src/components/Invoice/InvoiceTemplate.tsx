@@ -67,9 +67,9 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-xs text-slate-500">{CONFIG.COMPANY_ADDRESS}</p>
-            <p className="text-xs text-slate-500">{CONFIG.COMPANY_EMAIL}</p>
-            <p className="text-xs text-slate-500">{CONFIG.COMPANY_PHONE}</p>
+            <p className="text-xs text-slate-600">{CONFIG.COMPANY_ADDRESS}</p>
+            <p className="text-xs text-slate-600">{CONFIG.COMPANY_EMAIL}</p>
+            <p className="text-xs text-slate-600">{CONFIG.COMPANY_PHONE}</p>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
             <p className="text-sm font-bold text-brand-600">
               #{order.order_number}
             </p>
-            <p className="text-xs text-slate-500 flex items-center justify-end gap-1">
+            <p className="text-xs text-slate-600 flex items-center justify-end gap-1">
               <Calendar size={12} />
               {new Date(order.created_at).toLocaleDateString("id-ID", {
                 day: "numeric",
@@ -96,15 +96,15 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
       <div className="grid grid-cols-2 gap-12 mb-12 relative z-10">
         {/* Bill To */}
         <div>
-          <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+          <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
             <User size={12} className="text-brand-500" /> PELANGGAN
           </h3>
           <div className="space-y-2">
             <p className="text-lg font-black text-slate-800">
               {order.full_name}
             </p>
-            <p className="text-sm text-slate-500 flex items-center gap-2">
-              <Phone size={14} className="text-slate-300" />{" "}
+            <p className="text-sm text-slate-600 flex items-center gap-2">
+              <Phone size={14} className="text-slate-400" />{" "}
               {order.phone_number}
             </p>
           </div>
@@ -112,12 +112,12 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
         {/* Project Details */}
         <div>
-          <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+          <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
             <Package size={12} className="text-brand-500" /> DETAIL PROJECT
           </h3>
           <div className="space-y-3">
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">
+              <p className="text-[10px] font-bold text-slate-600 uppercase">
                 Kategori
               </p>
               <p className="text-sm font-bold text-slate-700">
@@ -125,7 +125,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">
+              <p className="text-[10px] font-bold text-slate-600 uppercase">
                 Paket Pilihan
               </p>
               <p className="text-sm font-bold text-brand-600 flex items-center gap-1">
@@ -141,10 +141,10 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-y border-slate-100">
-              <th className="py-4 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <th className="py-4 px-6 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">
                 Deskripsi Layanan
               </th>
-              <th className="py-4 px-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <th className="py-4 px-6 text-right text-[10px] font-black text-slate-600 uppercase tracking-widest">
                 Harga
               </th>
             </tr>
@@ -158,13 +158,13 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                 <div className="flex gap-4 mt-2">
                   {displayPackageData && (
                     <>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded">
                         <RefreshCw size={10} className="text-brand-500" />
                         {displayPackageData.isrevisionunlimited
                           ? "Unlimited Rev"
                           : `${displayPackageData.totalrevision}x Rev`}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded">
                         <Clock size={10} className="text-brand-500" />
                         Est. {displayPackageData.duration} Days
                       </div>
@@ -172,7 +172,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                   )}
                 </div>
                 {order.brief_detail && (
-                  <p className="mt-4 text-[11px] text-slate-400 leading-relaxed border-l-2 border-slate-100 pl-4">
+                  <p className="mt-4 text-[11px] text-slate-600 leading-relaxed border-l-2 border-slate-100 pl-4">
                     {order.brief_detail.length > 400
                       ? `${order.brief_detail.substring(0, 400)}...`
                       : order.brief_detail}
@@ -193,7 +193,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
       <div className="flex justify-end mb-12 relative z-10">
         <div className="w-80 space-y-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+            <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">
               Subtotal
             </span>
             <span className="text-slate-800 font-bold">
@@ -205,7 +205,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
           {Number(order.discount_value) > 0 && (
             <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+              <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                 Diskon
                 {order.discount_type === "percentage" && (
                   <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black">
@@ -248,7 +248,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
             </h4>
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
                   Metode
                 </p>
                 <p className="text-sm font-black text-slate-700 uppercase">
@@ -256,7 +256,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
                   Status
                 </p>
                 {type === "PROFORMA" ? (
@@ -270,7 +270,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                 )}
               </div>
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
                   Nominal Dibayar
                 </p>
                 <p className="text-sm font-black text-slate-700">
@@ -278,7 +278,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                 </p>
               </div>
               <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
                   Waktu Verifikasi
                 </p>
                 <p className="text-sm font-bold text-slate-700">
@@ -313,7 +313,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         <p className="text-sm font-bold text-slate-800 mb-1">
           Terima kasih telah mempercayakan mahakarya Anda kepada kami.
         </p>
-        <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-medium">
+        <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-medium">
           {CONFIG.COMPANY_NAME} &bull; Elevated Visual Experience
         </p>
       </div>

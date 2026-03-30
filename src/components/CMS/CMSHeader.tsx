@@ -34,7 +34,7 @@ const CMSHeader: React.FC<CMSHeaderProps> = ({
         )}
         <h1 className="text-xl font-bold text-slate-900">{title}</h1>
         {countText && (
-          <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-200/60 transition-all">
+          <span className="text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-200/60 transition-all">
             {countText}
           </span>
         )}

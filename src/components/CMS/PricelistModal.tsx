@@ -239,7 +239,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             error={errors.totalrevision?.message}
           />
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 ml-1">
+            <label className="text-xs font-bold text-slate-600 ml-1">
               Revisi Unlimited?
             </label>
             <label className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
@@ -257,7 +257,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
 
         {/* Visibility Toggle */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-500 ml-1">
+          <label className="text-xs font-bold text-slate-600 ml-1">
             Tampilkan ke Customer?
           </label>
           <div className="flex items-center gap-2 p-1 bg-slate-100 border border-slate-200 rounded-lg w-fit">
@@ -269,7 +269,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
                 isShowToCustomer
                   ? "bg-emerald-500 !text-white shadow-sm shadow-emerald-500/30"
-                  : "text-slate-400 hover:text-slate-600"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Eye size={14} />
@@ -283,14 +283,14 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
                 !isShowToCustomer
                   ? "bg-slate-500 !text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <EyeOff size={14} />
               Sembunyikan
             </button>
           </div>
-          <p className="text-[11px] text-slate-400 ml-1">
+          <p className="text-[11px] text-slate-500 ml-1">
             {isShowToCustomer
               ? "Item ini akan tampil di halaman Pricelist & Homepage."
               : "Item ini hanya terlihat di CMS admin, tidak tampil ke customer."}
@@ -299,7 +299,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
 
         {/* Deliverables */}
         <div className="space-y-3">
-          <label className="text-xs font-bold text-slate-500 ml-1">
+          <label className="text-xs font-bold text-slate-600 ml-1">
             Deliverables
           </label>
           <div className="flex items-start gap-2">
@@ -339,13 +339,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
                   type="button"
                   onClick={() => removeDeliverable(i)}
                   icon={Trash2}
-                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-300 hover:!text-rose-500 hover:!bg-rose-50"
+                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:!text-rose-500 hover:!bg-rose-50"
                 />
               </div>
             ))}
           </div>
           {deliverables.length === 0 && (
-            <p className="text-xs text-slate-300 italic px-2">
+            <p className="text-xs text-slate-400 italic px-2">
               Belum ada deliverable ditambahkan.
             </p>
           )}

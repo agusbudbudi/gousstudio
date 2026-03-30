@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   CheckCircle2,
   Clock,
@@ -61,6 +62,7 @@ const cmsOrderValidationSchema = z.object({
       "DONE",
     ])
     .optional(),
+  is_sandbox: z.boolean().nullable().optional(),
 });
 
 type OrderFormValues = z.infer<typeof cmsOrderValidationSchema>;
@@ -257,8 +259,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
             {/* Paket & Layanan */}
             <div className="bg-white border border-slate-200 rounded-2xl">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-                  <Package size={12} className="text-slate-300" /> Detail Paket
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <Package size={12} className="text-slate-400" /> Detail Paket
                   & Layanan
                 </h3>
               </div>
@@ -359,7 +361,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         )}
                       />
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-500 block ml-1">
+                        <label className="text-sm font-medium text-slate-600 block ml-1">
                           Discount
                         </label>
                         <div className="flex items-center gap-2">
@@ -517,7 +519,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                               }).format(selectedPricelist.finalprice)}
                             </CMSBadge>
                           </div>
-                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed max-w-md">
+                          <p className="text-[10px] text-slate-600 font-medium leading-relaxed max-w-md">
                             {selectedPricelist.description}
                           </p>
                         </div>
@@ -525,7 +527,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                       <div className="flex flex-wrap gap-2 shrink-0">
                         <div className="px-3 py-1.5 bg-white border border-slate-100 rounded-lg flex items-center gap-1.5">
                           <Clock size={12} className="text-slate-400" />
-                          <span className="text-[11px] font-bold text-slate-600">
+                          <span className="text-[11px] font-bold text-slate-700">
                             {selectedPricelist.duration} hari
                           </span>
                         </div>
@@ -538,7 +540,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                           ) : (
                             <RefreshCw size={12} className="text-slate-300" />
                           )}
-                          <span className="text-[11px] font-bold text-slate-600">
+                          <span className="text-[11px] font-bold text-slate-700">
                             {selectedPricelist.isrevisionunlimited
                               ? "Unlimited"
                               : `${selectedPricelist.totalrevision}x`}{" "}
@@ -550,7 +552,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     {selectedPricelist.deliverables &&
                       selectedPricelist.deliverables.length > 0 && (
                         <div className="pt-3 border-t border-brand-100/50">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                             Apa yang didapat:
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -577,8 +579,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
             {/* Brief & Notes */}
             <div className="bg-white border border-slate-200 rounded-2xl">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-                  <FileText size={12} className="text-slate-300" /> Brief &
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <FileText size={12} className="text-slate-400" /> Brief &
                   Catatan Project
                 </h3>
               </div>
@@ -621,8 +623,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
             {/* Status & Deadline */}
             <div className="bg-white border border-slate-200 rounded-2xl">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-                  <Clock size={12} className="text-slate-300" /> Status &
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <Clock size={12} className="text-slate-400" /> Status &
                   Deadline
                 </h3>
               </div>
@@ -713,8 +715,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 {order.status === "DONE" && order.deliverables_url && (
                   <div className="pt-2.5">
                     <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
-                      <label className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-                        <FileText size={14} className="text-slate-400" />{" "}
+                      <label className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
+                        <FileText size={14} className="text-slate-500" />{" "}
                         Deliverables Link
                       </label>
                       <a
@@ -737,8 +739,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
             {/* Pelanggan */}
             <div className="bg-white border border-slate-200 rounded-2xl">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
-                  <User size={12} className="text-slate-300" /> Pelanggan
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <User size={12} className="text-slate-400" /> Pelanggan
                 </h3>
                 {order.status === "DRAFT" && (
                   <button
@@ -912,21 +914,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   ) && (
                     <div className="space-y-0.5">
                       <CMSViewItem
-                        label="Tipe Pembayaran"
+                        label="Tipe Verifikasi"
                         value={
-                          <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
-                              order.is_sandbox === null ||
-                              order.is_sandbox === undefined
-                                ? "text-slate-600 bg-slate-100 border-slate-200"
-                                : "text-brand-600 bg-brand-50 border-brand-100"
-                            }`}
-                          >
-                            {order.is_sandbox === null ||
-                            order.is_sandbox === undefined
-                              ? "Verifikasi Manual"
-                              : "Otomatis (Pakasir)"}
-                          </span>
+                          order.is_sandbox === null ||
+                          order.is_sandbox === undefined
+                            ? "Manual Verification"
+                            : order.is_sandbox === false
+                              ? "Otomatis (Pakasir)"
+                              : "Sandbox (Pakasir - Testing)"
                         }
                       />
                       <CMSViewItem
@@ -1016,7 +1011,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 {order.status === "WAITING FOR PAYMENT" && (
                   <CMSButton
                     type="button"
-                    onClick={() => setIsVerifyPaymentModalOpen(true)}
+                    onClick={() => {
+                      setVerifyPaidAmount(
+                        order.final_price ?? order.price ?? 0,
+                      );
+                      setVerifyPaymentMethod("Manual Transfer");
+                      setIsVerifyPaymentModalOpen(true);
+                    }}
                     className="w-full mt-2 py-3"
                   >
                     Konfirmasi Pembayaran
@@ -1095,6 +1096,91 @@ const OrderForm: React.FC<OrderFormProps> = ({
       />
 
       {/* Modals for verification and Selesai would go here. Omitted for brevity or implement simply: */}
+      {isVerifyPaymentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl"
+          >
+            <div className="flex items-center gap-3 text-emerald-600">
+              <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+                <CheckCircle2 size={24} />
+              </div>
+              <h2 className="font-black text-xl tracking-tight">
+                Verifikasi Pembayaran
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
+                  Metode Pembayaran
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Transfer BCA, Cash, dll."
+                  value={verifyPaymentMethod}
+                  onChange={(e) => setVerifyPaymentMethod(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
+                  Nominal yang Dibayar
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                    Rp
+                  </span>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={verifyPaidAmount}
+                    onChange={(e) =>
+                      setVerifyPaidAmount(Number(e.target.value))
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-11 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsVerifyPaymentModalOpen(false)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const success = await onStatusUpdate(
+                    order.id,
+                    "IN PROGRESS",
+                    {
+                      payment_method: verifyPaymentMethod,
+                      paid_amount: verifyPaidAmount,
+                      paid_at: new Date().toISOString(),
+                      is_sandbox: null,
+                    },
+                  );
+                  if (success) {
+                    setIsVerifyPaymentModalOpen(false);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 !text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer"
+              >
+                Konfirmasi
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {isSelesaiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">

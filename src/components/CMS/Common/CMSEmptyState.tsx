@@ -16,7 +16,7 @@ const CMSEmptyState: React.FC<CMSEmptyStateProps> = ({
   description,
   action,
   containerClassName = "py-32",
-  iconClassName = "w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-2xl",
+  iconClassName = "w-16 h-16 bg-slate-50 border border-slate-100 text-slate-500 rounded-2xl",
 }) => {
   return (
     <div
@@ -29,7 +29,7 @@ const CMSEmptyState: React.FC<CMSEmptyStateProps> = ({
       </div>
       <p className="text-slate-700 font-bold mb-1.5 text-base">{title}</p>
       {description && (
-        <p className="text-slate-500 text-sm max-w-[300px] leading-relaxed">
+        <p className="text-slate-600 text-sm max-w-[300px] leading-relaxed">
           {description}
         </p>
       )}

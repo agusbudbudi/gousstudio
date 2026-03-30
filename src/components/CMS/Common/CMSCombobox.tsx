@@ -80,7 +80,7 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
         <div className="absolute top-[calc(100%+4px)] z-50 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 shadow-lg">
           {filteredOptions.length === 0 ? (
             <div className="px-5 py-4 text-center">
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 {notFoundText}
               </p>
               {onCreateNew && createNewText && value && (
@@ -116,7 +116,7 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
                     {opt.rightElement}
                   </div>
                   {opt.description && (
-                    <p className="text-[11px] text-slate-400 font-medium">
+                    <p className="text-[11px] text-slate-500 font-medium">
                       {opt.description}
                     </p>
                   )}

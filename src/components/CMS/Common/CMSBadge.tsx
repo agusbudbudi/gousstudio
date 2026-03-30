@@ -24,7 +24,7 @@ const CMSBadge: React.FC<CMSBadgeProps> = ({
       case "REVIEWED":
         return "bg-purple-50 text-purple-700 border-purple-200";
       case "REVISION":
-        return "bg-rose-50 text-rose-700 border-rose-200";
+        return "bg-rose-50 text-rose-500 border-rose-200";
       default:
         return "bg-slate-50 text-slate-700 border-slate-200";
     }

@@ -80,7 +80,7 @@ const OrderList: React.FC<OrderListProps> = ({
                 >
                   #{order.order_number}
                 </button>
-                <div className="text-[10px] text-slate-400 mt-1 whitespace-nowrap">
+                <div className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">
                   {new Date(order.created_at).toLocaleDateString("id-ID", {
                     day: "2-digit",
                     month: "short",
@@ -104,7 +104,7 @@ const OrderList: React.FC<OrderListProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-slate-500 mt-0.5 font-medium">
+                <div className="text-xs text-slate-600 mt-0.5 font-medium">
                   {order.phone_number}
                 </div>
               </CMSTableCell>
@@ -125,8 +125,8 @@ const OrderList: React.FC<OrderListProps> = ({
               </CMSTableCell>
               <CMSTableCell className="hidden md:table-cell">
                 {order.deadline ? (
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                    <Calendar size={12} className="text-slate-400" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    <Calendar size={12} className="text-slate-500" />
                     {new Date(order.deadline).toLocaleDateString("id-ID")}
                   </div>
                 ) : (
@@ -157,7 +157,7 @@ const OrderList: React.FC<OrderListProps> = ({
       {totalPages > 1 && (
         <div className="flex-shrink-0 mt-4 rounded-xl">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs font-medium text-slate-500 text-center sm:text-left">
+            <div className="text-xs font-medium text-slate-600 text-center sm:text-left">
               Menampilkan{" "}
               <span className="font-bold text-slate-700">
                 {(currentPage - 1) * itemsPerPage + 1}
@@ -188,7 +188,7 @@ const OrderList: React.FC<OrderListProps> = ({
                     const showEllipsis = i > 0 && p - arr[i - 1] > 1;
                     return (
                       <React.Fragment key={p}>
-                        {showEllipsis && <span className="text-slate-300 px-1">...</span>}
+                        {showEllipsis && <span className="text-slate-400 px-1">...</span>}
                         <button
                           onClick={() => setCurrentPage(p)}
                           className={`min-w-[30px] h-[30px] rounded-lg text-xs font-bold transition-all cursor-pointer ${

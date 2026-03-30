@@ -749,8 +749,8 @@ const OrderDetail = () => {
                             <CreditCard size={11} />
                             {order.is_sandbox === null ||
                             order.is_sandbox === undefined
-                              ? "Pembayaran Manual"
-                              : "Pembayaran Otomatis"}
+                              ? "Manual Verification"
+                              : "Otomatis (Pakasir)"}
                           </span>
                           {order.is_sandbox === true && (
                             <span className="bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400 px-1.5 py-0.5 rounded text-[9px] tracking-widest">
