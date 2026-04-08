@@ -65,3 +65,14 @@ export const fastworkSchema = z.object({
   delay: z.string().optional(),
 });
 export type FastworkFormData = z.infer<typeof fastworkSchema>;
+
+// --- Testimonial Modal ---
+export const testimonialSchema = z.object({
+  name: z.string().min(2, "Nama minimal 2 karakter"),
+  title: z.string().min(2, "Gelar/Jabatan minimal 2 karakter"),
+  rating: z.number().min(1).max(5),
+  testimony: z.string().min(10, "Testimoni minimal 10 karakter"),
+  is_show: z.boolean(),
+  avatar_url: z.string().optional(),
+});
+export type TestimonialFormData = z.infer<typeof testimonialSchema>;

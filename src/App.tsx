@@ -25,6 +25,7 @@ const PortfolioCMS = lazy(() => import('./components/CMS/PortfolioCMS'));
 const PricelistCMS = lazy(() => import('./components/CMS/PricelistCMS'));
 const ServicesCMS = lazy(() => import('./components/CMS/ServicesCMS'));
 const FastworkCMS = lazy(() => import('./components/CMS/FastworkCMS'));
+const TestimonialCMS = lazy(() => import('./components/CMS/TestimonialCMS'));
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -132,6 +133,7 @@ const AnimatedRoutes = () => {
           <Route path="portfolio" element={<PortfolioCMS />} />
           <Route path="pricelist" element={<PricelistCMS />} />
           <Route path="services" element={<ServicesCMS />} />
+          <Route path="testimonials" element={<TestimonialCMS />} />
           <Route path="fastwork" element={<FastworkCMS />} />
         </Route>
         <Route path="/order/:orderNumber" element={<OrderDetail />} />
