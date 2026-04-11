@@ -504,7 +504,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center shrink-0">
-                          <CheckCircle2 size={16} className="text-white" />
+                          <CheckCircle2 size={16} className="!text-white" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -1037,7 +1037,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                     <Maximize2
                       size={32}
-                      className="text-white transform scale-75 group-hover:scale-110 transition-transform"
+                      className="!text-white transform scale-75 group-hover:scale-110 transition-transform"
                     />
                   </div>
                 </div>
@@ -1070,7 +1070,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         {order.status === "DRAFT" && order.id !== "NEW" && (
           <CMSButton
             type="button"
-            className="!bg-orange-500 text-white hover:!bg-orange-600 border-none"
+            className="!bg-orange-500 !text-white hover:!bg-orange-600 border-none"
             onClick={async () => {
               await onStatusUpdate(order.id, "WAITING FOR PAYMENT");
             }}
@@ -1082,7 +1082,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         {order.status === "IN PROGRESS" && order.id !== "NEW" && (
           <CMSButton
             type="button"
-            className="!bg-purple-500 text-white hover:!bg-purple-600 border-none"
+            className="!bg-purple-500 !text-white hover:!bg-purple-600 border-none"
             onClick={() => onStatusUpdate(order.id, "REVIEWED")}
           >
             Send for Review
@@ -1092,14 +1092,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
           <>
             <CMSButton
               type="button"
-              className="!bg-rose-500 text-white hover:!bg-rose-600 border-none"
+              className="!bg-rose-500 !text-white hover:!bg-rose-600 border-none"
               onClick={() => onStatusUpdate(order.id, "REVISION")}
             >
               Revision
             </CMSButton>
             <CMSButton
               type="button"
-              className="!bg-emerald-500 text-white hover:!bg-emerald-600 border-none"
+              className="!bg-emerald-500 !text-white hover:!bg-emerald-600 border-none"
               onClick={() => setIsSelesaiModalOpen(true)}
             >
               Selesai
@@ -1241,7 +1241,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   });
                   setIsSelesaiModalOpen(false);
                 }}
-                className="flex-1 p-2 bg-emerald-500 text-white rounded-lg"
+                className="flex-1 p-2 bg-emerald-500 !text-white rounded-lg"
               >
                 Selesai
               </button>

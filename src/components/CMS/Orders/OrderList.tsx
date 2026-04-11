@@ -193,7 +193,7 @@ const OrderList: React.FC<OrderListProps> = ({
                           onClick={() => setCurrentPage(p)}
                           className={`min-w-[30px] h-[30px] rounded-lg text-xs font-bold transition-all cursor-pointer ${
                             currentPage === p
-                              ? "bg-brand-500 text-white shadow-md shadow-brand-500/20"
+                              ? "bg-brand-500 !text-white shadow-md shadow-brand-500/20"
                               : "text-slate-500 hover:bg-slate-50 border border-transparent hover:border-slate-200"
                           }`}
                         >
