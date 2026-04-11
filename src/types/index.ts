@@ -101,3 +101,16 @@ export interface ClientItem {
   notes?: string;
   created_at: string;
 }
+
+export interface TestimonialItem {
+  id?: string;
+  name: string;
+  title: string;
+  rating: number;
+  testimony: string;
+  avatar_url?: string;
+  is_show: boolean;
+  order_index?: number;
+  created_at?: string;
+  updated_at?: string;
+}

@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   Layers,
   Target,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PortfolioList from "./PortfolioList";
@@ -34,6 +35,7 @@ import FastworkCMS from "./FastworkCMS";
 import ServicesCMS from "./ServicesCMS";
 import OrderCMS from "./OrderCMS";
 import ClientCMS from "./ClientCMS";
+import TestimonialCMS from "./TestimonialCMS";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
@@ -116,8 +118,9 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
     const path = location.pathname;
     if (path.includes("/orders")) return "orders";
     if (path.includes("/clients")) return "clients";
-    if (path.includes("/portfolio")) return "portfolio";
     if (path.includes("/pricelist")) return "pricelist";
+    if (path.includes("/testimonials")) return "testimonials";
+    if (path.includes("/portfolio")) return "portfolio";
     if (path.includes("/services")) return "services";
     if (path.includes("/fastwork")) return "fastwork";
     return "orders";
@@ -228,6 +231,14 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
                 activePage={activePage}
                 isCollapsed={isCollapsed}
                 onClick={() => navigate("/cms/services")}
+              />
+              <MenuItem
+                id="testimonials"
+                icon={MessageSquare}
+                label="Testimonials"
+                activePage={activePage}
+                isCollapsed={isCollapsed}
+                onClick={() => navigate("/cms/testimonials")}
               />
               <MenuItem
                 id="fastwork"

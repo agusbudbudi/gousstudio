@@ -19,11 +19,13 @@ import {
   Maximize2,
   FileDown,
   Plus,
+  Hash,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toPng } from "html-to-image";
+import { useNavigate } from "react-router-dom";
 
 import { OrderItem, PricelistItem, ClientItem } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
@@ -101,6 +103,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   onClientAdded,
 }) => {
   const { addToast } = useToast();
+  const navigate = useNavigate();
   const briefTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -816,6 +819,36 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-0.5">
+                    {(() => {
+                      const linkedClient = clients.find(
+                        (c) => c.id === order.client_id,
+                      );
+                      const linkedClientId =
+                        linkedClient?.client_no !== undefined
+                          ? `CLT-${String(linkedClient.client_no).padStart(3, "0")}`
+                          : null;
+                      return (
+                        <CMSViewItem
+                          label="Client ID"
+                          value={
+                            linkedClientId ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/cms/clients/${linkedClientId}`)
+                                }
+                                className="text-brand-500 hover:text-brand-600 hover:underline font-bold text-sm flex items-center gap-1 transition-all cursor-pointer"
+                              >
+                                {linkedClientId}
+                                <ExternalLink size={11} />
+                              </button>
+                            ) : (
+                              "—"
+                            )
+                          }
+                        />
+                      );
+                    })()}
                     <CMSViewItem
                       label="Nama Pelanggan"
                       value={formValues.full_name}

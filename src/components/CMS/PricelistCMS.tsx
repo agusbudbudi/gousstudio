@@ -162,63 +162,19 @@ const PricelistCMS: React.FC = () => {
   const persistToSupabase = async () => {
     setSaving(true);
     try {
-      const flatData = items.map((item, index) => ({
-        ...(item.id ? { id: item.id } : {}),
-        slug: (item as any).slug,
-        category: item.category,
-        servicename: item.servicename,
-        description: item.description,
-        retailprice: item.retailprice,
-        finalprice: item.finalprice,
-        duration: item.duration,
-        isrevisionunlimited: item.isrevisionunlimited,
-        totalrevision: item.totalrevision,
-        deliverables: item.deliverables || [],
-        order_index: index,
-        is_show_to_customer: item.isShowToCustomer ?? false,
-      }));
+      const response = await fetch("/api/cms/pricelists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: items }),
+      });
 
-      const currentIds = items.filter((item) => item.id).map((item) => item.id);
-      const deletedIds = pristineItems
-        .filter((item) => item.id && !currentIds.includes(item.id))
-        .map((item) => item.id);
-
-      // Separate items to update vs insert
-      const itemsToUpdate = flatData.filter((item) => item.id);
-      const itemsToInsert = flatData.filter((item) => !item.id);
-
-      // Explicitly delete removed items
-      if (deletedIds.length > 0) {
-        const { error: delError } = await supabase
-          .from("pricelists")
-          .delete()
-          .in("id", deletedIds);
-        if (delError) throw delError;
+      if (response.ok) {
+        addToast("Pricelist berhasil disimpan ke Supabase!", "success");
+        await fetchPricelist(); // Await the refresh
+      } else {
+        const err = await response.json();
+        addToast(`Gagal menyimpan: ${err.message}`, "error");
       }
-
-      // Update existing items individually
-      if (itemsToUpdate.length > 0) {
-        const updatePromises = itemsToUpdate.map(async (item) => {
-          const { id, ...updateData } = item;
-          const { error } = await supabase
-            .from("pricelists")
-            .update(updateData)
-            .eq("id", id);
-          if (error) throw error;
-        });
-        await Promise.all(updatePromises);
-      }
-
-      // Insert new items without IDs
-      if (itemsToInsert.length > 0) {
-        const { error: insError } = await supabase
-          .from("pricelists")
-          .insert(itemsToInsert);
-        if (insError) throw insError;
-      }
-
-      addToast("Pricelist berhasil disimpan ke Supabase!", "success");
-      await fetchPricelist(); // Await the refresh
     } catch (err: any) {
       addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
