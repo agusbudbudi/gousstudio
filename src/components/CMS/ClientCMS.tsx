@@ -245,7 +245,7 @@ const ClientCMS: React.FC = () => {
         )}
       </CMSHeader>
 
-      <div className="flex-1 min-h-0 overflow-hidden pt-6">
+      <div className="flex-1 min-h-0 flex flex-col pt-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
@@ -291,11 +291,27 @@ const ClientCMS: React.FC = () => {
                 <div className="p-6">
                   {/* Top: Avatar & Name */}
                   <div className="flex items-center gap-4 mb-4 pr-20">
-                    <div className="w-[42px] h-[42px] rounded-full bg-brand-500/10 flex items-center justify-center shrink-0">
-                      <span className="text-brand-500 font-bold text-lg leading-none">
-                        {selectedClient.full_name?.charAt(0).toUpperCase() ||
-                          "?"}
-                      </span>
+                    <div className="shrink-0">
+                      {selectedClient.photo_url ? (
+                        <div
+                          className="rounded-lg overflow-hidden"
+                          style={{ width: 88, height: 40 }}
+                        >
+                          <img
+                            src={selectedClient.photo_url}
+                            alt={selectedClient.full_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-[42px] h-[42px] rounded-full bg-brand-500/10 flex items-center justify-center">
+                          <span className="text-brand-500 font-bold text-lg leading-none">
+                            {selectedClient.full_name
+                              ?.charAt(0)
+                              .toUpperCase() || "?"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h2 className="text-lg font-bold text-slate-800 mb-1 leading-tight">
@@ -504,7 +520,7 @@ const ClientCMS: React.FC = () => {
                 }
               />
             ) : (
-              <CMSTableContainer>
+              <CMSTableContainer className="flex-1 !overflow-y-auto custom-scrollbar">
                 <CMSTableHeader>
                   <CMSTableHeaderCell width="130px">
                     Client ID
@@ -544,10 +560,19 @@ const ClientCMS: React.FC = () => {
                       </CMSTableCell>
                       <CMSTableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 min-w-[2rem] min-h-[2rem] bg-brand-500/10 rounded-full flex items-center justify-center shrink-0">
-                            <span className="text-brand-500 font-bold text-xs leading-none">
-                              {client.full_name?.charAt(0).toUpperCase() || "?"}
-                            </span>
+                          <div className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full overflow-hidden bg-brand-500/10 flex items-center justify-center shrink-0 border border-slate-100">
+                            {client.photo_url ? (
+                              <img
+                                src={client.photo_url}
+                                alt={client.full_name}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <span className="text-brand-500 font-bold text-xs leading-none">
+                                {client.full_name?.charAt(0).toUpperCase() ||
+                                  "?"}
+                              </span>
+                            )}
                           </div>
                           <span className="font-bold text-slate-800 text-sm">
                             {client.full_name}

@@ -16,7 +16,10 @@ import CMSButton from "./Common/CMSButton";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { testimonialSchema, TestimonialFormData } from "../../utils/formSchemas";
+import {
+  testimonialSchema,
+  TestimonialFormData,
+} from "../../utils/formSchemas";
 import { TestimonialItem } from "../../types";
 
 interface TestimonialModalProps {
@@ -151,7 +154,7 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
               Avatar
             </label>
             <div className="relative group">
-              <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative">
+              <div className="w-24 h-24 rounded-2xl bg-slate-100 border-1 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
@@ -161,17 +164,17 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
                 ) : (
                   <User size={32} className="text-slate-300" />
                 )}
-                
+
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute inset-0 bg-black/40 !text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <Upload size={16} />
                   <span className="text-[10px] font-bold mt-1">Ganti</span>
                 </button>
               </div>
-              
+
               {avatarPreview && (
                 <button
                   type="button"
@@ -179,7 +182,7 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
                     setAvatarPreview(null);
                     setValue("avatar_url", "");
                   }}
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 !text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -243,7 +246,9 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
             </span>
           </div>
           {errors.rating && (
-            <p className="text-xs text-rose-500 mt-1">{errors.rating.message}</p>
+            <p className="text-xs text-rose-500 mt-1">
+              {errors.rating.message}
+            </p>
           )}
         </div>
 

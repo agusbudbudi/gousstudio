@@ -99,6 +99,7 @@ export interface ClientItem {
   phone_number?: string;
   company?: string;
   notes?: string;
+  photo_url?: string;
   created_at: string;
 }
 
