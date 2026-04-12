@@ -13,6 +13,8 @@ import CMSHeader from "./CMSHeader";
 import OrderFilters from "./Orders/OrderFilters";
 import OrderList from "./Orders/OrderList";
 import OrderForm from "./Orders/OrderForm";
+import OrderKanban from "./Orders/OrderKanban";
+import OrderTimeline from "./Orders/OrderTimeline";
 
 const OrderCMS: React.FC = () => {
   const { addToast } = useToast();
@@ -38,6 +40,7 @@ const OrderCMS: React.FC = () => {
   const ITEMS_PER_PAGE = 10;
   
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
+  const [viewMode, setViewMode] = useState<"LIST" | "KANBAN" | "TIMELINE">("LIST");
 
   const { data: pricelists = [] } = useQuery({
     queryKey: ["pricelists"],
@@ -160,6 +163,8 @@ const OrderCMS: React.FC = () => {
             setStatusFilter={setStatusFilter}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
             onAdd={() => navigate("/cms/orders/new")}
           />
         )}
@@ -191,16 +196,34 @@ const OrderCMS: React.FC = () => {
         />
       ) : (
         <div className="flex-1 min-h-0 flex flex-col pt-6">
-          <OrderList
-            orders={filteredOrders}
-            searchQuery={searchQuery}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            itemsPerPage={ITEMS_PER_PAGE}
-            updatingId={updatingId}
-            onSelectOrder={(orderNumber) => navigate(`/cms/orders/${orderNumber}`)}
-            onDeleteOrder={deleteOrder}
-          />
+          {viewMode === "LIST" && (
+            <OrderList
+              orders={filteredOrders}
+              searchQuery={searchQuery}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+              updatingId={updatingId}
+              onSelectOrder={(orderNumber) => navigate(`/cms/orders/${orderNumber}`)}
+              onDeleteOrder={deleteOrder}
+            />
+          )}
+
+          {viewMode === "KANBAN" && (
+            <OrderKanban
+              orders={filteredOrders}
+              updatingId={updatingId}
+              onSelectOrder={(orderNumber) => navigate(`/cms/orders/${orderNumber}`)}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          )}
+
+          {viewMode === "TIMELINE" && (
+            <OrderTimeline
+              orders={filteredOrders}
+              onSelectOrder={(orderNumber) => navigate(`/cms/orders/${orderNumber}`)}
+            />
+          )}
         </div>
       )}
     </div>

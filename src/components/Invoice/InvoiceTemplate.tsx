@@ -207,6 +207,11 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                 Diskon
+                {order.voucher_code && (
+                  <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black tracking-wider uppercase">
+                    {order.voucher_code}
+                  </span>
+                )}
                 {order.discount_type === "percentage" && (
                   <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black">
                     {order.discount_value}%

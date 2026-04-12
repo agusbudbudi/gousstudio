@@ -33,29 +33,46 @@ export interface PricelistItem {
 
 export interface OrderItem {
   id: string;
-  client_id?: string;
   order_number: string;
   full_name: string;
   phone_number: string;
   design_category: string;
   selected_package: string;
-  brief_detail?: string;
-  deadline?: string;
-  price?: number;
-  discount_value?: number;
-  discount_type?: 'fixed' | 'percentage';
-  final_price?: number;
+  brief_detail?: string | null;
+  deadline?: string | null;
+  price?: number | null;
+  discount_value?: number | null;
+  discount_type?: 'fixed' | 'percentage' | null;
+  final_price?: number | null;
   status: 'DRAFT' | 'WAITING FOR PAYMENT' | 'IN PROGRESS' | 'REVISION' | 'REVIEWED' | 'DONE';
-  payment_proof_url?: string;
-  deliverables_url?: string;
-  internal_notes?: string;
+  payment_proof_url?: string | null;
+  deliverables_url?: string | null;
+  internal_notes?: string | null;
   created_at: string;
-  source_order?: string;
-  payment_method?: string;
-  paid_amount?: number;
-  paid_at?: string;
+  source_order?: string | null;
+  client_id?: string | null;
+  payment_method?: string | null;
+  paid_amount?: number | null;
+  paid_at?: string | null;
   is_sandbox?: boolean | null;
   package_details?: PricelistItem;
+  voucher_code?: string | null;
+  referral_id?: string | null;
+}
+
+export interface ReferralCode {
+  id: string;
+  code: string;
+  order_id: string;
+  discount_value: number;
+  discount_type: "fixed" | "percentage";
+  is_used: boolean;
+  created_at: string;
+  orders?: {
+    full_name: string;
+    order_number: string;
+  };
+  used_on_order?: string;
 }
 
 export interface AppState {

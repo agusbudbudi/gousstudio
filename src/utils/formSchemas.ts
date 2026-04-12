@@ -8,6 +8,7 @@ export const orderSchema = z.object({
   design_category: z.string().optional(),
   brief: z.string().min(10, "Brief terlalu singkat (minimal 10 karakter)"),
   deadline: z.string().min(1, "Silakan tentukan deadline"),
+  voucher_code: z.string().regex(/^[a-zA-Z0-9]*$/, "Kode voucher hanya boleh berisi huruf dan angka").optional(),
 });
 export type OrderFormData = z.infer<typeof orderSchema>;
 

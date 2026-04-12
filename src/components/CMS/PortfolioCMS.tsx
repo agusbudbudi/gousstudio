@@ -298,7 +298,7 @@ const PortfolioCMS: React.FC = () => {
               <span
                 className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                   activeTab === cat.id
-                    ? "bg-brand-500 text-white"
+                    ? "bg-brand-500 !text-white"
                     : "bg-slate-100 text-slate-400"
                 }`}
               >

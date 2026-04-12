@@ -252,7 +252,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <Upload size={14} className="text-white" />
+                  <Upload size={14} className="!text-white" />
                   <span className="text-[9px] font-bold !text-white">
                     Ganti
                   </span>

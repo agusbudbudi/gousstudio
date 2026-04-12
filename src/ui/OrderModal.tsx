@@ -9,15 +9,19 @@ import {
   ChevronDown,
   CheckCircle2,
   ExternalLink,
+  Tag,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import CMSCombobox, {
+  ComboboxOption,
+} from "../components/CMS/Common/CMSCombobox";
+import CMSInput from "../components/CMS/Common/CMSInput";
 import { useAppStore } from "../store/useAppStore";
 import { orderSchema, OrderFormData } from "../utils/formSchemas";
 import { PricelistItem, OrderItem } from "../types";
 import { supabase } from "../utils/supabase";
 import { CONFIG } from "../config/constants";
-
 
 const OrderModal = () => {
   const {
@@ -201,6 +205,29 @@ const OrderModal = () => {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
+  // Prepare options for Combobox
+  const comboboxOptions: ComboboxOption[] = [
+    ...(!pricelistOptions.some((p) => p.servicename === "Custom Package")
+      ? [
+          {
+            label: "Custom Package",
+            value: "Custom Package",
+            description: "Project desain kustom sesuai kebutuhan Anda",
+          },
+        ]
+      : []),
+    ...pricelistOptions.map((p) => ({
+      label: p.servicename || "No Name",
+      value: p.servicename || "No Value",
+      description: p.category || "",
+      rightElement: (
+        <span className="text-[10px] font-black text-brand-500/80 bg-brand-500/5 px-2 py-0.5 rounded border border-brand-500/10">
+          {p.duration} Hari
+        </span>
+      ),
+    })),
+  ];
+
   if (!isOpen) return null;
 
   const onSubmit = async (data: OrderFormData) => {
@@ -281,7 +308,7 @@ const OrderModal = () => {
         </div>
 
         {isSubmitted ? (
-          <div className="flex-1 px-6 py-10 md:p-10 flex flex-col items-center justify-center text-center animate-fadeIn scroll-smooth overflow-y-auto">
+          <div className="flex-1 p-6 flex flex-col items-center justify-center text-center animate-fadeIn scroll-smooth overflow-y-auto">
             <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 neon-glow shadow-emerald-500/20 shadow-lg border border-emerald-500/20">
               <CheckCircle2 size={40} className="text-emerald-500" />
             </div>
@@ -348,64 +375,36 @@ const OrderModal = () => {
             <div className="flex-1 px-4 py-4 md:p-6 overflow-y-auto">
               <div className="space-y-4 md:space-y-6">
                 {/* Nama */}
-                <div className="relative">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Nama Lengkap <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative group">
-                    <User
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                      size={18}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Masukkan nama Anda"
-                      {...register("name")}
-                      style={{
-                        backgroundColor: "var(--color-glass-bg)",
-                        color: "var(--color-text)",
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.name ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]`}
-                    />
-                  </div>
-                  {errors.name && (
-                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
+                <CMSInput
+                  label="Nama Lengkap"
+                  required
+                  leftIcon={<User size={18} />}
+                  placeholder="Masukkan nama Anda"
+                  {...register("name")}
+                  error={errors.name?.message}
+                  variant="glass"
+                />
 
                 {/* WhatsApp */}
-                <div className="relative">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Nomor WhatsApp <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative group">
-                    <Phone
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                      size={18}
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Contoh: 08123456789"
-                      {...register("whatsapp")}
-                      onChange={(e) => {
-                        e.target.value = e.target.value.replace(/\D/g, "");
-                        register("whatsapp").onChange(e);
-                      }}
-                      style={{
-                        backgroundColor: "var(--color-glass-bg)",
-                        color: "var(--color-text)",
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.whatsapp ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all border-[1px]`}
-                    />
-                  </div>
-                  {errors.whatsapp && (
-                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
-                      {errors.whatsapp.message}
-                    </p>
-                  )}
-                </div>
+                <CMSInput
+                  label="Nomor WhatsApp"
+                  required
+                  leftIcon={<Phone size={18} />}
+                  type="tel"
+                  placeholder="Contoh: 08123456789"
+                  {...register("whatsapp")}
+                  onChange={(
+                    e: React.ChangeEvent<
+                      HTMLInputElement | HTMLTextAreaElement
+                    >,
+                  ) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/\D/g, "");
+                    register("whatsapp").onChange(e);
+                  }}
+                  error={errors.whatsapp?.message}
+                  variant="glass"
+                />
 
                 {/* Service Dropdown */}
                 <div className="relative">
@@ -413,19 +412,23 @@ const OrderModal = () => {
                     Kebutuhan Desain <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative group">
-                    <MessageSquare
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                      size={18}
-                    />
                     <Controller
                       name="selected_package"
                       control={control}
                       render={({ field }) => (
-                        <select
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            const selected = e.target.value;
+                        <CMSCombobox
+                          placeholder={
+                            loadingPricelists
+                              ? "Memuat paket..."
+                              : "Klik untuk mencari paket desain..."
+                          }
+                          leftIcon={<MessageSquare size={18} />}
+                          value={field.value}
+                          onChange={(val) => {
+                            field.onChange(val);
+                          }}
+                          onSelectOption={(opt) => {
+                            const selected = opt.value;
                             const selectedRow = pricelistOptions.find(
                               (p) => p.servicename === selected,
                             );
@@ -454,61 +457,11 @@ const OrderModal = () => {
                               );
                             }
                           }}
-                          style={{
-                            backgroundColor: "var(--color-glass-bg)",
-                            color: "var(--color-text)",
-                          }}
-                          className={`w-full pl-12 pr-10 py-4 text-base md:text-sm rounded-xl border ${errors.selected_package ? "border-rose-500" : "border-white/10"} appearance-none focus:outline-none focus:border-brand-500 transition-all cursor-pointer border-[1px]`}
-                        >
-                          {loadingPricelists ? (
-                            <option
-                              value=""
-                              style={{ backgroundColor: "var(--color-card)" }}
-                            >
-                              Memuat...
-                            </option>
-                          ) : (
-                            <>
-                              <option
-                                value=""
-                                style={{ backgroundColor: "var(--color-card)" }}
-                              >
-                                Pilih Paket...
-                              </option>
-
-                              {!pricelistOptions.some(
-                                (p) => p.servicename === "Custom Package",
-                              ) && (
-                                <option
-                                  value="Custom Package"
-                                  style={{
-                                    backgroundColor: "var(--color-card)",
-                                  }}
-                                >
-                                  Custom Package
-                                </option>
-                              )}
-
-                              {pricelistOptions.map((p) => (
-                                <option
-                                  key={p.servicename}
-                                  value={p.servicename}
-                                  style={{
-                                    backgroundColor: "var(--color-card)",
-                                    color: "var(--color-text)",
-                                  }}
-                                >
-                                  {p.servicename}
-                                </option>
-                              ))}
-                            </>
-                          )}
-                        </select>
+                          options={comboboxOptions}
+                          disabled={loadingPricelists}
+                          variant="glass"
+                        />
                       )}
-                    />
-                    <ChevronDown
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                      size={18}
                     />
                   </div>
                   {errors.selected_package && (
@@ -525,56 +478,43 @@ const OrderModal = () => {
                 )}
 
                 {/* Brief */}
-                <div className="relative">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Detail Brief <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    {...register("brief")}
-                    rows={5}
-                    placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
-                    style={{
-                      backgroundColor: "var(--color-glass-bg)",
-                      color: "var(--color-text)",
-                    }}
-                    className={`w-full p-4 text-base md:text-sm rounded-xl border ${errors.brief ? "border-rose-500" : "border-white/10"} placeholder:text-slate-400 focus:outline-none focus:border-brand-500 transition-all resize-none border-[1px]`}
-                  ></textarea>
-                  {errors.brief && (
-                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
-                      {errors.brief.message}
-                    </p>
-                  )}
-                </div>
+                <CMSInput
+                  label="Detail Brief"
+                  required
+                  isTextArea
+                  rows={4}
+                  placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
+                  {...register("brief")}
+                  error={errors.brief?.message}
+                  variant="glass"
+                />
 
                 {/* Deadline */}
-                <div className="relative">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Desain Harus Ready Tanggal{" "}
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative group">
-                    <Calendar
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"
-                      size={18}
-                    />
-                    <input
-                      type="date"
-                      {...register("deadline")}
-                      style={{
-                        backgroundColor: "var(--color-glass-bg)",
-                        color: "var(--color-text)",
-                        boxSizing: "border-box",
-                        maxWidth: "100%",
-                      }}
-                      className={`w-full pl-12 pr-4 py-4 text-base md:text-sm rounded-xl border ${errors.deadline ? "border-rose-500" : "border-white/10"} focus:outline-none focus:border-brand-500 transition-all [color-scheme:light] dark:[color-scheme:dark] border-[1px]`}
-                    />
-                  </div>
-                  {errors.deadline && (
-                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
-                      {errors.deadline.message}
-                    </p>
-                  )}
-                </div>
+                <CMSInput
+                  label="Desain Harus Ready Tanggal"
+                  required
+                  leftIcon={<Calendar size={18} />}
+                  type="date"
+                  {...register("deadline")}
+                  error={errors.deadline?.message}
+                  variant="glass"
+                  className="[color-scheme:light] dark:[color-scheme:dark]"
+                />
+
+                {/* Voucher Code */}
+                <CMSInput
+                  label="Kode Voucher (Opsional)"
+                  leftIcon={<Tag size={18} />}
+                  placeholder="Contoh: REFXXXXX"
+                  {...register("voucher_code")}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                    register("voucher_code").onChange(e);
+                  }}
+                  error={errors.voucher_code?.message}
+                  variant="glass"
+                />
               </div>
             </div>
 

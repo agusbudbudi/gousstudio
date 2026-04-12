@@ -25,7 +25,7 @@ const CMSButton: React.FC<CMSButtonProps> = ({
 
   const variantStyles = {
     primary:
-      "px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg  border border-brand-500",
+      "px-4 py-2 bg-brand-500 hover:bg-brand-600 !text-white rounded-lg  border border-brand-500",
     secondary:
       "px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:border-brand-500 hover:text-brand-500 hover:bg-brand-50 rounded-lg  font-bold",
     ghost:

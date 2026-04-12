@@ -46,16 +46,34 @@ export default async function handler(req, res) {
     case 'update':
       if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
       try {
-        const { data, error } = await supabase.from('orders').update(req.body.updates).eq('id', req.body.id).select();
+        const { data, error } = await supabase.from('orders').update(req.body.updates).eq('id', req.body.id).select().single();
         if (error) throw error;
+
+        // If payment is manually confirmed, mark the associated voucher as used
+        if (req.body.updates.paid_amount !== undefined && data.referral_id) {
+          await supabase.from('referral_codes').update({ is_used: true }).eq('id', data.referral_id);
+        }
+
+        // If order reverting to DRAFT or CANCELLED, release the voucher
+        if ((req.body.updates.status === 'DRAFT' || req.body.updates.status === 'CANCELLED') && data.referral_id) {
+          await supabase.from('referral_codes').update({ is_used: false }).eq('id', data.referral_id);
+        }
+
         return res.status(200).json({ success: true, data });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 
     case 'delete':
       if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
       try {
+        const { data: orderToDelete } = await supabase.from('orders').select('referral_id').eq('id', req.body.id).single();
         const { error } = await supabase.from('orders').delete().eq('id', req.body.id);
         if (error) throw error;
+
+        // Automatically release bound voucher when order is wiped
+        if (orderToDelete && orderToDelete.referral_id) {
+          await supabase.from('referral_codes').update({ is_used: false }).eq('id', orderToDelete.referral_id);
+        }
+
         return res.status(200).json({ success: true, message: 'Deleted' });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 

@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       // Select the order first to ensure it exists
       const { data: existingOrder, error: fetchError } = await supabase
         .from('orders')
-        .select('id, status, price, final_price')
+        .select('id, status, price, final_price, referral_id')
         .eq('order_number', order_id)
         .single();
         
@@ -79,6 +79,14 @@ export default async function handler(req, res) {
 
       if (dbError) {
         return res.status(500).json({ message: 'Failed to update order status', error: dbError.message });
+      }
+
+      // Mark voucher as used if payment is successful
+      if (existingOrder.referral_id) {
+        await supabase
+          .from('referral_codes')
+          .update({ is_used: true })
+          .eq('id', existingOrder.referral_id);
       }
 
       console.log(`Order ${order_id} payment successful, status updated.`);

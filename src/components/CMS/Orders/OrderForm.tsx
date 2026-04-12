@@ -20,6 +20,7 @@ import {
   FileDown,
   Plus,
   Hash,
+  X,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,12 +49,20 @@ const cmsOrderValidationSchema = z.object({
   selected_package: z.string().min(1, "Paket wajib dipilih"),
   price: z.number().min(0, "Harga wajib diisi"),
   final_price: z.number().min(0, "Harga final wajib diisi"),
-  brief_detail: z.string().min(10, "Brief minimal 10 karakter"),
-  deadline: z.string().min(1, "Silakan tentukan deadline"),
-  discount_type: z.enum(["fixed", "percentage"]).optional(),
-  discount_value: z.number().optional(),
-  internal_notes: z.string().optional(),
-  client_id: z.string().optional(),
+  brief_detail: z
+    .string()
+    .min(10, "Brief minimal 10 karakter")
+    .nullable()
+    .optional(),
+  deadline: z
+    .string()
+    .min(1, "Silakan tentukan deadline")
+    .nullable()
+    .optional(),
+  discount_type: z.enum(["fixed", "percentage"]).nullable().optional(),
+  discount_value: z.number().nullable().optional(),
+  internal_notes: z.string().nullable().optional(),
+  client_id: z.string().nullable().optional(),
   status: z
     .enum([
       "DRAFT",
@@ -65,6 +74,8 @@ const cmsOrderValidationSchema = z.object({
     ])
     .optional(),
   is_sandbox: z.boolean().nullable().optional(),
+  voucher_code: z.string().nullable().optional(),
+  referral_id: z.string().nullable().optional(),
 });
 
 type OrderFormValues = z.infer<typeof cmsOrderValidationSchema>;
@@ -134,6 +145,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
     useState(false);
   const [verifyPaymentMethod, setVerifyPaymentMethod] = useState("");
   const [verifyPaidAmount, setVerifyPaidAmount] = useState<number | "">("");
+  const [isValidatingVoucher, setIsValidatingVoucher] = useState(false);
+  const [voucherData, setVoucherData] = useState<any>(null);
+  const [voucherError, setVoucherError] = useState<string | null>(null);
 
   // Sync form when order prop changes (e.g. status updates)
   useEffect(() => {
@@ -143,6 +157,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
       final_price: Number(order.final_price ?? order.price) || 0,
       discount_value: Number(order.discount_value) || 0,
       discount_type: order.discount_type || "fixed",
+      referral_id: order.referral_id || null,
     });
   }, [order, reset]);
 
@@ -207,6 +222,91 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
     const finalP = calculateFinalPrice(newPrice, newDiscVal, newDiscType);
     setValue("final_price", finalP, { shouldValidate: true });
+  };
+
+  const handleValidateVoucher = async () => {
+    const code = formValues.voucher_code;
+    if (!code) {
+      setVoucherError("Masukkan kode voucher");
+      return;
+    }
+
+    try {
+      setIsValidatingVoucher(true);
+      setVoucherError(null);
+      const res = await fetch(
+        `/api/orders?action=validate-voucher&code=${code}`,
+      );
+      const result = await res.json();
+
+      if (!res.ok) {
+        setVoucherError(result.message || "Voucher tidak valid");
+        setVoucherData(null);
+        return;
+      }
+
+      setVoucherData(result.voucher);
+      addToast("Voucher berhasil divalidasi", "success");
+    } catch (err) {
+      setVoucherError("Terjadi kesalahan sistem");
+    } finally {
+      setIsValidatingVoucher(false);
+    }
+  };
+
+  const handleApplyVoucher = async () => {
+    if (!voucherData) return;
+
+    try {
+      // In CMS, we might want to just update the local form state first,
+      // but the user said "amount value voucher shall be automatically set the discount value and discount type on the order and make it non editable after voucher tervalidasi"
+      // This suggests we should update the FORM fields.
+
+      setValue(
+        "discount_type",
+        voucherData.discount_type as "fixed" | "percentage",
+      );
+      setValue("discount_value", voucherData.discount_value);
+      setValue("referral_id", voucherData.id);
+
+      // Recalculate everything
+      const finalP = calculateFinalPrice(
+        formValues.price,
+        voucherData.discount_value,
+        voucherData.discount_type,
+      );
+      setValue("final_price", finalP);
+
+      // Update the referral_id in our local state/form if we had it in schema,
+      // but since it's an update, the backend 'apply-voucher' is better for FINALIZATION.
+      // However, for UI, we just lock the fields.
+
+      addToast("Voucher diterapkan ke rincian biaya", "success");
+    } catch (err) {
+      addToast("Gagal menerapkan voucher", "error");
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    const isApplied = !!formValues.referral_id;
+
+    // Phase 1: Clear verification metadata
+    setVoucherData(null);
+    setVoucherError(null);
+    setValue("voucher_code", "");
+
+    // Phase 2: If already applied, reset values & referral link
+    if (isApplied) {
+      setValue("discount_value", 0);
+      setValue("discount_type", "fixed");
+      setValue("referral_id", null);
+
+      const finalP = calculateFinalPrice(formValues.price, 0, "fixed");
+      setValue("final_price", finalP);
+      addToast("Voucher dilepaskan dan diskon di-reset", "success");
+    } else {
+      addToast("Validasi voucher dibatalkan", "success");
+    }
   };
 
   const submitForm = (data: OrderFormValues) => {
@@ -365,7 +465,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
                       />
                       <div className="space-y-1.5">
                         <label className="text-sm font-medium text-slate-600 block ml-1">
-                          Discount
+                          Discount{" "}
+                          {formValues.referral_id &&
+                          (formValues.voucher_code || order.voucher_code)
+                            ? `[${formValues.voucher_code || order.voucher_code}]`
+                            : ""}
                         </label>
                         <div className="flex items-center gap-2">
                           <Controller
@@ -380,7 +484,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                     ? 100
                                     : formValues.price
                                 }
-                                className="text-rose-500 !bg-white"
+                                readOnly={!!formValues.referral_id}
+                                className={`text-rose-500 ${!!formValues.referral_id ? "!bg-slate-100 font-bold" : "!bg-white"}`}
                                 value={
                                   field.value === 0 && !field.value
                                     ? ""
@@ -401,8 +506,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             render={({ field }) => (
                               <CMSSelect
                                 containerClassName="shrink-0 w-[80px]"
-                                className="!pl-3 !pr-6 !text-sm !h-[42px]"
-                                value={field.value}
+                                disabled={!!formValues.referral_id}
+                                className={`!pl-3 !pr-6 !text-sm !h-[42px] ${!!formValues.referral_id ? "!bg-slate-100" : ""}`}
+                                value={field.value || "fixed"}
                                 onChange={(e) =>
                                   handlePriceOrDiscountChange(
                                     "discount_type",
@@ -504,7 +610,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center shrink-0">
-                          <CheckCircle2 size={16} className="text-white" />
+                          <CheckCircle2 size={16} className="!text-white" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -872,6 +978,167 @@ const OrderForm: React.FC<OrderFormProps> = ({
               </div>
             </div>
 
+            {/* Voucher Section */}
+            {(formValues.status === "DRAFT" || !!formValues.referral_id) && (
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
+                  <Tag size={12} className="text-slate-400" /> Voucher &
+                  Referral
+                </h3>
+              </div>
+              <div className="p-5 space-y-4">
+                {formValues.status === "DRAFT" && (
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <Controller
+                        name="voucher_code"
+                        control={control}
+                        render={({ field }) => (
+                          <CMSInput
+                            label="Kode Voucher"
+                            placeholder="Contoh: REFXXXXX"
+                            leftIcon={<Tag size={14} />}
+                            className="font-mono uppercase transition-all"
+                            {...field}
+                            value={field.value || ""}
+                            error={
+                              voucherError ||
+                              (errors as any).voucher_code?.message
+                            }
+                            readOnly={!!formValues.referral_id || !!voucherData}
+                          />
+                        )}
+                      />
+                    </div>
+                    {!formValues.referral_id && !voucherData && (
+                      <div className="pt-[26px]">
+                        <CMSButton
+                          type="button"
+                          variant="primary"
+                          onClick={handleValidateVoucher}
+                          loading={isValidatingVoucher}
+                          className="shrink-0 h-[42px]"
+                        >
+                          Validasi
+                        </CMSButton>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Voucher Card Metadata - Highlighted Coupon Style */}
+                {(voucherData || formValues.referral_id) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative bg-emerald-50/40 border border-emerald-300 rounded-xl overflow-hidden shadow-sm shadow-emerald-500/5 transition-all"
+                  >
+                    {/* Remove Voucher Button - Only visible in DRAFT or before application logic */}
+                    {formValues.status === "DRAFT" && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveVoucher}
+                        className="absolute top-2 right-2 p-1 text-emerald-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all cursor-pointer z-10"
+                        title="Remove Voucher"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+
+                    <div className="p-4 space-y-3">
+                      {/* Top Section: Code & Discount Vertical Stack */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 bg-white border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                          <Tag size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest leading-none mb-1.5">
+                            Voucher Code
+                          </p>
+                          <h4 className="font-mono font-black text-sm text-slate-800 leading-none">
+                            {voucherData?.code || order.voucher_code}
+                          </h4>
+                        </div>
+                      </div>
+
+                      {/* Dashed Separator */}
+                      <div className="border-t border-dashed border-emerald-300 mx-[-1rem] px-4" />
+
+                      {/* Bottom Section: Issuer info & Discount Value */}
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 bg-white border border-emerald-100 rounded-full flex items-center justify-center text-emerald-400">
+                              <User size={10} />
+                            </div>
+                            <p className="text-[11px] font-medium text-slate-500">
+                              Issued for{" "}
+                              <span className="font-bold text-slate-800">
+                                {voucherData?.issuer_name || "Pelanggan"}
+                              </span>
+                            </p>
+                          </div>
+
+                          <div className="pl-7">
+                            <div className="flex items-baseline gap-1 leading-none">
+                              <span className="text-base font-black text-emerald-600 tracking-tight">
+                                {voucherData?.discount_type === "fixed" ||
+                                order.discount_type === "fixed"
+                                  ? "Rp "
+                                  : ""}
+                                {voucherData?.discount_value ||
+                                  order.discount_value}
+                                {voucherData?.discount_type === "percentage" ||
+                                order.discount_type === "percentage"
+                                  ? "%"
+                                  : ""}
+                              </span>
+                              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                                Discount
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {formValues.referral_id ? (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500 !text-white rounded text-[10px] font-black uppercase tracking-wider">
+                            <Check size={10} strokeWidth={4} />
+                            Applied
+                          </div>
+                        ) : (
+                          <div className="px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[10px] font-black uppercase tracking-wider">
+                            Verified
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {formValues.referral_id &&
+                      formValues.referral_id !== order.referral_id && (
+                        <div className="px-4 py-2 bg-emerald-500/10 border-t border-emerald-100 italic">
+                          <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                            Voucher Applied! Silakan klik simpan untuk menyimpan
+                            perubahan.
+                          </p>
+                        </div>
+                      )}
+
+                    {!formValues.referral_id && voucherData && (
+                      <button
+                        type="button"
+                        onClick={handleApplyVoucher}
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 !text-white text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:bg-emerald-800 cursor-pointer"
+                      >
+                        Apply Discount to Order
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            </div>
+          )}
+
             {/* Pembayaran & Tagihan */}
             {order.id !== "NEW" && (
               <div
@@ -1027,17 +1294,21 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 </h3>
                 <div
                   className="relative group rounded-xl overflow-hidden border border-slate-100 bg-slate-50 aspect-video cursor-zoom-in group"
-                  onClick={() => window.open(order.payment_proof_url, "_blank")}
+                  onClick={() => {
+                    if (order.payment_proof_url) {
+                      window.open(order.payment_proof_url, "_blank");
+                    }
+                  }}
                 >
                   <img
-                    src={order.payment_proof_url}
+                    src={order.payment_proof_url || ""}
                     alt="Bukti Pembayaran"
                     className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                     <Maximize2
                       size={32}
-                      className="text-white transform scale-75 group-hover:scale-110 transition-transform"
+                      className="!text-white transform scale-75 group-hover:scale-110 transition-transform"
                     />
                   </div>
                 </div>
@@ -1070,7 +1341,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         {order.status === "DRAFT" && order.id !== "NEW" && (
           <CMSButton
             type="button"
-            className="!bg-orange-500 text-white hover:!bg-orange-600 border-none"
+            className="!bg-orange-500 !text-white hover:!bg-orange-600 border-none"
             onClick={async () => {
               await onStatusUpdate(order.id, "WAITING FOR PAYMENT");
             }}
@@ -1082,7 +1353,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         {order.status === "IN PROGRESS" && order.id !== "NEW" && (
           <CMSButton
             type="button"
-            className="!bg-purple-500 text-white hover:!bg-purple-600 border-none"
+            className="!bg-purple-500 !text-white hover:!bg-purple-600 border-none"
             onClick={() => onStatusUpdate(order.id, "REVIEWED")}
           >
             Send for Review
@@ -1092,14 +1363,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
           <>
             <CMSButton
               type="button"
-              className="!bg-rose-500 text-white hover:!bg-rose-600 border-none"
+              className="!bg-rose-500 !text-white hover:!bg-rose-600 border-none"
               onClick={() => onStatusUpdate(order.id, "REVISION")}
             >
               Revision
             </CMSButton>
             <CMSButton
               type="button"
-              className="!bg-emerald-500 text-white hover:!bg-emerald-600 border-none"
+              className="!bg-emerald-500 !text-white hover:!bg-emerald-600 border-none"
               onClick={() => setIsSelesaiModalOpen(true)}
             >
               Selesai
@@ -1241,7 +1512,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   });
                   setIsSelesaiModalOpen(false);
                 }}
-                className="flex-1 p-2 bg-emerald-500 text-white rounded-lg"
+                className="flex-1 p-2 bg-emerald-500 !text-white rounded-lg"
               >
                 Selesai
               </button>

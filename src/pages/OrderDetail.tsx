@@ -26,6 +26,10 @@ import {
   Image as ImageIcon,
   CreditCard,
   FileDown,
+  Star,
+  Gift,
+  X,
+  Copy,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { InvoiceTemplate } from "../components/Invoice/InvoiceTemplate";
@@ -48,6 +52,12 @@ const OrderDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -64,9 +74,11 @@ const OrderDetail = () => {
         const result = await res.json();
         const data = result.order;
         const priceData = result.priceData;
+        const existingReferral = result.referralCode;
 
         if (!data) throw new Error("Order not found");
         setOrder(data as OrderItem);
+        if (existingReferral) setReferralCode(existingReferral);
 
         if (priceData) {
           const displayPrice =
@@ -209,6 +221,40 @@ const OrderDetail = () => {
     }
   };
 
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText || !order) return;
+
+    try {
+      setSubmittingFeedback(true);
+      const res = await fetch("/api/orders?action=submit-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: order.order_number,
+          rating: feedbackRating,
+          testimony: feedbackText,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Gagal mengirim feedback");
+
+      const result = await res.json();
+      setReferralCode(result.referralCode);
+      addToast("Terima kasih atas feedback Anda!", "success");
+    } catch (err: any) {
+      addToast(err.message || "Gagal mengirim feedback", "error");
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    addToast("Kode referral berhasil disalin!", "success");
+  };
+
   const getStatusInfo = (status: string) => {
     switch (status) {
       case "DONE":
@@ -323,7 +369,7 @@ const OrderDetail = () => {
   const statusInfo = getStatusInfo(order.status);
   const totalDuration = calculateProjectDuration(
     order.created_at,
-    order.deadline,
+    order.deadline || undefined,
   );
 
   // Also keep track of actual days left for visual cues (rose color if late)
@@ -336,7 +382,7 @@ const OrderDetail = () => {
     const diffTime = (deadline as any) - (today as any);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-  const isLate = (calculateDaysLeft(order.deadline) ?? 0) < 0;
+  const isLate = (calculateDaysLeft(order.deadline || undefined) ?? 0) < 0;
 
   return (
     <div className="min-h-screen pt-24 pb-10 px-4 transition-colors duration-500 bg-[var(--color-bg)] selection:bg-brand-500/30">
@@ -705,6 +751,11 @@ const OrderDetail = () => {
                         <div className="flex items-center justify-between text-[11px] font-bold">
                           <span className="text-slate-400 flex items-center gap-1.5">
                             Diskon
+                            {order.voucher_code && (
+                              <span className="text-brand-400 bg-brand-500/10 border border-brand-500/20 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase">
+                                {order.voucher_code}
+                              </span>
+                            )}
                             {Number(packageData.discount_value) > 0 &&
                               packageData.discount_type === "percentage" && (
                                 <span className="text-brand-400 bg-brand-500/10 border border-brand-500/20 px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider">
@@ -863,6 +914,187 @@ const OrderDetail = () => {
           </p>
         </div>
       </div>
+
+      {/* Floating Action Button for Feedback */}
+      {order && order.status === "DONE" && !referralCode && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap"
+        >
+          <button
+            onClick={() => setIsFeedbackOpen(true)}
+            className="flex items-center gap-3 bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-[0.2em] shadow-2xl shadow-brand-500/40 transition-all hover:scale-110 active:scale-95 group uppercase cursor-pointer"
+          >
+            <Gift className="w-5 h-5 animate-bounce-slow" />
+            Klaim Voucher
+          </button>
+        </motion.div>
+      )}
+
+      {/* Testimonial & Referral Modal */}
+      <AnimatePresence>
+        {isFeedbackOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() =>
+                !submittingFeedback && !referralCode && setIsFeedbackOpen(false)
+              }
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            ></motion.div>
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-[var(--color-bg)] border border-[var(--color-border-adaptive)] rounded-2xl overflow-hidden shadow-2xl transition-colors duration-500"
+            >
+              {/* Header */}
+              <div className="p-4 border-b border-[var(--color-border-adaptive)] flex items-center justify-between">
+                <h3 className="text-[var(--color-text-title)] font-black tracking-tight text-lg flex items-center gap-2">
+                  <Gift className="text-brand-500 w-5 h-5" />
+                  {referralCode
+                    ? "Hadiah Untuk Anda!"
+                    : "Bagikan Pengalaman Anda"}
+                </h3>
+                <button
+                  onClick={() => setIsFeedbackOpen(false)}
+                  className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-title)] transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {referralCode ? (
+                  <div className="text-center space-y-6">
+                    <div className="w-28 h-28 flex items-center justify-center mx-auto mb-6">
+                      <img
+                        src="/img/voucher-icon.png"
+                        alt="Voucher"
+                        className="w-full h-full object-contain drop-shadow-xl animate-float"
+                      />
+                    </div>
+                    <h4 className="text-2xl font-black text-[var(--color-text-title)] px-2">
+                      Terima kasih, {order.full_name.split(" ")[0]}!
+                    </h4>
+                    <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-xs mx-auto">
+                      Sebagai apresiasi, gunakan kode ini untuk mendapatkan{" "}
+                      <span className="text-emerald-500 font-bold">
+                        Potongan 5%
+                      </span>{" "}
+                      di pesanan berikutnya.
+                    </p>
+
+                    <div className="mt-8 relative group">
+                      <div className="bg-brand-gradient border-2 border-dashed border-brand-500/30 rounded-2xl p-8 transition-all group-hover:border-brand-500/60 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-brand-500/[0.03] blur-xl"></div>
+                        <div className="relative z-10">
+                          <div className="text-[10px] uppercase font-black tracking-widest text-brand-500 mb-2">
+                            VOUCHER CODE
+                          </div>
+                          <div className="text-2xl font-black text-[var(--color-text-title)] tracking-widest font-['Neue_Machina'] mb-1 select-all">
+                            {referralCode}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        referralCode && copyToClipboard(referralCode)
+                      }
+                      className="w-full flex items-center justify-center gap-3 bg-brand-500 hover:bg-brand-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer group"
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={18} /> BERHASIL DISALIN
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={18} /> SALIN KODE VOUCHER
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-[var(--color-text-muted)] text-sm leading-relaxed text-center">
+                      Kepuasan Anda adalah prioritas kami. Berikan penilaian
+                      Anda untuk membantu kami menjadi lebih baik.
+                    </p>
+
+                    {/* Star Rating Selection */}
+                    <div className="flex flex-col items-center gap-3 py-2">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setFeedbackRating(star)}
+                            className="p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                          >
+                            <Star
+                              size={32}
+                              className={`${
+                                star <= feedbackRating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-200 dark:text-slate-700"
+                              } transition-colors`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <span className="text-[var(--color-text-muted)] font-black text-xs uppercase tracking-widest">
+                        Rating: {feedbackRating}/5
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] ml-1">
+                        Testimoni
+                      </label>
+                      <textarea
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                        placeholder="Tuliskan kesan pesan Anda..."
+                        style={{
+                          backgroundColor: "var(--color-glass-bg)",
+                          color: "var(--color-text)",
+                        }}
+                        className="w-full border border-[var(--color-border-adaptive)] rounded-2xl p-4 text-sm focus:outline-none focus:border-brand-500/50 transition-all min-h-[120px] resize-none"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleSubmitFeedback}
+                      disabled={!feedbackText || submittingFeedback}
+                      className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white py-4 rounded-xl font-black text-sm tracking-[0.2em] transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] uppercase flex items-center justify-center gap-3 group cursor-pointer neon-glow"
+                    >
+                      {submittingFeedback ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>MENGIRIM...</span>
+                        </>
+                      ) : (
+                        <>
+                          KIRIM & DAPATKAN DISKON{" "}
+                          <Gift
+                            size={18}
+                            className="transition-transform group-hover:rotate-12"
+                          />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Hidden Invoice Template for Capture */}
       <div
