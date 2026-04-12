@@ -26,6 +26,7 @@ import {
   Layers,
   Target,
   MessageSquare,
+  Ticket,
 } from "lucide-react";
 import { supabase } from "../../utils/supabase";
 import PortfolioList from "./PortfolioList";
@@ -120,6 +121,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
     if (path.includes("/clients")) return "clients";
     if (path.includes("/pricelist")) return "pricelist";
     if (path.includes("/testimonials")) return "testimonials";
+    if (path.includes("/vouchers")) return "vouchers";
     if (path.includes("/portfolio")) return "portfolio";
     if (path.includes("/services")) return "services";
     if (path.includes("/fastwork")) return "fastwork";
@@ -202,6 +204,14 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
                 activePage={activePage}
                 isCollapsed={isCollapsed}
                 onClick={() => navigate("/cms/pricelist")}
+              />
+              <MenuItem
+                id="vouchers"
+                icon={Ticket}
+                label="Vouchers"
+                activePage={activePage}
+                isCollapsed={isCollapsed}
+                onClick={() => navigate("/cms/vouchers")}
               />
             </div>
           </div>
