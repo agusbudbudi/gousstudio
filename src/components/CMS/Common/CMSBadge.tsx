@@ -26,19 +26,19 @@ const CMSBadge: React.FC<CMSBadgeProps> = ({
       case "REVISION":
         return "bg-rose-50 text-rose-500 border-rose-200";
       default:
-        return "bg-slate-50 text-slate-700 border-slate-200";
+        return "bg-paper text-ink/70 border-ink/10";
     }
   };
 
   const baseStyles =
-    "text-xs font-bold px-2 py-0.5 rounded-md border whitespace-nowrap inline-flex items-center justify-center";
+    "text-xs font-semibold px-2.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center justify-center";
 
   const variantStyles = {
     status: status
       ? getStatusColor(status)
-      : "bg-slate-50 text-slate-700 border-slate-200",
-    neutral: "bg-slate-50 text-slate-600 border-slate-100",
-    brand: "bg-brand-50 text-brand-600 border-brand-100",
+      : "bg-paper text-ink/70 border-ink/10",
+    neutral: "bg-paper text-ink/70 border-ink/10",
+    brand: "bg-violet-50 text-violet-700 border-violet-100",
   };
 
   return (

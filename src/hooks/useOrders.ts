@@ -120,10 +120,8 @@ export function useOrders() {
     return false;
   };
 
+  // Callers confirm with the user first (OrderCMS uses useConfirm)
   const deleteOrder = async (id: string, orderNumber: string) => {
-    if (!window.confirm(`Hapus order #${orderNumber}? Tindakan ini tidak dapat dibatalkan.`)) {
-      return false;
-    }
     try {
       await deleteMutation.mutateAsync({ id, orderNumber });
       return true;

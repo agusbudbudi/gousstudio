@@ -36,6 +36,7 @@ import CMSCombobox from "../Common/CMSCombobox";
 import CMSViewItem from "../Common/CMSViewItem";
 import CMSBadge from "../Common/CMSBadge";
 import CMSButton from "../Common/CMSButton";
+import CMSModal from "../Common/CMSModal";
 import ClientModal from "../ClientModal";
 import { InvoiceTemplate } from "../../Invoice/InvoiceTemplate";
 
@@ -45,7 +46,7 @@ const cmsOrderValidationSchema = z.object({
     .string()
     .regex(/^\d+$/, "Nomor WhatsApp hanya boleh berisi angka")
     .min(9, "Nomor WA tidak valid"),
-  design_category: z.string().min(1, "Kategori wajib diisi"),
+  design_category: z.string().min(1, "Layanan wajib diisi"),
   selected_package: z.string().min(1, "Paket wajib dipilih"),
   price: z.number().min(0, "Harga wajib diisi"),
   final_price: z.number().min(0, "Harga final wajib diisi"),
@@ -140,6 +141,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [isSelesaiModalOpen, setIsSelesaiModalOpen] = useState(false);
+  const [confirmingStatus, setConfirmingStatus] = useState(false);
   const [deliverablesInput, setDeliverablesInput] = useState("");
   const [isVerifyPaymentModalOpen, setIsVerifyPaymentModalOpen] =
     useState(false);
@@ -360,10 +362,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
           {/* Left Column */}
           <div className="lg:col-span-8 space-y-4">
             {/* Paket & Layanan */}
-            <div className="bg-white border border-slate-200 rounded-2xl">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <Package size={12} className="text-slate-400" /> Detail Paket
+            <div className="bg-white border border-ink/10 rounded-[20px]">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <Package size={12} className="text-ink/45" /> Detail Paket
                   & Layanan
                 </h3>
               </div>
@@ -378,10 +380,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         control={control}
                         render={({ field }) => (
                           <CMSInput
-                            label="Kategori"
+                            label="Layanan"
                             leftIcon={<Tag size={14} />}
                             error={errors.design_category?.message as string}
-                            placeholder="Kategori Desain"
+                            placeholder="Terisi otomatis dari paket"
                             {...field}
                           />
                         )}
@@ -403,7 +405,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                               );
                               if (pkgInfo) {
                                 field.onChange(opt.value);
-                                setValue("design_category", pkgInfo.category);
+                                setValue("design_category", pkgInfo.service?.title ?? "Lainnya");
                                 handlePriceOrDiscountChange(
                                   "price",
                                   pkgInfo.finalprice,
@@ -414,9 +416,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
                               ...pricelists.map((p) => ({
                                 label: p.servicename,
                                 value: p.servicename,
-                                description: p.category,
+                                description: p.service?.title ?? "Lainnya",
                                 rightElement: (
-                                  <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 whitespace-nowrap mt-0.5">
+                                  <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 whitespace-nowrap mt-0.5">
                                     Rp{" "}
                                     {Number(p.finalprice).toLocaleString(
                                       "id-ID",
@@ -464,7 +466,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         )}
                       />
                       <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-slate-600 block ml-1">
+                        <label className="text-sm font-medium text-ink/70 block ml-1">
                           Discount{" "}
                           {formValues.referral_id &&
                           (formValues.voucher_code || order.voucher_code)
@@ -485,7 +487,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                     : formValues.price
                                 }
                                 readOnly={!!formValues.referral_id}
-                                className={`text-rose-500 ${!!formValues.referral_id ? "!bg-slate-100 font-bold" : "!bg-white"}`}
+                                className={`text-rose-500 ${!!formValues.referral_id ? "!bg-ink/5 font-bold" : "!bg-white"}`}
                                 value={
                                   field.value === 0 && !field.value
                                     ? ""
@@ -507,7 +509,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                               <CMSSelect
                                 containerClassName="shrink-0 w-[80px]"
                                 disabled={!!formValues.referral_id}
-                                className={`!pl-3 !pr-6 !text-sm !h-[42px] ${!!formValues.referral_id ? "!bg-slate-100" : ""}`}
+                                className={`!pl-3 !pr-6 !text-sm !h-[42px] ${!!formValues.referral_id ? "!bg-ink/5" : ""}`}
                                 value={field.value || "fixed"}
                                 onChange={(e) =>
                                   handlePriceOrDiscountChange(
@@ -544,7 +546,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 ) : (
                   <>
                     <CMSViewItem
-                      label="Kategori"
+                      label="Layanan"
                       value={formValues.design_category}
                       icon={Tag}
                     />
@@ -565,7 +567,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         formValues.discount_value > 0 ? (
                           <div className="flex items-center gap-2">
                             {formValues.discount_type === "percentage" && (
-                              <CMSBadge variant="brand" className="!rounded-md">
+                              <CMSBadge variant="brand" >
                                 {formValues.discount_value}%
                               </CMSBadge>
                             )}
@@ -592,7 +594,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         <CMSBadge
                           variant="status"
                           status="DONE"
-                          className="!text-sm !py-1 px-2 gap-2"
+                          className="!text-sm !py-1 !px-2 gap-2"
                         >
                           <CreditCard size={14} className="text-emerald-600" />
                           {formValues.final_price === 0
@@ -606,20 +608,20 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
                 {/* Package Summary Card */}
                 {selectedPricelist && (
-                  <div className="bg-brand-50/30 border border-brand-100 rounded-xl p-4 space-y-4">
+                  <div className="bg-violet-50/30 border border-violet-100 rounded-[14px] p-4 space-y-4">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center shrink-0">
                           <CheckCircle2 size={16} className="!text-white" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-slate-800">
+                            <h4 className="text-sm font-bold text-ink">
                               {selectedPricelist.servicename}
                             </h4>
                             <CMSBadge
                               variant="brand"
-                              className="text-[10px] !rounded-md"
+                              className="!text-[10px]"
                             >
                               {new Intl.NumberFormat("id-ID", {
                                 style: "currency",
@@ -628,28 +630,28 @@ const OrderForm: React.FC<OrderFormProps> = ({
                               }).format(selectedPricelist.finalprice)}
                             </CMSBadge>
                           </div>
-                          <p className="text-[10px] text-slate-600 font-medium leading-relaxed max-w-md">
+                          <p className="text-[10px] text-ink/70 font-medium leading-relaxed max-w-md">
                             {selectedPricelist.description}
                           </p>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 shrink-0">
-                        <div className="px-3 py-1.5 bg-white border border-slate-100 rounded-lg flex items-center gap-1.5">
-                          <Clock size={12} className="text-slate-400" />
-                          <span className="text-[11px] font-bold text-slate-700">
+                        <div className="px-3 py-1.5 bg-white border border-ink/[0.06] rounded-[10px] flex items-center gap-1.5">
+                          <Clock size={12} className="text-ink/45" />
+                          <span className="text-[11px] font-bold text-ink">
                             {selectedPricelist.duration} hari
                           </span>
                         </div>
-                        <div className="px-3 py-1.5 bg-white border border-slate-100 rounded-lg flex items-center gap-1.5">
+                        <div className="px-3 py-1.5 bg-white border border-ink/[0.06] rounded-[10px] flex items-center gap-1.5">
                           {selectedPricelist.isrevisionunlimited ? (
                             <InfinityIcon
                               size={12}
-                              className="text-slate-400"
+                              className="text-ink/45"
                             />
                           ) : (
-                            <RefreshCw size={12} className="text-slate-300" />
+                            <RefreshCw size={12} className="text-ink/30" />
                           )}
-                          <span className="text-[11px] font-bold text-slate-700">
+                          <span className="text-[11px] font-bold text-ink">
                             {selectedPricelist.isrevisionunlimited
                               ? "Unlimited"
                               : `${selectedPricelist.totalrevision}x`}{" "}
@@ -660,19 +662,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     </div>
                     {selectedPricelist.deliverables &&
                       selectedPricelist.deliverables.length > 0 && (
-                        <div className="pt-3 border-t border-brand-100/50">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <div className="pt-3 border-t border-violet-100/50">
+                          <p className="gs-label text-[10px] text-muted mb-2">
                             Apa yang didapat:
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             {selectedPricelist.deliverables.map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-start gap-2 text-xs text-slate-600"
+                                className="flex items-start gap-2 text-xs text-ink/70"
                               >
                                 <Check
                                   size={12}
-                                  className="text-brand-500 mt-0.5 shrink-0"
+                                  className="text-violet-600 mt-0.5 shrink-0"
                                 />
                                 <span className="font-medium">{item}</span>
                               </div>
@@ -686,10 +688,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
             </div>
 
             {/* Brief & Notes */}
-            <div className="bg-white border border-slate-200 rounded-2xl">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <FileText size={12} className="text-slate-400" /> Brief &
+            <div className="bg-white border border-ink/10 rounded-[20px]">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <FileText size={12} className="text-ink/45" /> Brief &
                   Catatan Project
                 </h3>
               </div>
@@ -708,7 +710,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     />
                   )}
                 />
-                <div className="pt-4 border-t border-slate-50">
+                <div className="pt-4 border-t border-ink/[0.04]">
                   <Controller
                     name="internal_notes"
                     control={control}
@@ -717,7 +719,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         label="Catatan Internal Admin"
                         isTextArea
                         isBold={false}
-                        className="min-h-[64px] !bg-slate-50/50"
+                        className="min-h-[64px] !bg-paper/50"
                         {...field}
                       />
                     )}
@@ -730,10 +732,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
           {/* Right Column */}
           <div className="lg:col-span-4 space-y-4">
             {/* Status & Deadline */}
-            <div className="bg-white border border-slate-200 rounded-2xl">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <Clock size={12} className="text-slate-400" /> Status &
+            <div className="bg-white border border-ink/10 rounded-[20px]">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <Clock size={12} className="text-ink/45" /> Status &
                   Deadline
                 </h3>
               </div>
@@ -795,7 +797,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 ? "REVISION"
                                 : undefined
                             }
-                            className="!rounded-md"
+                            
                           >
                             {(calculateDaysLeft(order.deadline) ?? 0) > 0
                               ? `${calculateDaysLeft(order.deadline)} Hari lagi`
@@ -804,7 +806,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 : `Terlambat ${Math.abs(calculateDaysLeft(order.deadline) ?? 0)} Hari`}
                           </CMSBadge>
                         )}
-                        <Calendar size={12} className="text-slate-300" />
+                        <Calendar size={12} className="text-ink/30" />
                         <span>
                           {order.deadline
                             ? new Date(order.deadline).toLocaleDateString(
@@ -823,16 +825,16 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 )}
                 {order.status === "DONE" && order.deliverables_url && (
                   <div className="pt-2.5">
-                    <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
-                      <label className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
-                        <FileText size={14} className="text-slate-500" />{" "}
+                    <div className="flex flex-col gap-1.5 p-3 bg-paper rounded-[10px]">
+                      <label className="text-sm font-medium text-ink/70 flex items-center gap-1.5">
+                        <FileText size={14} className="text-muted" />{" "}
                         Deliverables Link
                       </label>
                       <a
                         href={order.deliverables_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-brand-500 hover:text-brand-600 hover:underline flex items-center gap-1 font-bold text-sm w-full"
+                        className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-1 font-bold text-sm w-full"
                       >
                         <span className="truncate">
                           {order.deliverables_url}
@@ -846,16 +848,16 @@ const OrderForm: React.FC<OrderFormProps> = ({
             </div>
 
             {/* Pelanggan */}
-            <div className="bg-white border border-slate-200 rounded-2xl">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <User size={12} className="text-slate-400" /> Pelanggan
+            <div className="bg-white border border-ink/10 rounded-[20px]">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <User size={12} className="text-ink/45" /> Pelanggan
                 </h3>
                 {order.status === "DRAFT" && (
                   <button
                     type="button"
                     onClick={() => setIsClientModalOpen(true)}
-                    className="text-brand-500 hover:text-brand-600 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer"
+                    className="text-violet-600 hover:text-violet-700 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer"
                   >
                     <Plus size={10} /> Client Baru
                   </button>
@@ -894,7 +896,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             description: c.company || undefined,
                             rightElement:
                               c.client_no !== undefined ? (
-                                <span className="text-[9px] font-bold text-brand-500 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
+                                <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100">
                                   {formatClientId(c.client_no)}
                                 </span>
                               ) : undefined,
@@ -943,7 +945,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 onClick={() =>
                                   navigate(`/cms/clients/${linkedClientId}`)
                                 }
-                                className="text-brand-500 hover:text-brand-600 hover:underline font-bold text-sm flex items-center gap-1 transition-all cursor-pointer"
+                                className="text-violet-600 hover:text-violet-700 hover:underline font-bold text-sm flex items-center gap-1 transition-all cursor-pointer"
                               >
                                 {linkedClientId}
                                 <ExternalLink size={11} />
@@ -970,7 +972,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 <button
                   type="button"
                   onClick={handleSendWhatsApp}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 !text-white py-3 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
                 >
                   <MessageCircle size={16} className="!text-white" /> Update via
                   WhatsApp
@@ -980,10 +982,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
             {/* Voucher Section */}
             {(formValues.status === "DRAFT" || !!formValues.referral_id) && (
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <Tag size={12} className="text-slate-400" /> Voucher &
+              <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <Tag size={12} className="text-ink/45" /> Voucher &
                   Referral
                 </h3>
               </div>
@@ -1032,15 +1034,15 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative bg-emerald-50/40 border border-emerald-300 rounded-xl overflow-hidden shadow-sm shadow-emerald-500/5 transition-all"
+                    className="relative bg-emerald-50/40 border border-emerald-300 rounded-[14px] overflow-hidden transition-all"
                   >
                     {/* Remove Voucher Button - Only visible in DRAFT or before application logic */}
                     {formValues.status === "DRAFT" && (
                       <button
                         type="button"
                         onClick={handleRemoveVoucher}
-                        className="absolute top-2 right-2 p-1 text-emerald-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all cursor-pointer z-10"
-                        title="Remove Voucher"
+                        className="absolute top-2 right-2 p-1 text-emerald-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all cursor-pointer z-10"
+                        aria-label="Remove Voucher" title="Remove Voucher"
                       >
                         <X size={14} />
                       </button>
@@ -1049,14 +1051,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     <div className="p-4 space-y-3">
                       {/* Top Section: Code & Discount Vertical Stack */}
                       <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 bg-white border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                        <div className="w-9 h-9 bg-white border border-emerald-100 rounded-[14px] flex items-center justify-center text-emerald-500 shrink-0">
                           <Tag size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest leading-none mb-1.5">
+                          <p className="gs-label text-[10px] text-emerald-700/70 leading-none mb-1.5">
                             Voucher Code
                           </p>
-                          <h4 className="font-mono font-black text-sm text-slate-800 leading-none">
+                          <h4 className="font-mono font-bold text-sm text-ink leading-none">
                             {voucherData?.code || order.voucher_code}
                           </h4>
                         </div>
@@ -1072,9 +1074,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             <div className="w-5 h-5 bg-white border border-emerald-100 rounded-full flex items-center justify-center text-emerald-400">
                               <User size={10} />
                             </div>
-                            <p className="text-[11px] font-medium text-slate-500">
+                            <p className="text-[11px] font-medium text-muted">
                               Issued for{" "}
-                              <span className="font-bold text-slate-800">
+                              <span className="font-bold text-ink">
                                 {voucherData?.issuer_name || "Pelanggan"}
                               </span>
                             </p>
@@ -1082,7 +1084,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
                           <div className="pl-7">
                             <div className="flex items-baseline gap-1 leading-none">
-                              <span className="text-base font-black text-emerald-600 tracking-tight">
+                              <span className="gs-display text-lg font-extrabold text-emerald-700">
                                 {voucherData?.discount_type === "fixed" ||
                                 order.discount_type === "fixed"
                                   ? "Rp "
@@ -1094,7 +1096,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                   ? "%"
                                   : ""}
                               </span>
-                              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                              <span className="gs-label text-[10px] text-emerald-600">
                                 Discount
                               </span>
                             </div>
@@ -1102,12 +1104,12 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         </div>
 
                         {formValues.referral_id ? (
-                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500 !text-white rounded text-[10px] font-black uppercase tracking-wider">
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500 !text-white rounded-full gs-label text-[10px]">
                             <Check size={10} strokeWidth={4} />
                             Applied
                           </div>
                         ) : (
-                          <div className="px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[10px] font-black uppercase tracking-wider">
+                          <div className="px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded-full gs-label text-[10px]">
                             Verified
                           </div>
                         )}
@@ -1128,7 +1130,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                       <button
                         type="button"
                         onClick={handleApplyVoucher}
-                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 !text-white text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:bg-emerald-800 cursor-pointer"
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 !text-white text-sm font-semibold transition-all flex items-center justify-center gap-2 active:bg-emerald-800 cursor-pointer"
                       >
                         Apply Discount to Order
                       </button>
@@ -1142,9 +1144,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
             {/* Pembayaran & Tagihan */}
             {order.id !== "NEW" && (
               <div
-                className={`border rounded-2xl ${
+                className={`border rounded-[20px] ${
                   ["DRAFT", "WAITING FOR PAYMENT"].includes(order.status || "")
-                    ? "bg-white border-slate-200"
+                    ? "bg-white border-ink/10"
                     : "bg-emerald-50/50 border-emerald-200"
                 }`}
               >
@@ -1153,16 +1155,16 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     ["DRAFT", "WAITING FOR PAYMENT"].includes(
                       order.status || "",
                     )
-                      ? "border-slate-100 bg-slate-50/50"
+                      ? "border-ink/[0.06] bg-paper/50"
                       : "border-emerald-100/50 bg-emerald-500/5"
                   }`}
                 >
                   <h3
-                    className={`text-xs font-bold flex items-center gap-2 uppercase tracking-wider ${
+                    className={`gs-label flex items-center gap-2 ${
                       ["DRAFT", "WAITING FOR PAYMENT"].includes(
                         order.status || "",
                       )
-                        ? "text-slate-400"
+                        ? "text-ink/45"
                         : "text-emerald-600"
                     }`}
                   >
@@ -1172,7 +1174,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                         ["DRAFT", "WAITING FOR PAYMENT"].includes(
                           order.status || "",
                         )
-                          ? "text-slate-300"
+                          ? "text-ink/30"
                           : "text-emerald-500"
                       }
                     />{" "}
@@ -1197,7 +1199,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                       ["DRAFT", "WAITING FOR PAYMENT"].includes(
                         order.status || "",
                       )
-                        ? "!bg-slate-100 !text-slate-500"
+                        ? "!bg-ink/5 !text-muted"
                         : ""
                     }
                   >
@@ -1235,7 +1237,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                       <CMSViewItem
                         label="Nominal Dibayar"
                         value={
-                          <span className="font-black text-emerald-600">
+                          <span className="font-bold text-emerald-700">
                             {order.paid_amount
                               ? new Intl.NumberFormat("id-ID", {
                                   style: "currency",
@@ -1266,11 +1268,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   <button
                     type="button"
                     onClick={handleDownloadInvoice}
-                    className={`w-full py-3 font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`w-full py-3 font-bold text-sm rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       ["DRAFT", "WAITING FOR PAYMENT"].includes(
                         order.status || "",
                       )
-                        ? "bg-slate-100 border border-slate-200 hover:bg-slate-200 hover:border-slate-300 text-slate-700"
+                        ? "bg-ink/5 border border-ink/10 hover:bg-ink/10 hover:border-ink/20 text-ink"
                         : "bg-white border border-emerald-400 text-emerald-600 hover:bg-emerald-50"
                     }`}
                   >
@@ -1287,13 +1289,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
             {/* Manual Payment Verification & Proof */}
             {order.payment_proof_url && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 uppercase tracking-wider">
+              <div className="bg-white border border-ink/10 rounded-[20px] p-5 space-y-4">
+                <h3 className="gs-label text-muted flex items-center gap-2">
                   <ImageIcon size={12} className="text-emerald-500" />
                   Bukti Pembayaran
                 </h3>
                 <div
-                  className="relative group rounded-xl overflow-hidden border border-slate-100 bg-slate-50 aspect-video cursor-zoom-in group"
+                  className="relative group rounded-[14px] overflow-hidden border border-ink/[0.06] bg-paper aspect-video cursor-zoom-in group"
                   onClick={() => {
                     if (order.payment_proof_url) {
                       window.open(order.payment_proof_url, "_blank");
@@ -1305,7 +1307,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     alt="Bukti Pembayaran"
                     className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                  <div className="absolute inset-0 bg-ink/45 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                     <Maximize2
                       size={32}
                       className="!text-white transform scale-75 group-hover:scale-110 transition-transform"
@@ -1334,7 +1336,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
       </div>
 
       {/* Footer Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 backdrop-blur-md border-t border-slate-200 flex justify-end gap-3 z-30 px-6 md:px-8">
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-paper/85 backdrop-blur-md border-t border-ink/10 flex justify-end gap-3 z-30 px-6 md:px-8">
         <CMSButton variant="ghost" type="button" onClick={onCancel}>
           Batal
         </CMSButton>
@@ -1399,127 +1401,122 @@ const OrderForm: React.FC<OrderFormProps> = ({
         }
       />
 
-      {/* Modals for verification and Selesai would go here. Omitted for brevity or implement simply: */}
-      {isVerifyPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl"
-          >
-            <div className="flex items-center gap-3 text-emerald-600">
-              <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
-                <CheckCircle2 size={24} />
-              </div>
-              <h2 className="font-black text-xl tracking-tight">
-                Verifikasi Pembayaran
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
-                  Metode Pembayaran
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Transfer BCA, Cash, dll."
-                  value={verifyPaymentMethod}
-                  onChange={(e) => setVerifyPaymentMethod(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">
-                  Nominal yang Dibayar
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
-                    Rp
-                  </span>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={verifyPaidAmount}
-                    onChange={(e) =>
-                      setVerifyPaidAmount(Number(e.target.value))
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-11 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsVerifyPaymentModalOpen(false)}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const success = await onStatusUpdate(
-                    order.id,
-                    "IN PROGRESS",
-                    {
-                      payment_method: verifyPaymentMethod,
-                      paid_amount: verifyPaidAmount,
-                      paid_at: new Date().toISOString(),
-                      is_sandbox: null,
-                    },
-                  );
-                  if (success) {
-                    setIsVerifyPaymentModalOpen(false);
-                  }
-                }}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 !text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer"
-              >
-                Konfirmasi
-              </button>
-            </div>
-          </motion.div>
+      {/* Verify payment */}
+      <CMSModal
+        isOpen={isVerifyPaymentModalOpen}
+        onClose={() => !confirmingStatus && setIsVerifyPaymentModalOpen(false)}
+        title="Verifikasi Pembayaran"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <CMSButton
+              variant="ghost"
+              type="button"
+              onClick={() => setIsVerifyPaymentModalOpen(false)}
+              disabled={confirmingStatus}
+            >
+              Batal
+            </CMSButton>
+            <CMSButton
+              type="button"
+              icon={CheckCircle2}
+              loading={confirmingStatus}
+              className="!bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600 hover:!border-emerald-700"
+              onClick={async () => {
+                setConfirmingStatus(true);
+                try {
+                  const success = await onStatusUpdate(order.id, "IN PROGRESS", {
+                    payment_method: verifyPaymentMethod,
+                    paid_amount: verifyPaidAmount,
+                    paid_at: new Date().toISOString(),
+                    is_sandbox: null,
+                  });
+                  if (success) setIsVerifyPaymentModalOpen(false);
+                } finally {
+                  setConfirmingStatus(false);
+                }
+              }}
+            >
+              Konfirmasi
+            </CMSButton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted">
+            Status order akan berpindah ke <span className="font-semibold text-ink">IN PROGRESS</span>.
+          </p>
+          <CMSInput
+            label="Metode Pembayaran"
+            placeholder="Contoh: Transfer BCA, Cash, dll."
+            value={verifyPaymentMethod}
+            onChange={(e) => setVerifyPaymentMethod(e.target.value)}
+            autoFocus
+          />
+          <CMSInput
+            label="Nominal yang Dibayar"
+            type="number"
+            inputMode="numeric"
+            placeholder="0"
+            leftIcon={<span className="text-sm font-semibold">Rp</span>}
+            value={verifyPaidAmount}
+            onChange={(e) => setVerifyPaidAmount(Number(e.target.value))}
+          />
         </div>
-      )}
+      </CMSModal>
 
-      {isSelesaiModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-            <h2 className="font-bold text-lg">Selesaikan Pesanan</h2>
-            <input
-              type="url"
-              placeholder="G Drive link..."
-              value={deliverablesInput}
-              onChange={(e) => setDeliverablesInput(e.target.value)}
-              className="w-full border p-3 rounded-lg"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setIsSelesaiModalOpen(false)}
-                className="flex-1 p-2 bg-slate-100 rounded-lg"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onStatusUpdate(order.id, "DONE", {
+      {/* Complete order */}
+      <CMSModal
+        isOpen={isSelesaiModalOpen}
+        onClose={() => !confirmingStatus && setIsSelesaiModalOpen(false)}
+        title="Selesaikan Pesanan"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <CMSButton
+              variant="ghost"
+              type="button"
+              onClick={() => setIsSelesaiModalOpen(false)}
+              disabled={confirmingStatus}
+            >
+              Batal
+            </CMSButton>
+            <CMSButton
+              type="button"
+              icon={CheckCircle2}
+              loading={confirmingStatus}
+              className="!bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600 hover:!border-emerald-700"
+              onClick={async () => {
+                setConfirmingStatus(true);
+                try {
+                  const success = await onStatusUpdate(order.id, "DONE", {
                     deliverables_url: deliverablesInput,
                   });
-                  setIsSelesaiModalOpen(false);
-                }}
-                className="flex-1 p-2 bg-emerald-500 !text-white rounded-lg"
-              >
-                Selesai
-              </button>
-            </div>
-          </div>
+                  if (success !== false) setIsSelesaiModalOpen(false);
+                } finally {
+                  setConfirmingStatus(false);
+                }
+              }}
+            >
+              Selesai
+            </CMSButton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted">
+            Status order akan berpindah ke <span className="font-semibold text-ink">DONE</span>. Tambahkan link file final untuk klien.
+          </p>
+          <CMSInput
+            label="Link File Final"
+            type="url"
+            placeholder="https://drive.google.com/..."
+            value={deliverablesInput}
+            onChange={(e) => setDeliverablesInput(e.target.value)}
+            autoFocus
+          />
         </div>
-      )}
+      </CMSModal>
 
       {/* Hidden Invoice Template for Image Generation */}
       {order.id !== "NEW" && (

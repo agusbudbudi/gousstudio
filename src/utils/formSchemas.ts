@@ -13,18 +13,26 @@ export const orderSchema = z.object({
 export type OrderFormData = z.infer<typeof orderSchema>;
 
 // --- Portfolio Modal ---
-export const portfolioSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.string().optional(),
-  imgalt: z.string().optional(),
-  linkurl: z.string().min(1, "Link Gallery / Drive wajib diisi").url("Format URL tidak valid"),
-  image: z.any().optional(), // File upload handled separately or not strictly validated here
-  role: z.string().optional(),
-  tools: z.string().optional(),
-  category: z.string().min(1, "Kategori wajib diisi"),
-  pricelist_id: z.string().optional(),
-});
+export const portfolioSchema = z
+  .object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    tags: z.string().optional(),
+    imgalt: z.string().optional(),
+    // Either an uploaded image (Vercel Blob URL) or a gallery/drive link — never both.
+    sourceMode: z.enum(["upload", "url"]),
+    linkurl: z.string().url("Format URL tidak valid").optional().or(z.literal("")),
+    image: z.string().nullable().optional(), // Pending file is validated in the modal before upload
+    role: z.string().optional(),
+    tools: z.string().optional(),
+    service_id: z.string().min(1, "Layanan wajib dipilih"),
+    pricelist_id: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.sourceMode === "url" && !data.linkurl) {
+      ctx.addIssue({ code: "custom", path: ["linkurl"], message: "Link Gallery / Drive wajib diisi" });
+    }
+  });
 export type PortfolioFormData = z.infer<typeof portfolioSchema>;
 
 // --- Pricelist Modal ---
@@ -32,13 +40,13 @@ export const pricelistSchema = z.object({
   slug: z.string().min(2, "Slug minimal 2 karakter"),
   servicename: z.string().min(3, "Nama layanan minimal 3 karakter"),
   description: z.string().min(5, "Deskripsi minimal 5 karakter"),
-  category: z.string().min(1, "Kategori wajib diisi"),
   retailprice: z.number({ message: "Harga harus berupa angka" }).min(0, "Harga tidak boleh negatif"),
   finalprice: z.number({ message: "Harga harus berupa angka" }).min(0, "Harga tidak boleh negatif"),
   duration: z.number({ message: "Durasi harus berupa angka" }).min(1, "Durasi minimal 1 hari"),
   totalrevision: z.number().optional(), // Can be 0 if unlimited
   isrevisionunlimited: z.boolean(),
   isShowToCustomer: z.boolean(),
+  service_id: z.string().optional(), // select value; "" = no service
   // deliverables array is managed separately in state in the component
 });
 export type PricelistFormData = z.infer<typeof pricelistSchema>;
@@ -48,9 +56,10 @@ export const servicesSchema = z.object({
   slug: z.string().min(2, "Slug minimal 2 karakter"),
   title: z.string().min(3, "Nama layanan minimal 3 karakter"),
   description: z.string().min(5, "Deskripsi minimal 5 karakter"),
-  icon: z.string().min(1, "Icon wajib dipilih"),
-  category: z.string().min(1, "Kategori wajib diisi"),
-  color: z.string().min(1, "Warna wajib dipilih"),
+  // Kept for the DB columns; no longer edited in the form
+  icon: z.string().optional(),
+  category: z.string().optional(),
+  color: z.string().optional(),
   // included array is managed separately in state in the component
 });
 export type ServicesFormData = z.infer<typeof servicesSchema>;

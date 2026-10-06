@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../utils/supabase";
 import {
-  Loader2,
   X,
   Save,
   User,
@@ -225,13 +224,13 @@ const ClientModal: React.FC<ClientModalProps> = ({
         <div className="flex gap-4">
           {/* Left column: Photo upload only */}
           <div className="flex flex-col gap-1.5 shrink-0 w-60">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+            <label className="gs-label text-[11px] text-muted ml-1">
               Foto / Logo
             </label>
             <div className="relative group">
               {/* Zone: 160px wide, 176:80 ratio → ~73px tall */}
               <div
-                className="w-full rounded-xl overflow-hidden border border-dashed border-slate-300 bg-slate-50 relative cursor-pointer flex items-center justify-center"
+                className="w-full rounded-[14px] overflow-hidden border border-dashed border-ink/20 bg-paper relative cursor-pointer flex items-center justify-center"
                 style={{ aspectRatio: "176 / 80" }}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -243,17 +242,17 @@ const ClientModal: React.FC<ClientModalProps> = ({
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-1">
-                    <ImagePlus size={18} className="text-slate-300" />
-                    <span className="text-[9px] text-slate-400 font-medium">
+                    <ImagePlus size={18} className="text-ink/30" />
+                    <span className="text-[10px] text-ink/45 font-medium">
                       Upload foto
                     </span>
                   </div>
                 )}
 
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <div className="absolute inset-0 bg-ink/45 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <Upload size={14} className="!text-white" />
-                  <span className="text-[9px] font-bold !text-white">
+                  <span className="text-[10px] font-semibold !text-white">
                     Ganti
                   </span>
                 </div>
@@ -264,14 +263,14 @@ const ClientModal: React.FC<ClientModalProps> = ({
                 <button
                   type="button"
                   onClick={handleRemovePhoto}
-                  title="Hapus foto"
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 !text-white rounded-full flex items-center justify-center shadow-md border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer z-10"
+                  aria-label="Hapus foto" title="Hapus foto"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 !text-white rounded-full flex items-center justify-center border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer z-10"
                 >
                   <X size={9} />
                 </button>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 leading-tight">
+            <p className="text-[10px] text-ink/45 leading-tight">
               JPG/PNG, dipotong otomatis 176×80
             </p>
           </div>

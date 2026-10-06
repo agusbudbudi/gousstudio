@@ -1,34 +1,62 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import AnimatedPage from '../ui/AnimatedPage';
-import Hero from '../components/Hero';
-import Clients from '../components/Clients';
-import Services from '../components/Services';
-import Process from '../components/Process';
-import Portfolio from '../components/Portfolio';
-import PricelistPreview from '../components/PricelistPreview';
-import Testimonials from '../components/Testimonials';
-import FastworkPromo from '../components/FastworkPromo';
-import About from '../components/About';
-import Contact from '../components/Contact';
+import { motion } from 'framer-motion';
+import LandingNavbar from '../components/landing/LandingNavbar';
+import HeroSection from '../components/landing/HeroSection';
+import ClientMarquee from '../components/landing/ClientMarquee';
+import SelectedWork from '../components/landing/SelectedWork';
+import ServicesBento from '../components/landing/ServicesBento';
+import WhyGous from '../components/landing/WhyGous';
+import TestimonialsSection from '../components/landing/TestimonialsSection';
+import ProcessSection from '../components/landing/ProcessSection';
+import PricingSection from '../components/landing/PricingSection';
+import AboutSection from '../components/landing/AboutSection';
+import FaqSection from '../components/landing/FaqSection';
+import FastworkStrip from '../components/landing/FastworkStrip';
+import FinalCta from '../components/landing/FinalCta';
+import LandingFooter from '../components/landing/LandingFooter';
+import StickyCta from '../components/landing/StickyCta';
 
+const TITLE = 'Jasa Desain Logo & Brand Identity Jakarta | Gous Studio';
+const DESCRIPTION =
+  'Studio desain grafis di Jakarta: desain logo, brand identity, social media & poster design. 7+ tahun, 100+ klien. Konsultasi gratis via WhatsApp.';
+
+// Opacity-only page transition: a transform here would break `position: fixed` children.
 const Home = () => (
-  <AnimatedPage>
+  <motion.div
+    className="gs min-h-[100dvh]"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+  >
     <Helmet>
-      <title>Home | Gous Studio</title>
-      <meta name="description" content="Jasa desain grafis profesional, logo, poster, dan manajemen media sosial dari Gous Studio." />
+      <title>{TITLE}</title>
+      <meta name="description" content={DESCRIPTION} />
+      <meta property="og:title" content={TITLE} />
+      <meta property="og:description" content={DESCRIPTION} />
+      <meta property="twitter:title" content={TITLE} />
+      <meta property="twitter:description" content={DESCRIPTION} />
+      <meta name="theme-color" content="#f7f6f2" />
     </Helmet>
-    <Hero />
-    <Clients />
-    <Services />
-    <Process />
-    <Portfolio limit={12} />
-    <PricelistPreview />
-    <Testimonials />
-    <FastworkPromo />
-    <About />
-    <Contact />
-  </AnimatedPage>
+    <LandingNavbar />
+    <div id="main" tabIndex={-1} className="outline-none">
+      <HeroSection />
+      <ClientMarquee />
+      <SelectedWork />
+      <ServicesBento />
+      <WhyGous />
+      <TestimonialsSection />
+      <ProcessSection />
+      <PricingSection />
+      <AboutSection />
+      <FaqSection />
+      <FastworkStrip />
+      <FinalCta />
+    </div>
+    <LandingFooter />
+    <StickyCta />
+  </motion.div>
 );
 
 export default Home;

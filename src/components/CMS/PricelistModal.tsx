@@ -7,6 +7,7 @@ import {
   Save,
   Eye,
   EyeOff,
+  Layers,
 } from "lucide-react";
 
 import CMSModal from "./Common/CMSModal";
@@ -20,13 +21,6 @@ import { pricelistSchema, PricelistFormData } from "../../utils/formSchemas";
 import { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { PricelistItem } from "../../types";
 
-const PRICE_CATEGORIES = [
-  "Brand Identity",
-  "Print & Digital",
-  "Social Media",
-  "Management",
-];
-
 // DEFAULT_FORM no longer needed heavily due to RHF defaultValues, but keeping categories
 
 interface PricelistModalProps {
@@ -34,6 +28,7 @@ interface PricelistModalProps {
   onClose: () => void;
   onSave: (data: any) => void;
   initialData: any;
+  services?: { id: number; title: string }[];
 }
 
 const PricelistModal: React.FC<PricelistModalProps> = ({
@@ -41,6 +36,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
   onClose,
   onSave,
   initialData,
+  services = [],
 }) => {
   const {
     register,
@@ -55,13 +51,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
       slug: "",
       servicename: "",
       description: "",
-      category: "Brand Identity",
       retailprice: 0,
       finalprice: 0,
       duration: 1,
       totalrevision: 0,
       isrevisionunlimited: false,
       isShowToCustomer: false,
+      service_id: "",
     } as PricelistFormData,
   });
 
@@ -78,13 +74,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
         slug: initialData.slug || "",
         servicename: initialData.servicename || "",
         description: initialData.description || "",
-        category: initialData.category || "Brand Identity",
         retailprice: Number(initialData.retailprice) || 0,
         finalprice: Number(initialData.finalprice) || 0,
         duration: Number(initialData.duration) || 1,
         totalrevision: Number(initialData.totalrevision) || 0,
         isrevisionunlimited: initialData.isrevisionunlimited || false,
         isShowToCustomer: initialData.isShowToCustomer ?? false,
+        service_id: initialData.service_id ? String(initialData.service_id) : "",
       });
       setDeliverables(initialData.deliverables || []);
     } else {
@@ -92,13 +88,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
         slug: "",
         servicename: "",
         description: "",
-        category: "Brand Identity",
         retailprice: 0,
         finalprice: 0,
         duration: 1,
         totalrevision: 0,
         isrevisionunlimited: false,
         isShowToCustomer: false,
+        service_id: "",
       });
       setDeliverables([]);
     }
@@ -119,12 +115,14 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
   const onSubmit = async (data: PricelistFormData) => {
     setIsSubmitting(true);
     try {
-      const result = {
+      const { service_id: serviceId, ...fields } = data;
+      const result: Record<string, any> = {
         ...(initialData || {}),
-        ...data,
+        ...fields,
         totalrevision: data.isrevisionunlimited ? 0 : data.totalrevision,
         deliverables,
       };
+      result.service_id = serviceId ? Number(serviceId) : null;
       onSave(result);
     } finally {
       setIsSubmitting(false);
@@ -170,14 +168,15 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             disabled={!!initialData}
           />
           <CMSSelect
-            label="Kategori"
-            icon={Layout}
-            error={errors.category?.message}
-            {...register("category")}
+            label="Layanan"
+            icon={Layers}
+            error={errors.service_id?.message}
+            {...register("service_id")}
           >
-            {PRICE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            <option value="">Tanpa layanan (paket custom)</option>
+            {services.map((svc) => (
+              <option key={svc.id} value={String(svc.id)}>
+                {svc.title}
               </option>
             ))}
           </CMSSelect>
@@ -185,7 +184,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
 
         {/* Service Name */}
         <CMSInput
-          label="Nama Layanan"
+          label="Nama Paket"
           placeholder="e.g. Logo Design – Professional"
           {...register("servicename")}
           error={errors.servicename?.message}
@@ -239,16 +238,16 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             error={errors.totalrevision?.message}
           />
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-600 ml-1">
+            <label className="text-xs font-bold text-ink/70 ml-1">
               Revisi Unlimited?
             </label>
-            <label className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
+            <label className="flex items-center gap-3 px-4 py-2.5 bg-paper border border-ink/10 rounded-[10px] cursor-pointer hover:border-violet-400 transition-all group">
               <input
                 type="checkbox"
                 {...register("isrevisionunlimited")}
-                className="w-5 h-5 accent-brand-500 rounded-lg"
+                className="w-5 h-5 accent-violet-600 rounded-[10px]"
               />
-              <span className="text-sm font-bold text-slate-700">
+              <span className="text-sm font-bold text-ink">
                 Unlimited
               </span>
             </label>
@@ -257,19 +256,19 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
 
         {/* Visibility Toggle */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-600 ml-1">
+          <label className="text-xs font-bold text-ink/70 ml-1">
             Tampilkan ke Customer?
           </label>
-          <div className="flex items-center gap-2 p-1 bg-slate-100 border border-slate-200 rounded-lg w-fit">
+          <div className="flex items-center gap-2 p-1 bg-white border border-ink/10 rounded-full w-fit">
             <button
               type="button"
               onClick={() =>
                 setValue("isShowToCustomer", true, { shouldValidate: true })
               }
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                 isShowToCustomer
-                  ? "bg-emerald-500 !text-white shadow-sm shadow-emerald-500/30"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-emerald-600 !text-white"
+                  : "text-muted hover:text-ink"
               }`}
             >
               <Eye size={14} />
@@ -280,17 +279,17 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
               onClick={() =>
                 setValue("isShowToCustomer", false, { shouldValidate: true })
               }
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                 !isShowToCustomer
-                  ? "bg-slate-500 !text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-ink !text-paper"
+                  : "text-muted hover:text-ink"
               }`}
             >
               <EyeOff size={14} />
               Sembunyikan
             </button>
           </div>
-          <p className="text-[11px] text-slate-500 ml-1">
+          <p className="text-[11px] text-muted ml-1">
             {isShowToCustomer
               ? "Item ini akan tampil di halaman Pricelist & Homepage."
               : "Item ini hanya terlihat di CMS admin, tidak tampil ke customer."}
@@ -299,7 +298,7 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
 
         {/* Deliverables */}
         <div className="space-y-3">
-          <label className="text-xs font-bold text-slate-600 ml-1">
+          <label className="text-xs font-bold text-ink/70 ml-1">
             Deliverables
           </label>
           <div className="flex items-start gap-2">
@@ -329,9 +328,9 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
             {deliverables.map((d: any, i: number) => (
               <div
                 key={i}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-lg group hover:border-brand-200 transition-all"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-paper/50 border border-ink/[0.06] rounded-[10px] group hover:border-violet-200 transition-all"
               >
-                <span className="text-sm font-medium text-slate-700 flex-1">
+                <span className="text-sm font-medium text-ink flex-1">
                   {d}
                 </span>
                 <CMSButton
@@ -339,13 +338,13 @@ const PricelistModal: React.FC<PricelistModalProps> = ({
                   type="button"
                   onClick={() => removeDeliverable(i)}
                   icon={Trash2}
-                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:!text-rose-500 hover:!bg-rose-50"
+                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-ink/45 hover:!text-rose-500 hover:!bg-rose-50"
                 />
               </div>
             ))}
           </div>
           {deliverables.length === 0 && (
-            <p className="text-xs text-slate-400 italic px-2">
+            <p className="text-xs text-ink/45 italic px-2">
               Belum ada deliverable ditambahkan.
             </p>
           )}

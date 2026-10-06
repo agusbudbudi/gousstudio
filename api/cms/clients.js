@@ -11,8 +11,8 @@ function getCmsToken(req) {
 
 export default async function handler(req, res) {
   const { action } = req.query;
-  const { CMS_PASSWORD, VITE_CMS_PASSWORD, SUPABASE_URL, VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
-  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+  const { CMS_PASSWORD, SUPABASE_URL, VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+  const effectivePassword = CMS_PASSWORD;
   const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
 
   // Validate Auth

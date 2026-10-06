@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
-import { Loader2, Plus, Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import CMSTableSkeleton from "./Common/CMSTableSkeleton";
+import CMSEmptyState from "./Common/CMSEmptyState";
+import { AlertTriangle, RotateCw } from "lucide-react";
+import { useConfirm } from "./Common/CMSConfirmDialog";
 import CMSHeader from "./CMSHeader";
 import FastworkList from "./FastworkList";
 import FastworkModal from "./FastworkModal";
@@ -13,6 +17,7 @@ import { FastworkItem } from "../../types";
 
 const FastworkCMS: React.FC = () => {
   const { addToast } = useToast();
+  const { confirm, confirmDialog } = useConfirm();
   const [items, setItems] = useState<FastworkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,9 +50,11 @@ const FastworkCMS: React.FC = () => {
     fetchItems();
   }, []);
 
-  const fetchItems = async () => {
+  // `silent` refetches (after save) keep the list visible instead of flashing the skeleton
+  const fetchItems = async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      setError(null);
       const { data, error: fetchError } = await supabase
         .from("fastwork_items")
         .select("*")
@@ -72,8 +79,13 @@ const FastworkCMS: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteItem = (index: number) => {
-    if (!window.confirm("Hapus Fastwork item ini?")) return;
+  const handleDeleteItem = async (index: number) => {
+    const ok = await confirm({
+      title: "Hapus Fastwork item ini?",
+      description: "Item dihapus dari daftar. Perubahan baru tersimpan ke database setelah kamu klik Simpan.",
+      destructive: true,
+    });
+    if (!ok) return;
     setItems((prev) => prev.filter((_, i) => i !== index));
     addToast(
       "Item berhasil dihapus (lokal). Klik 'Simpan' untuk memperbarui database.",
@@ -160,7 +172,7 @@ const FastworkCMS: React.FC = () => {
       }
 
       addToast("Data Fastwork berhasil disimpan!", "success");
-      await fetchItems();
+      await fetchItems({ silent: true });
     } catch (err: any) {
       addToast(`Gagal menyimpan: ${err.message}`, "error");
     } finally {
@@ -210,17 +222,19 @@ const FastworkCMS: React.FC = () => {
       {/* Content */}
       <div className="pt-6">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-            <p className="text-slate-400 font-medium">
-              Memuat fastwork items...
-            </p>
-          </div>
+          <CMSTableSkeleton rows={6} columns={4} label="Memuat fastwork items..." />
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-            <p className="text-slate-500 text-sm">{error}</p>
-          </div>
+          <CMSEmptyState
+            icon={AlertTriangle}
+            iconClassName="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-[20px]"
+            title="Fastwork gagal dimuat"
+            description={String(error)}
+            action={
+              <CMSButton variant="secondary" icon={RotateCw} onClick={() => fetchItems()}>
+                Coba lagi
+              </CMSButton>
+            }
+          />
         ) : (
           <FastworkList
             items={items}
@@ -238,6 +252,7 @@ const FastworkCMS: React.FC = () => {
         onSave={handleSaveItem}
         initialData={editingItem}
       />
+      {confirmDialog}
     </div>
   );
 };

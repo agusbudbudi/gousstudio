@@ -2,11 +2,7 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
 import OrderModal from './ui/OrderModal';
-import FloatingWhatsApp from './ui/FloatingWhatsApp';
-import { useAppStore } from './store/useAppStore';
 import ToastContainer from './components/Common/ToastContainer';
 
 // Lazy loaded pages
@@ -17,6 +13,8 @@ const CMS = lazy(() => import('./pages/CMS'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 const PricelistDetailPage = lazy(() => import('./pages/PricelistDetailPage'));
 const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const ClientPortal = lazy(() => import('./pages/ClientPortal'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // CMS Components
 const OrderCMS = lazy(() => import('./components/CMS/OrderCMS'));
@@ -61,58 +59,13 @@ const ScrollToTop = () => {
   return null;
 };
 
-const ScrollReveal = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    const revealCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(revealCallback, {
-      threshold: 0.1,
-    });
-
-    const observeElements = () => {
-      const revealElements = document.querySelectorAll(".reveal:not(.visible)");
-      revealElements.forEach((el) => observer.observe(el));
-    };
-
-    // Initial observation
-    observeElements();
-
-    // Observe future elements (e.g., after Suspense loads)
-    const mutationObserver = new MutationObserver((mutations: MutationRecord[]) => {
-      let newNodesAdded = false;
-      for (const mutation of mutations) {
-        if (mutation.addedNodes.length > 0) {
-          newNodesAdded = true;
-          break;
-        }
-      }
-      if (newNodesAdded) {
-        observeElements();
-      }
-    });
-
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      observer.disconnect();
-      mutationObserver.disconnect();
-    };
-  }, [pathname]);
-
-  return null;
-};
-
+// Route-level fallback: a thin top progress bar instead of a full-screen spinner.
+// It fades in after a short delay so fast chunk loads show nothing at all (see .gs-page-loader in index.css).
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-transparent">
-    <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+  <div className="min-h-screen" role="status" aria-label="Memuat halaman">
+    <div className="gs-page-loader" aria-hidden="true">
+      <div className="gs-page-loader__bar" />
+    </div>
   </div>
 );
 
@@ -120,11 +73,13 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      {/* All /cms/* routes share one key so switching CMS tabs doesn't remount the CMS layout */}
+      <Routes location={location} key={location.pathname.startsWith('/cms') ? '/cms' : location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/pricelist" element={<PricelistPage />} />
         <Route path="/pricelist/:slug" element={<PricelistDetailPage />} />
+        <Route path="/portal/:token" element={<ClientPortal />} />
         <Route path="/cms" element={<CMS />}>
           <Route index element={<Navigate to="orders" replace />} />
           <Route path="orders" element={<OrderCMS />} />
@@ -137,60 +92,41 @@ const AnimatedRoutes = () => {
           <Route path="testimonials" element={<TestimonialCMS />} />
           <Route path="vouchers" element={<VoucherCMS />} />
           <Route path="fastwork" element={<FastworkCMS />} />
+          {/* Unknown CMS section: back to the default page instead of an empty layout */}
+          <Route path="*" element={<Navigate to="orders" replace />} />
         </Route>
         <Route path="/order/:orderNumber" element={<OrderDetail />} />
         <Route path="/order/:orderNumber/payment" element={<PaymentPage />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   );
 };
 
 function AppContent() {
-  const { theme } = useAppStore();
   const location = useLocation();
   const isCMS = location.pathname.startsWith('/cms');
+  // Every non-CMS page (landing, portfolio, pricelist, client pages, 404) is on the brand shell
+  // and ships its own navbar and footer (src/components/landing).
+  const isLanding = !isCMS;
 
+  // Lets global styles (e.g. the page scrollbar) switch to the brand-shell palette.
   useEffect(() => {
-    if (theme === 'light') {
-      document.body.classList.add('light');
-    } else {
-      document.body.classList.remove('light');
-    }
-  }, [theme]);
+    document.documentElement.toggleAttribute('data-gs-shell', isLanding);
+    document.documentElement.toggleAttribute('data-cms-shell', isCMS);
+  }, [isLanding, isCMS]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      const scrollBar = document.getElementById('scroll-progress');
-      if (scrollBar) scrollBar.style.width = scrolled + '%';
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
+  // Brand-shell pages sit on paper; the CMS uses its lighter paper (see .cms-root in index.css)
+  const shellBg = isCMS ? 'bg-[#fbfbf9]' : 'bg-paper';
   return (
-    <div className={`mesh-gradient min-h-screen antialiased ${isCMS ? 'bg-black' : ''}`}>
-      {!isCMS && (
-        <div id="scroll-progress" className="fixed top-0 left-0 h-[3px] z-[200] transition-all duration-100" style={{ background: 'linear-gradient(to right, var(--color-brand), var(--color-neon-pink), var(--color-neon-orange))', width: '0%' }}></div>
-      )}
-      
-      {!isCMS && <Navbar />}
-      
+    <div className={`min-h-screen antialiased ${shellBg}`}>
       <main>
         <Suspense fallback={<PageLoader />}>
           <AnimatedRoutes />
         </Suspense>
       </main>
 
-      {!isCMS && <Footer />}
-
       {!isCMS && <OrderModal />}
-      {!isCMS && <FloatingWhatsApp />}
       <ToastContainer />
     </div>
   );
@@ -221,7 +157,6 @@ function App() {
         </Helmet>
 
         <ScrollToTop />
-        <ScrollReveal />
         <AppContent />
       </Router>
     </HelmetProvider>

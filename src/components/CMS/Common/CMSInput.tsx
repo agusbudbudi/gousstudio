@@ -10,7 +10,6 @@ interface CMSInputProps extends Omit<React.InputHTMLAttributes<
   rows?: number;
   leftIcon?: React.ReactNode;
   isBold?: boolean;
-  variant?: "cms" | "glass";
   value?: string | number | readonly string[] | null;
 }
 
@@ -26,8 +25,7 @@ const CMSInput = forwardRef<
       isTextArea = false,
       leftIcon,
       isBold = false,
-      variant = "cms",
-      className = "",
+          className = "",
       id,
       ...props
     },
@@ -42,16 +40,17 @@ const CMSInput = forwardRef<
       }
     }, [isTextArea, props.value]);
 
-    const isGlass = variant === "glass";
+  
+    // Only control the field when a `value` prop is actually passed (e.g. CMSCombobox).
+    // react-hook-form's register() is uncontrolled and passes no value — forcing value=""
+    // there made every registered field impossible to type in.
+    const { value: rawValue, ...restProps } = props;
+    const valueProps = "value" in props ? { value: rawValue ?? "" } : {};
 
     const inputStyles = `
-      w-full ${leftIcon ? "pl-12 pr-4" : "px-4"} ${isTextArea ? "py-3" : "h-[48px] py-0"} rounded-xl text-sm ${isBold ? "font-bold" : "font-medium"} 
-      focus:outline-none focus:ring-2 focus:!border-brand-500 
-      transition-all placeholder:text-slate-400 border
-      ${isGlass
-          ? "bg-[var(--color-glass-bg)] border-white/10 text-[var(--color-text)] focus:ring-brand-500/20"
-          : "bg-slate-50 border-slate-200 focus:bg-white text-slate-700 focus:ring-brand-500/10"
-      }
+      w-full ${leftIcon ? "pl-12 pr-4" : "px-4"} ${isTextArea ? "py-3" : "h-[48px] py-0"} rounded-[14px] text-sm ${isBold ? "font-bold" : "font-medium"} 
+      focus:outline-none transition-[border-color,box-shadow,background-color] duration-200 border
+      bg-white border-ink/15 hover:border-ink/30 text-ink placeholder:text-ink/30 focus:ring-4 focus:!border-violet-600 focus:ring-violet-600/15
       ${error ? "border-rose-500 focus:!border-rose-500 focus:ring-rose-500/10" : ""}
       ${className}
     `;
@@ -63,7 +62,7 @@ const CMSInput = forwardRef<
             {label && (
               <label
                 htmlFor={id}
-                className="text-sm font-medium text-slate-600 block"
+                className="text-sm font-medium text-ink/70 block"
               >
                 {label}
               </label>
@@ -76,7 +75,7 @@ const CMSInput = forwardRef<
         <div className="relative group">
           {leftIcon && (
             <div
-              className={`absolute left-4 ${isTextArea ? "top-3.5" : "top-1/2 -translate-y-1/2"} flex items-center justify-center text-slate-400 group-focus-within:text-brand-500 transition-colors pointer-events-none`}
+              className={`absolute left-4 ${isTextArea ? "top-3.5" : "top-1/2 -translate-y-1/2"} flex items-center justify-center text-ink/35 group-focus-within:text-violet-600 transition-colors pointer-events-none`}
             >
               {leftIcon}
             </div>
@@ -98,8 +97,8 @@ const CMSInput = forwardRef<
                 }
               }}
               className={`${inputStyles} resize-none leading-relaxed overflow-hidden`}
-              {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
-              value={props.value ?? ""}
+              {...(restProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
+              {...valueProps}
               onInput={(e) => {
                 const target = e.currentTarget;
                 target.style.height = "auto";
@@ -112,13 +111,13 @@ const CMSInput = forwardRef<
               id={id}
               ref={ref as React.Ref<HTMLInputElement>}
               className={inputStyles}
-              {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
-              value={props.value ?? ""}
+              {...(restProps as React.InputHTMLAttributes<HTMLInputElement>)}
+              {...valueProps}
             />
           )}
         </div>
         {error && (
-          <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">{error}</p>
+          <p role="alert" className="text-rose-600 text-xs mt-1 ml-1 font-medium">{error}</p>
         )}
       </div>
     );

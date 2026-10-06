@@ -16,13 +16,14 @@ const CMSSearchBar: React.FC<CMSSearchBarProps> = ({
 }) => {
   return (
     <div className={`relative group ${className || "w-64"}`}>
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 group-focus-within:text-brand-500 transition-colors" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink/40 transition-colors group-focus-within:text-violet-600" />
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/5 focus:border-brand-500 w-full transition-all placeholder:text-slate-400"
+        aria-label={placeholder}
+        className="w-full rounded-full border border-ink/15 bg-white py-2 pl-10 pr-4 text-sm font-medium text-ink placeholder:text-ink/35 transition-[border-color,box-shadow] duration-200 hover:border-ink/30 focus:border-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-600/15"
       />
     </div>
   );

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import {
-  Loader2,
   Plus,
   Search,
   Save,
@@ -9,8 +8,12 @@ import {
   Shapes,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import CMSTableSkeleton from "./Common/CMSTableSkeleton";
+import CMSEmptyState from "./Common/CMSEmptyState";
+import { AlertTriangle, RotateCw } from "lucide-react";
+import { useConfirm } from "./Common/CMSConfirmDialog";
 import CMSHeader from "./CMSHeader";
-import ServicesList from "./ServicesList";
+import ServicesList, { ServiceStats } from "./ServicesList";
 import ServicesModal from "./ServicesModal";
 import CMSButton from "./Common/CMSButton";
 import CMSSearchBar from "./Common/CMSSearchBar";
@@ -20,6 +23,7 @@ import { ServiceItem } from "../../types";
 
 const ServicesCMS: React.FC = () => {
   const { addToast } = useToast();
+  const { confirm, confirmDialog } = useConfirm();
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,11 +54,43 @@ const ServicesCMS: React.FC = () => {
 
   useEffect(() => {
     fetchItems();
+    fetchStats();
   }, []);
 
-  const fetchItems = async () => {
+  // Linked packages / works per service (services-as-parent model). Stays undefined
+  // until pricelists.service_id exists, so the list falls back to the deliverables count.
+  const [stats, setStats] = useState<Record<string, ServiceStats> | undefined>();
+  const fetchStats = async () => {
+    const [{ data: packages, error: pkgError }, { data: works }] = await Promise.all([
+      supabase.from("pricelists").select("id, service_id, finalprice, is_show_to_customer"),
+      supabase.from("portfolios").select("pricelist_id"),
+    ]);
+    if (pkgError || !packages) return; // column missing before the migration
+    const next: Record<string, ServiceStats> = {};
+    const serviceByPackage = new Map<number, number>();
+    for (const p of packages as any[]) {
+      if (!p.service_id) continue;
+      serviceByPackage.set(p.id, p.service_id);
+      const s = (next[p.service_id] ||= { packages: 0, publicPackages: 0, minPrice: null, works: 0 });
+      s.packages += 1;
+      if (p.is_show_to_customer) {
+        s.publicPackages += 1;
+        const price = Number(p.finalprice) || 0;
+        if (price > 0) s.minPrice = s.minPrice === null ? price : Math.min(s.minPrice, price);
+      }
+    }
+    for (const w of (works || []) as any[]) {
+      const serviceId = serviceByPackage.get(Number(w.pricelist_id));
+      if (serviceId) next[serviceId].works += 1;
+    }
+    setStats(next);
+  };
+
+  // `silent` refetches (after save) keep the list visible instead of flashing the skeleton
+  const fetchItems = async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      setError(null);
       const { data, error: fetchError } = await supabase
         .from("services")
         .select("*")
@@ -86,8 +122,13 @@ const ServicesCMS: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteItem = (index: number) => {
-    if (!window.confirm("Hapus layanan ini?")) return;
+  const handleDeleteItem = async (index: number) => {
+    const ok = await confirm({
+      title: "Hapus layanan ini?",
+      description: "Layanan dihapus dari daftar. Perubahan baru tersimpan ke database setelah kamu klik Simpan.",
+      destructive: true,
+    });
+    if (!ok) return;
     setItems((prev) => prev.filter((_, i) => i !== index));
     addToast(
       "Layanan berhasil dihapus (lokal). Klik 'Simpan' untuk memperbarui database.",
@@ -133,7 +174,7 @@ const ServicesCMS: React.FC = () => {
 
       if (response.ok) {
         addToast("Layanan berhasil disimpan!", "success");
-        await fetchItems();
+        await fetchItems({ silent: true });
       } else {
         const err = await response.json();
         addToast(`Gagal menyimpan: ${err.message}`, "error");
@@ -161,7 +202,7 @@ const ServicesCMS: React.FC = () => {
           variant="secondary"
           onClick={handleAddItem}
           icon={Plus}
-          className="shrink-0 font-bold"
+          className="shrink-0 !font-bold"
         >
           Tambah
         </CMSButton>
@@ -170,7 +211,7 @@ const ServicesCMS: React.FC = () => {
           onClick={persistToSupabase}
           loading={saving}
           icon={Save}
-          className="shrink-0 font-bold"
+          className="shrink-0 !font-bold"
         >
           Simpan
         </CMSButton>
@@ -188,18 +229,23 @@ const ServicesCMS: React.FC = () => {
       {/* Content */}
       <div className="pt-6">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-            <p className="text-slate-400 font-medium">Memuat services...</p>
-          </div>
+          <CMSTableSkeleton rows={6} columns={4} label="Memuat services..." />
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-            <p className="text-slate-500 text-sm">{error}</p>
-          </div>
+          <CMSEmptyState
+            icon={AlertTriangle}
+            iconClassName="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-[20px]"
+            title="Services gagal dimuat"
+            description={String(error)}
+            action={
+              <CMSButton variant="secondary" icon={RotateCw} onClick={() => fetchItems()}>
+                Coba lagi
+              </CMSButton>
+            }
+          />
         ) : (
           <ServicesList
             items={items}
+            stats={stats}
             searchQuery={searchQuery}
             onEdit={handleEditItem}
             onDelete={handleDeleteItem}
@@ -214,6 +260,7 @@ const ServicesCMS: React.FC = () => {
         onSave={handleSaveItem}
         initialData={editingItem}
       />
+      {confirmDialog}
     </div>
   );
 };

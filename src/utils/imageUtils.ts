@@ -144,3 +144,55 @@ export const compressAndCropImageRect = (
     reader.onerror = () => reject(new Error("File reading failed"));
   });
 };
+
+/**
+ * Resizes an image proportionally (no crop) so its width does not exceed maxWidth.
+ * @param file The original image file
+ * @param maxWidth Maximum output width in pixels
+ * @param quality Compression quality from 0 to 1
+ * @param outputFormat MIME type for output. Defaults to 'image/webp'
+ * @returns A promise that resolves to a compressed Blob
+ */
+export const resizeImage = (
+  file: File,
+  maxWidth: number = 1920,
+  quality: number = 0.85,
+  outputFormat: "image/webp" | "image/jpeg" | "image/png" = "image/webp"
+): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Canvas toBlob failed"));
+            }
+          },
+          outputFormat,
+          outputFormat === "image/png" ? undefined : quality
+        );
+      };
+      img.onerror = () => reject(new Error("Image loading failed"));
+    };
+    reader.onerror = () => reject(new Error("File reading failed"));
+  });
+};

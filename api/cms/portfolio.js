@@ -1,4 +1,38 @@
 import { createClient } from "@supabase/supabase-js";
+import { list, del } from "@vercel/blob";
+
+const BLOB_PREFIX = 'portfolio/';
+// Skip recent blobs: they may be uploaded in a modal but not yet saved (e.g. another tab).
+const ORPHAN_MIN_AGE_MS = 60 * 60 * 1000;
+
+async function cleanupOrphanedBlobs(supabase) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+
+  const { data: rows, error } = await supabase
+    .from('portfolios')
+    .select('image')
+    .not('image', 'is', null);
+  if (error) throw error;
+
+  const referenced = new Set(rows.map(r => r.image));
+  const cutoff = Date.now() - ORPHAN_MIN_AGE_MS;
+  const orphans = [];
+
+  let cursor;
+  do {
+    const page = await list({ prefix: BLOB_PREFIX, cursor, limit: 1000 });
+    for (const blob of page.blobs) {
+      if (!referenced.has(blob.url) && new Date(blob.uploadedAt).getTime() < cutoff) {
+        orphans.push(blob.url);
+      }
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+
+  if (orphans.length > 0) {
+    await del(orphans);
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,11 +45,10 @@ export default async function handler(req, res) {
     VITE_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY, 
     CMS_PASSWORD, 
-    VITE_CMS_PASSWORD 
   } = process.env;
 
   const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
-  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+  const effectivePassword = CMS_PASSWORD;
 
   const cookies = (req.headers.cookie || '').split(';');
   let cmsToken = null;
@@ -38,13 +71,14 @@ export default async function handler(req, res) {
   const supabase = createClient(effectiveUrl, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    // 1. Flatten the data from { category: [items] } to [items]
-    const flatData = Object.entries(data).flatMap(([category, items]) => 
-      items.map((item, index) => ({ 
+    // 1. Flatten the data from { [serviceId]: [items] } to [items].
+    //    The group key is the service id ("none" = no service); order_index is the position within the service.
+    const flatData = Object.entries(data).flatMap(([serviceKey, items]) =>
+      items.map((item, index) => ({
         ...(item.id ? { id: item.id } : {}),
         title: item.title,
         description: item.description,
-        category: category,
+        service_id: serviceKey === 'none' ? null : parseInt(serviceKey, 10),
         tags: item.tags || [],
         imgalt: item.imgalt || item.imgAlt || '',
         linkurl: item.linkurl || item.linkUrl || '',
@@ -99,6 +133,14 @@ export default async function handler(req, res) {
         .from('portfolios')
         .insert(itemsToInsert);
       if (insertError) throw insertError;
+    }
+
+    // 5. Remove orphaned blobs (replaced images, deleted items, abandoned uploads).
+    // Best-effort: a cleanup failure must not fail the save.
+    try {
+      await cleanupOrphanedBlobs(supabase);
+    } catch (cleanupError) {
+      console.error('Blob cleanup error:', cleanupError);
     }
 
     return res.status(200).json({ success: true });

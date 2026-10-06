@@ -17,8 +17,14 @@ import {
   Trash2,
   Pencil,
   Smile,
+  Copy,
+  Link,
+  RefreshCw,
+  AlertTriangle,
+  RotateCw,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import { useConfirm } from "./Common/CMSConfirmDialog";
 import CMSHeader from "./CMSHeader";
 import { ClientItem, OrderItem } from "../../types";
 import ClientModal from "./ClientModal";
@@ -29,6 +35,8 @@ import CMSStatCard from "./Common/CMSStatCard";
 import CMSInfoItem from "./Common/CMSInfoItem";
 import CMSViewItem from "./Common/CMSViewItem";
 import CMSEmptyState from "./Common/CMSEmptyState";
+import CMSSkeleton from "./Common/CMSSkeleton";
+import CMSTableSkeleton from "./Common/CMSTableSkeleton";
 import {
   CMSTableContainer,
   CMSTableHeader,
@@ -42,6 +50,7 @@ const formatClientId = (no?: number) =>
 
 const ClientCMS: React.FC = () => {
   const { addToast } = useToast();
+  const { confirm, confirmDialog } = useConfirm();
   const navigate = useNavigate();
   const { clientNo } = useParams<{ clientNo?: string }>();
 
@@ -90,6 +99,7 @@ const ClientCMS: React.FC = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch("/api/cms/clients?action=get");
       if (!res.ok) {
         const err = await res.json();
@@ -168,12 +178,12 @@ const ClientCMS: React.FC = () => {
   };
 
   const deleteClient = async (id: string, name: string) => {
-    if (
-      !window.confirm(
-        `Hapus client "${name}"? Tindakan ini tidak dapat dibatalkan.`,
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: `Hapus client "${name}"?`,
+      description: "Data client akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
+      destructive: true,
+    });
+    if (!ok) return;
     setDeletingId(id);
     try {
       const res = await fetch("/api/cms/clients?action=delete", {
@@ -203,6 +213,26 @@ const ClientCMS: React.FC = () => {
     );
   });
 
+  const handleCopyMagicLink = () => {
+    if (!selectedClient?.magic_link_token) {
+      addToast(
+        "Client ini belum memiliki magic link. Harap perbarui database.",
+        "error",
+      );
+      return;
+    }
+    const token = selectedClient.magic_link_token;
+    const url = `${window.location.origin}/portal/${token}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        addToast("Magic link berhasil disalin!", "success");
+      })
+      .catch((err) => {
+        addToast("Gagal menyalin link.", "error");
+      });
+  };
+
   const isNew = selectedClient?.id === "NEW";
 
   return (
@@ -212,8 +242,8 @@ const ClientCMS: React.FC = () => {
           viewMode === "DETAILS" && selectedClient ? (
             <div className="flex items-center gap-2">
               <span>Detail Client</span>
-              <span className="text-slate-400 mx-1">-</span>
-              <span className="text-brand-600 text-xl font-bold">
+              <span className="text-ink/45 mx-1">-</span>
+              <span className="text-violet-700 text-xl font-bold">
                 {formatClientId(selectedClient.client_no)}
               </span>
             </div>
@@ -247,20 +277,24 @@ const ClientCMS: React.FC = () => {
 
       <div className="flex-1 min-h-0 flex flex-col pt-6">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-            <p className="text-slate-400 font-medium">Memuat data client...</p>
-          </div>
+          <CMSTableSkeleton rows={8} columns={5} label="Memuat data client..." />
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-            <p className="text-slate-500 text-sm">{error}</p>
-          </div>
+          <CMSEmptyState
+            icon={AlertTriangle}
+            iconClassName="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-[20px]"
+            title="Client gagal dimuat"
+            description={error}
+            action={
+              <CMSButton variant="secondary" icon={RotateCw} onClick={fetchClients}>
+                Coba lagi
+              </CMSButton>
+            }
+          />
         ) : viewMode === "DETAILS" && selectedClient ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full min-h-0 overflow-hidden pb-4">
             {/* Left Panel: Client Info */}
             <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar pr-1">
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col relative">
+              <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col relative shrink-0">
                 {/* Header Action Buttons (Edit/Delete) */}
                 <div className="absolute top-6 right-6 flex items-center gap-1">
                   {!isNew && (
@@ -270,7 +304,7 @@ const ClientCMS: React.FC = () => {
                         onClick={handleOpenEditModal}
                         icon={Pencil}
                         iconSize={14}
-                        title="Edit Client"
+                        aria-label="Edit Client" title="Edit Client"
                       />
                       <CMSButton
                         variant="danger"
@@ -282,7 +316,7 @@ const ClientCMS: React.FC = () => {
                         }
                         icon={Trash2}
                         iconSize={14}
-                        title="Hapus Client"
+                        aria-label="Hapus Client" title="Hapus Client"
                       />
                     </>
                   )}
@@ -294,7 +328,7 @@ const ClientCMS: React.FC = () => {
                     <div className="shrink-0">
                       {selectedClient.photo_url ? (
                         <div
-                          className="rounded-lg overflow-hidden"
+                          className="rounded-[10px] overflow-hidden"
                           style={{ width: 88, height: 40 }}
                         >
                           <img
@@ -304,8 +338,8 @@ const ClientCMS: React.FC = () => {
                           />
                         </div>
                       ) : (
-                        <div className="w-[42px] h-[42px] rounded-full bg-brand-500/10 flex items-center justify-center">
-                          <span className="text-brand-500 font-bold text-lg leading-none">
+                        <div className="w-[42px] h-[42px] rounded-full bg-violet-600/10 flex items-center justify-center">
+                          <span className="text-violet-600 font-bold text-lg leading-none">
                             {selectedClient.full_name
                               ?.charAt(0)
                               .toUpperCase() || "?"}
@@ -314,14 +348,14 @@ const ClientCMS: React.FC = () => {
                       )}
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-800 mb-1 leading-tight">
+                      <h2 className="text-lg font-bold text-ink mb-1 leading-tight">
                         {selectedClient.full_name}
                       </h2>
                     </div>
                   </div>
 
                   {/* List Data */}
-                  <div className="flex flex-col mt-4 border-t border-slate-100 pt-2">
+                  <div className="flex flex-col mt-4 border-t border-ink/[0.06] pt-2 pb-2">
                     <CMSViewItem
                       label="Phone Number"
                       value={selectedClient.phone_number || "—"}
@@ -333,15 +367,19 @@ const ClientCMS: React.FC = () => {
                       icon={Building2}
                       className="!border-0"
                     />
-                    <div className="pt-2">
-                      <div className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-md">
-                        <label className="text-sm font-medium text-slate-600 flex items-center gap-1.5">
-                          <FileText size={14} className="text-slate-500" />
-                          Customer Notes
-                        </label>
-                        <span className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
-                          {selectedClient.notes || "—"}
-                        </span>
+                  </div>
+
+                  {/* Notes Section - Auto Height */}
+                  <div className="mt-2">
+                    <div className="flex flex-col gap-2 p-4 bg-paper/80 rounded-[14px] border border-ink/[0.03]">
+                      <label className="gs-label text-[10px] text-muted flex items-center gap-1.5">
+                        <FileText size={12} className="text-ink/45" />
+                        Customer Notes
+                      </label>
+                      <div className="text-[13px] font-medium text-ink leading-relaxed whitespace-pre-wrap break-words">
+                        {selectedClient.notes || (
+                          <span className="text-ink/45 italic">Tidak ada catatan</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -359,32 +397,32 @@ const ClientCMS: React.FC = () => {
                   totalTransactions > 0 ? totalSpend / totalTransactions : 0;
 
                 return (
-                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col shrink-0">
-                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-                      <ShoppingBag size={12} className="text-slate-400" />
-                      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0">
+                    <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center gap-2">
+                      <ShoppingBag size={12} className="text-ink/45" />
+                      <h3 className="gs-label text-ink">
                         Customer Value
                       </h3>
                     </div>
 
-                    <div className="grid grid-cols-2 p-5 border-b border-slate-100 relative bg-white gap-4">
+                    <div className="grid grid-cols-2 p-5 border-b border-ink/[0.06] relative bg-white gap-4">
                       {/* Vertical divider */}
-                      <div className="absolute left-1/2 top-5 bottom-5 w-px bg-slate-100 hidden sm:block"></div>
+                      <div className="absolute left-1/2 top-5 bottom-5 w-px bg-ink/5 hidden sm:block"></div>
 
                       <div className="pr-2">
-                        <span className="text-sm font-medium text-slate-600 block mb-1">
+                        <span className="text-sm font-medium text-ink/70 block mb-1">
                           Total Transactions
                         </span>
-                        <span className="text-lg font-bold text-slate-800">
+                        <span className="text-lg font-bold text-ink">
                           {totalTransactions}
                         </span>
                       </div>
 
                       <div className="sm:pl-4">
-                        <span className="text-sm font-medium text-slate-600 block mb-1">
+                        <span className="text-sm font-medium text-ink/70 block mb-1">
                           Total Spend
                         </span>
-                        <span className="text-lg font-bold text-slate-800">
+                        <span className="text-lg font-bold text-ink">
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",
@@ -394,11 +432,11 @@ const ClientCMS: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="p-5 bg-slate-50/20">
-                      <span className="text-sm font-medium text-slate-600 block mb-1">
+                    <div className="p-5 bg-paper/20">
+                      <span className="text-sm font-medium text-ink/70 block mb-1">
                         Average Spend per Purchase
                       </span>
-                      <span className="text-lg font-bold text-slate-800">
+                      <span className="text-lg font-bold text-ink">
                         {new Intl.NumberFormat("id-ID", {
                           style: "currency",
                           currency: "IDR",
@@ -409,30 +447,62 @@ const ClientCMS: React.FC = () => {
                   </div>
                 );
               })()}
+
+              {/* Portal Magic Link Card */}
+              {!isNew && (
+                <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0 mt-4">
+                  <div className="px-6 py-4 border-b border-ink/[0.06] bg-violet-50 flex items-center gap-2">
+                    <Link size={12} className="text-violet-600" />
+                    <h3 className="gs-label text-violet-900">
+                      Client Portal Link
+                    </h3>
+                  </div>
+                  <div className="p-5 flex flex-col gap-3">
+                    <p className="text-xs text-muted font-medium">
+                      Bagikan link ini agar client dapat melihat seluruh riwayat
+                      order dan file final mereka tanpa password.
+                    </p>
+                    {selectedClient.magic_link_token ? (
+                      <button
+                        onClick={handleCopyMagicLink}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-paper hover:bg-ink/5 border border-ink/15 hover:border-ink/40 text-ink rounded-full transition-colors font-semibold text-sm cursor-pointer"
+                      >
+                        <Copy size={16} />
+                        Salin Magic Link
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 rounded-[10px] text-xs font-medium border border-amber-100">
+                        <Loader2 size={14} className="motion-safe:animate-spin" />
+                        Menunggu token generated di database...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Panel: Order History */}
-            <div className="lg:col-span-8 flex-1 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col h-full">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-600 flex items-center gap-2 uppercase tracking-wider">
-                  <Clock size={12} className="text-slate-400" />
+            <div className="lg:col-span-8 flex-1 min-w-0 bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col h-full">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <Clock size={12} className="text-ink/45" />
                   History Order
                 </h3>
-                {loadingOrders && (
-                  <Loader2 size={14} className="text-brand-500 animate-spin" />
-                )}
               </div>
 
               <div className="flex-1 overflow-auto custom-scrollbar p-6">
                 {loadingOrders ? (
-                  <div className="flex flex-col items-center justify-center py-20">
-                    <Loader2
-                      size={32}
-                      className="text-brand-500 animate-spin mb-3"
-                    />
-                    <p className="text-slate-400 text-xs font-medium">
-                      Memuat history...
-                    </p>
+                  <div className="space-y-3" role="status" aria-label="Memuat history order">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center gap-4 rounded-[14px] border border-ink/10 p-4">
+                        <CMSSkeleton className="h-10 w-10 !rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <CMSSkeleton className={`h-3 ${["w-1/3", "w-1/2", "w-2/5"][i]}`} />
+                          <CMSSkeleton className="h-2.5 w-1/4" />
+                        </div>
+                        <CMSSkeleton className="h-5 w-20 !rounded-full" />
+                      </div>
+                    ))}
                   </div>
                 ) : clientOrders.length === 0 ? (
                   <CMSEmptyState
@@ -451,7 +521,7 @@ const ClientCMS: React.FC = () => {
                         Harga
                       </CMSTableHeaderCell>
                     </CMSTableHeader>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-ink/[0.04]">
                       {clientOrders.map((order) => (
                         <CMSTableRow key={order.id} className="cursor-default">
                           <CMSTableCell>
@@ -459,11 +529,11 @@ const ClientCMS: React.FC = () => {
                               onClick={() =>
                                 navigate(`/cms/orders/${order.order_number}`)
                               }
-                              className="text-xs font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all cursor-pointer block mb-1"
+                              className="text-xs font-bold text-violet-600 hover:text-violet-700 hover:underline transition-all cursor-pointer block mb-1"
                             >
                               #{order.order_number}
                             </button>
-                            <div className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                            <div className="text-[10px] text-muted flex items-center gap-1 font-medium">
                               <Calendar size={10} />
                               {new Date(order.created_at).toLocaleDateString(
                                 "id-ID",
@@ -476,10 +546,10 @@ const ClientCMS: React.FC = () => {
                             </div>
                           </CMSTableCell>
                           <CMSTableCell>
-                            <div className="text-xs font-bold text-slate-700">
+                            <div className="text-xs font-bold text-ink">
                               {order.selected_package}
                             </div>
-                            <div className="text-[10px] text-brand-500 font-bold">
+                            <div className="text-[10px] text-violet-600 font-bold">
                               {order.design_category}
                             </div>
                           </CMSTableCell>
@@ -535,17 +605,17 @@ const ClientCMS: React.FC = () => {
                   </CMSTableHeaderCell>
                   <CMSTableHeaderCell />
                 </CMSTableHeader>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-ink/[0.04]">
                   {filteredClients.map((client) => (
                     <CMSTableRow key={client.id}>
                       <CMSTableCell>
                         <button
                           onClick={() => handleEditClient(client)}
-                          className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer"
+                          className="font-bold text-violet-600 hover:text-violet-700 hover:underline transition-all flex items-center gap-1 cursor-pointer"
                         >
                           {formatClientId(client.client_no)}
                         </button>
-                        <div className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">
+                        <div className="text-[10px] text-muted mt-1 whitespace-nowrap">
                           {new Date(client.created_at).toLocaleDateString(
                             "id-ID",
                             {
@@ -560,7 +630,7 @@ const ClientCMS: React.FC = () => {
                       </CMSTableCell>
                       <CMSTableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full overflow-hidden bg-brand-500/10 flex items-center justify-center shrink-0 border border-slate-100">
+                          <div className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full overflow-hidden bg-violet-600/10 flex items-center justify-center shrink-0 border border-ink/[0.06]">
                             {client.photo_url ? (
                               <img
                                 src={client.photo_url}
@@ -568,35 +638,35 @@ const ClientCMS: React.FC = () => {
                                 className="w-full h-full object-contain"
                               />
                             ) : (
-                              <span className="text-brand-500 font-bold text-xs leading-none">
+                              <span className="text-violet-600 font-bold text-xs leading-none">
                                 {client.full_name?.charAt(0).toUpperCase() ||
                                   "?"}
                               </span>
                             )}
                           </div>
-                          <span className="font-bold text-slate-800 text-sm">
+                          <span className="font-bold text-ink text-sm">
                             {client.full_name}
                           </span>
                         </div>
                       </CMSTableCell>
                       <CMSTableCell>
-                        <span className="text-slate-600 text-sm font-medium">
+                        <span className="text-ink/70 text-sm font-medium">
                           {client.company || (
-                            <span className="text-slate-400">—</span>
+                            <span className="text-ink/45">—</span>
                           )}
                         </span>
                       </CMSTableCell>
                       <CMSTableCell className="hidden md:table-cell">
-                        <span className="text-slate-600 text-sm font-medium">
+                        <span className="text-ink/70 text-sm font-medium">
                           {client.phone_number || (
-                            <span className="text-slate-400">—</span>
+                            <span className="text-ink/45">—</span>
                           )}
                         </span>
                       </CMSTableCell>
                       <CMSTableCell className="hidden lg:table-cell max-w-[200px]">
-                        <span className="text-slate-500 text-xs truncate block">
+                        <span className="text-muted text-xs truncate block">
                           {client.notes || (
-                            <span className="text-slate-300">—</span>
+                            <span className="text-ink/30">—</span>
                           )}
                         </span>
                       </CMSTableCell>
@@ -609,7 +679,7 @@ const ClientCMS: React.FC = () => {
                           loading={deletingId === client.id}
                           icon={Trash2}
                           iconSize={14}
-                          title="Hapus Client"
+                          aria-label="Hapus Client" title="Hapus Client"
                         />
                       </CMSTableCell>
                     </CMSTableRow>
@@ -627,6 +697,7 @@ const ClientCMS: React.FC = () => {
         onSuccess={handleModalSuccess}
         initialData={selectedClient}
       />
+      {confirmDialog}
     </div>
   );
 };

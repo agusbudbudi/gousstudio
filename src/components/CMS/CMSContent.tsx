@@ -1,313 +1,295 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { motion, MotionConfig } from "framer-motion";
 import {
-  LayoutDashboard,
-  Plus,
   LogOut,
-  Search,
-  Image as ImageIcon,
-  ChevronRight,
-  ChevronLeft,
-  Monitor,
+  ChevronsLeft,
+  ChevronsRight,
   ShoppingBag,
-  FileText,
-  Palette,
-  Briefcase,
-  Megaphone,
-  Save,
-  DollarSign,
-  Zap,
-  Shapes,
-  ShoppingCart,
-  Shuffle,
   Users,
   Tags,
+  Ticket,
   LayoutGrid,
   Layers,
-  Target,
   MessageSquare,
-  Ticket,
+  Target,
+  ArrowUpRight,
+  X,
+  LucideIcon,
 } from "lucide-react";
-import { supabase } from "../../utils/supabase";
-import PortfolioList from "./PortfolioList";
-import PortfolioModal from "./PortfolioModal";
-import PricelistCMS from "./PricelistCMS";
-import FastworkCMS from "./FastworkCMS";
-import ServicesCMS from "./ServicesCMS";
-import OrderCMS from "./OrderCMS";
-import ClientCMS from "./ClientCMS";
-import TestimonialCMS from "./TestimonialCMS";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { useToast } from "../../hooks/useToast";
-import CMSHeader from "./CMSHeader";
+import { EASE, BrandLogo } from "../landing/primitives";
 
-import { PortfolioItem } from "../../types";
+// Lets page headers (CMSHeader) open the mobile nav drawer
+const CMSNavContext = createContext<{ openNav: () => void } | null>(null);
+export const useCMSNav = () => useContext(CMSNavContext);
 
-const CATEGORIES: { id: string; label: string; icon: any }[] = [
-  { id: "poster", label: "Poster & Banner", icon: FileText },
-  { id: "feed", label: "Social Media Feed", icon: Monitor },
-  { id: "ecommerce", label: "E-commerce", icon: ShoppingBag },
-  { id: "logo", label: "Logo & Branding", icon: Palette },
-  { id: "management", label: "Content Management", icon: Briefcase },
-  { id: "ads", label: "Digital Ads", icon: Megaphone },
-];
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === "undefined" ? true : window.matchMedia(DESKTOP_QUERY).matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return isDesktop;
+};
 
 interface CMSContentProps {
   onLogout: () => void;
   children?: React.ReactNode;
 }
 
-const MenuItem = ({
-  id,
-  icon: Icon,
-  label,
-  activePage,
-  isCollapsed,
-  onClick,
-}: {
+interface NavItem {
   id: string;
-  icon: any;
   label: string;
-  activePage: string;
+  icon: LucideIcon;
+}
+
+const NAV_GROUPS: { index: string; label: string; items: NavItem[] }[] = [
+  {
+    index: "01",
+    label: "Project Ops",
+    items: [
+      { id: "orders", label: "Orders", icon: ShoppingBag },
+      { id: "clients", label: "Clients", icon: Users },
+      { id: "pricelist", label: "Pricelist", icon: Tags },
+      { id: "vouchers", label: "Vouchers", icon: Ticket },
+    ],
+  },
+  {
+    index: "02",
+    label: "System Setup",
+    items: [
+      { id: "portfolio", label: "Portfolio", icon: LayoutGrid },
+      { id: "services", label: "Services", icon: Layers },
+      { id: "testimonials", label: "Testimonials", icon: MessageSquare },
+      { id: "fastwork", label: "Fastwork Sales", icon: Target },
+    ],
+  },
+];
+
+const ALL_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+const SIDEBAR_COLLAPSED_KEY = "gous_cms_sidebar_collapsed";
+
+const readCollapsed = () => {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+// Tooltip shown next to icons when the sidebar is collapsed
+const Tooltip: React.FC<{ label: string }> = ({ label }) => (
+  <span className="pointer-events-none absolute left-full z-[100] ml-3 -translate-x-1 whitespace-nowrap rounded-[8px] bg-ink px-2.5 py-1.5 text-xs font-medium text-paper opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100">
+    {label}
+  </span>
+);
+
+const NavButton: React.FC<{
+  item: NavItem;
+  isActive: boolean;
   isCollapsed: boolean;
   onClick: () => void;
-}) => {
-  const isActive = activePage === id;
+}> = ({ item, isActive, isCollapsed, onClick }) => {
+  const Icon = item.icon;
   return (
-    <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
-      <button
-        onClick={onClick}
-        className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer border ${
-          isActive
-            ? "bg-brand-50/70 border-brand-500/50 text-brand-700"
-            : "text-slate-600 border-transparent hover:text-brand-600 hover:bg-slate-50"
-        }`}
-      >
-        <Icon
-          className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-brand-600" : "text-slate-400 group-hover:text-brand-500"}`}
-          strokeWidth={isActive ? 2.5 : 2}
+    <button
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+      aria-label={isCollapsed ? item.label : undefined}
+      className={`group relative flex h-10 items-center rounded-[10px] text-sm transition-colors duration-200 ${
+        isCollapsed ? "w-10 justify-center" : "w-full gap-3 px-3"
+      } ${isActive ? "font-semibold text-ink" : "font-medium text-muted hover:bg-ink/[0.04] hover:text-ink"}`}
+    >
+      {/* Active pill slides between items (DESIGN.md §6, layoutId pill) */}
+      {isActive && (
+        <motion.span
+          layoutId="cms-nav-pill"
+          transition={{ duration: 0.35, ease: EASE }}
+          className="absolute inset-0 rounded-[10px] border border-violet-200 bg-violet-50"
         />
-        {!isCollapsed && <span className="truncate">{label}</span>}
-
-        {isCollapsed && (
-          <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
-            {label}
-            <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
-          </div>
-        )}
-      </button>
-    </div>
+      )}
+      <Icon
+        className={`relative h-4 w-4 shrink-0 ${isActive ? "text-violet-600" : "text-ink/40 group-hover:text-ink/70"}`}
+        strokeWidth={isActive ? 2.25 : 2}
+      />
+      {!isCollapsed && <span className="relative truncate">{item.label}</span>}
+      {isCollapsed && <Tooltip label={item.label} />}
+    </button>
   );
 };
 
 const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    return localStorage.getItem("gous_cms_sidebar_collapsed") === "true";
-  });
+  const [collapsedPref, setIsCollapsed] = useState(readCollapsed);
+  const isDesktop = useIsDesktop();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  // Collapsing is a desktop-only preference; the mobile drawer always shows labels
+  const isCollapsed = isDesktop && collapsedPref;
+
+  // Close the drawer on navigation, on Escape, and when switching to desktop
+  useEffect(() => setMobileOpen(false), [location.pathname, isDesktop]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
 
   const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem("gous_cms_sidebar_collapsed", String(newState));
+    const next = !collapsedPref;
+    setIsCollapsed(next);
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+    } catch {
+      // Preference just won't persist
+    }
   };
 
-  // Helper to determine active page from URL
-  const getActivePage = () => {
-    const path = location.pathname;
-    if (path.includes("/orders")) return "orders";
-    if (path.includes("/clients")) return "clients";
-    if (path.includes("/pricelist")) return "pricelist";
-    if (path.includes("/testimonials")) return "testimonials";
-    if (path.includes("/vouchers")) return "vouchers";
-    if (path.includes("/portfolio")) return "portfolio";
-    if (path.includes("/services")) return "services";
-    if (path.includes("/fastwork")) return "fastwork";
-    return "orders";
-  };
+  const activePage =
+    ALL_ITEMS.find((item) => location.pathname.includes(`/${item.id}`))?.id ?? "orders";
 
-  const activePage = getActivePage();
+  const footerButton = `group relative flex h-10 items-center rounded-[10px] text-sm font-medium transition-colors duration-200 ${
+    isCollapsed ? "w-10 justify-center" : "w-full gap-3 px-3"
+  }`;
 
   return (
-    <div
-      className="flex flex-1 overflow-hidden bg-[#F8FAFC]"
-      style={
-        {
-          "--sidebar-width": isCollapsed ? "4rem" : "12rem",
-        } as React.CSSProperties
-      }
-    >
-      {/* Sidebar */}
-      <aside
-        className={`${isCollapsed ? "w-16" : "w-48"} transition-all duration-300 z-20 border-r border-slate-200 bg-white flex flex-col -[1px_0_0_rgba(0,0,0,0.02)]`}
+    <MotionConfig reducedMotion="user">
+    <CMSNavContext.Provider value={{ openNav: () => setMobileOpen(true) }}>
+      <div
+        className="cms-shell flex flex-1 overflow-hidden bg-paper"
+        style={
+          {
+            // Page headers offset by this; the mobile drawer overlays instead of pushing content
+            "--sidebar-width": !isDesktop ? "0px" : isCollapsed ? "4.5rem" : "13.5rem",
+          } as React.CSSProperties
+        }
       >
-        <div
-          className={`py-3 ${isCollapsed ? "px-2 flex justify-center" : "px-4"}`}
+        {/* Mobile drawer backdrop */}
+        {!isDesktop && mobileOpen && (
+          <div
+            className="cms-modal-backdrop fixed inset-0 z-40 cursor-pointer bg-ink/45"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden
+          />
+        )}
+
+        {/* Sidebar: static column on desktop, slide-in drawer below lg */}
+        <aside
+          id="cms-sidebar"
+          inert={!isDesktop && !mobileOpen}
+          className={`${
+            isDesktop
+              ? `${isCollapsed ? "w-[4.5rem]" : "w-[13.5rem]"} relative z-20 transition-[width]`
+              : `fixed inset-y-0 left-0 z-50 w-[15rem] transition-transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`
+          } flex shrink-0 flex-col border-r border-ink/10 bg-white duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]`}
         >
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex items-center ${isCollapsed ? "justify-center" : "gap-1"} hover:opacity-80 transition-opacity cursor-pointer group w-full`}
+          {/* Wordmark — same height as the page header so the two lines align */}
+          <div
+            className={`flex h-[58px] shrink-0 items-center border-b border-ink/10 ${isCollapsed ? "justify-center" : "px-5"}`}
           >
-            <img
-              src="/img/gous-logo.png"
-              alt="Gous Studio"
-              className="w-8 h-8 object-contain shrink-0 group-hover:scale-105 transition-transform"
-            />
-            {!isCollapsed && (
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-slate-900 leading-tight text-lg group-hover:text-brand-700 transition-colors truncate">
-                  Gous Studio
-                </h2>
-                <p className="text-[10px] text-slate-400 font-bold truncate">
-                  Operation Dashboard
-                </p>
-              </div>
-            )}
-          </a>
-        </div>
-
-        <nav className={`flex-1 ${isCollapsed ? "p-2" : "p-4"} space-y-4 pt-0`}>
-          {/* Operation Group */}
-          <div>
-            {!isCollapsed ? (
-              <div className="px-3 py-2 text-[9px] text-slate-400 font-bold mb-1 uppercase tracking-wider truncate">
-                Project Ops
-              </div>
+            {isCollapsed ? (
+              <BrandLogo wordmark={false} size="sm" />
             ) : (
-              <div className="h-px bg-slate-100 mx-2 mb-3 mt-0"></div>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <BrandLogo size="sm" className="min-w-0" />
+                <span className="gs-label text-[10px] text-ink/40">CMS</span>
+              </div>
             )}
-            <div className="space-y-1.5">
-              <MenuItem
-                id="orders"
-                icon={ShoppingBag}
-                label="Orders"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/orders")}
-              />
-              <MenuItem
-                id="clients"
-                icon={Users}
-                label="Clients"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/clients")}
-              />
-              <MenuItem
-                id="pricelist"
-                icon={Tags}
-                label="Pricelist"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/pricelist")}
-              />
-              <MenuItem
-                id="vouchers"
-                icon={Ticket}
-                label="Vouchers"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/vouchers")}
-              />
-            </div>
+            {!isDesktop && (
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Tutup menu"
+                className="-mr-2 flex h-9 w-9 items-center justify-center rounded-full text-ink/45 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
 
-          {/* Setup Group */}
-          <div>
-            {!isCollapsed ? (
-              <div className="px-3 py-2 text-[9px] text-slate-400 font-bold mb-1 uppercase tracking-wider truncate">
-                System Setup
+          <nav
+            className={`custom-scrollbar flex-1 overflow-y-auto ${isCollapsed ? "px-3.5" : "px-3"} py-5 space-y-6`}
+            aria-label="Menu CMS"
+          >
+            {NAV_GROUPS.map((group) => (
+              <div key={group.index}>
+                {isCollapsed ? (
+                  <div className="mx-auto mb-3 h-px w-6 bg-ink/10" aria-hidden />
+                ) : (
+                  <p className="gs-label mb-2 flex items-center gap-2 px-3 text-[10px] text-ink/40">
+                    <span className="text-violet-600">{group.index}</span>
+                    <span aria-hidden className="h-px w-4 bg-current opacity-40" />
+                    <span className="truncate">{group.label}</span>
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {group.items.map((item) => (
+                    <NavButton
+                      key={item.id}
+                      item={item}
+                      isActive={activePage === item.id}
+                      isCollapsed={isCollapsed}
+                      onClick={() => navigate(`/cms/${item.id}`)}
+                    />
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="h-px bg-slate-100 mx-2 mb-3 mt-4"></div>
-            )}
-            <div className="space-y-1.5">
-              <MenuItem
-                id="portfolio"
-                icon={LayoutGrid}
-                label="Portfolio"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/portfolio")}
-              />
-              <MenuItem
-                id="services"
-                icon={Layers}
-                label="Services"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/services")}
-              />
-              <MenuItem
-                id="testimonials"
-                icon={MessageSquare}
-                label="Testimonials"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/testimonials")}
-              />
-              <MenuItem
-                id="fastwork"
-                icon={Target}
-                label="Fastwork Sales"
-                activePage={activePage}
-                isCollapsed={isCollapsed}
-                onClick={() => navigate("/cms/fastwork")}
-              />
-            </div>
-          </div>
-        </nav>
+            ))}
+          </nav>
 
-        <div
-          className={`p-3 border-t border-slate-100 space-y-2 ${isCollapsed ? "flex flex-col items-center" : ""}`}
-        >
-          <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
+          <div className={`space-y-1 border-t border-ink/10 py-3 ${isCollapsed ? "flex flex-col items-center px-3.5" : "px-3"}`}>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={isCollapsed ? "Lihat situs" : undefined}
+              className={`${footerButton} text-muted hover:bg-ink/[0.04] hover:text-ink`}
+            >
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-ink/40 transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-ink/70" />
+              {!isCollapsed && <span className="truncate">Lihat Situs</span>}
+              {isCollapsed && <Tooltip label="Lihat Situs" />}
+            </a>
+            {isDesktop && (
             <button
               onClick={toggleSidebar}
-              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer text-slate-500 hover:text-slate-700 hover:bg-slate-100`}
+              aria-label={isCollapsed ? "Perluas menu" : undefined}
+              aria-expanded={!isCollapsed}
+              className={`${footerButton} text-muted hover:bg-ink/[0.04] hover:text-ink`}
             >
               {isCollapsed ? (
-                <ChevronRight className="w-5 h-5 shrink-0 transition-transform" />
+                <ChevronsRight className="h-4 w-4 shrink-0 text-ink/40" />
               ) : (
-                <ChevronLeft className="w-5 h-5 shrink-0 transition-transform" />
+                <ChevronsLeft className="h-4 w-4 shrink-0 text-ink/40" />
               )}
-              {!isCollapsed && <span className="truncate">Collapse Menu</span>}
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
-                  Expand Menu
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
-                </div>
-              )}
+              {!isCollapsed && <span className="truncate">Ciutkan Menu</span>}
+              {isCollapsed && <Tooltip label="Perluas Menu" />}
             </button>
-          </div>
-
-          <div className={`w-full ${isCollapsed ? "flex justify-center" : ""}`}>
+            )}
             <button
               onClick={onLogout}
-              className={`relative group flex items-center ${isCollapsed ? "justify-center w-10 h-10 px-0" : "w-full gap-3 px-3 py-2.5"} rounded-lg font-medium transition-all text-sm cursor-pointer text-slate-500 hover:text-red-500 hover:bg-red-50/50`}
+              aria-label={isCollapsed ? "Keluar" : undefined}
+              className={`${footerButton} text-muted hover:bg-rose-50 hover:text-rose-600`}
             >
-              <LogOut className="w-5 h-5 shrink-0" />
-              {!isCollapsed && <span className="truncate">Sign Out</span>}
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2.5 py-1.5 bg-slate-800 font-medium !text-white text-xs rounded-md opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all whitespace-nowrap z-[100] shadow-sm pointer-events-none flex items-center">
-                  Sign Out
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45 rounded-sm"></div>
-                </div>
-              )}
+              <LogOut className="h-4 w-4 shrink-0 opacity-60" />
+              {!isCollapsed && <span className="truncate">Keluar</span>}
+              {isCollapsed && <Tooltip label="Keluar" />}
             </button>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-50/20 px-6 pb-6 pt-[58px] custom-scrollbar relative">
-        {children}
-      </main>
-    </div>
+        {/* Main Content (pages render their own fixed CMSHeader, 58px tall) */}
+        <main className="custom-scrollbar relative min-w-0 flex-1 overflow-y-auto bg-paper px-4 pb-6 pt-[58px] lg:px-6">
+          {children}
+        </main>
+      </div>
+    </CMSNavContext.Provider>
+    </MotionConfig>
   );
 };
 

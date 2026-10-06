@@ -11,11 +11,10 @@ export default async function handler(req, res) {
     VITE_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY, 
     CMS_PASSWORD, 
-    VITE_CMS_PASSWORD 
   } = process.env;
 
   const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
-  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+  const effectivePassword = CMS_PASSWORD;
 
   const cookies = (req.headers.cookie || '').split(';');
   let cmsToken = null;

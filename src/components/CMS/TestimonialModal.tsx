@@ -150,11 +150,11 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
         <div className="flex flex-col md:flex-row gap-6">
           {/* Avatar Upload */}
           <div className="flex flex-col items-center gap-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <label className="gs-label text-[11px] text-muted">
               Avatar
             </label>
             <div className="relative group">
-              <div className="w-24 h-24 rounded-2xl bg-slate-100 border-1 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative">
+              <div className="w-24 h-24 rounded-[20px] bg-ink/5 border-1 border-dashed border-ink/20 flex items-center justify-center overflow-hidden relative">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
@@ -162,13 +162,13 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User size={32} className="text-slate-300" />
+                  <User size={32} className="text-ink/30" />
                 )}
 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 bg-black/40 !text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute inset-0 bg-ink/45 !text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <Upload size={16} />
                   <span className="text-[10px] font-bold mt-1">Ganti</span>
@@ -182,7 +182,7 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
                     setAvatarPreview(null);
                     setValue("avatar_url", "");
                   }}
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 !text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 !text-white rounded-full flex items-center justify-center border-2 border-white hover:bg-rose-600 transition-colors cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -195,7 +195,7 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
               accept="image/*"
               className="hidden"
             />
-            <p className="text-[10px] text-slate-400 text-center">
+            <p className="text-[10px] text-ink/45 text-center">
               PNG/JPG, Maks 2MB
             </p>
           </div>
@@ -220,10 +220,10 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
 
         {/* Star Rating */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+          <label className="gs-label text-[11px] text-muted ml-1">
             Rating
           </label>
-          <div className="flex items-center gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-200 w-fit">
+          <div className="flex items-center gap-1.5 p-3 bg-paper rounded-[14px] border border-ink/10 w-fit">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -236,12 +236,12 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
                   className={`${
                     star <= rating
                       ? "fill-amber-400 text-amber-400"
-                      : "text-slate-300"
+                      : "text-ink/30"
                   } transition-colors`}
                 />
               </button>
             ))}
-            <span className="ml-3 text-sm font-black text-slate-700">
+            <span className="ml-3 text-sm font-semibold text-ink">
               {rating}.0
             </span>
           </div>
@@ -264,17 +264,17 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
 
         {/* Visibility Toggle */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+          <label className="gs-label text-[11px] text-muted ml-1">
             Status Tampilan
           </label>
-          <div className="flex items-center gap-2 p-1 bg-slate-100 border border-slate-200 rounded-lg w-fit">
+          <div className="flex items-center gap-2 p-1 bg-white border border-ink/10 rounded-full w-fit">
             <button
               type="button"
               onClick={() => setValue("is_show", true)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                 isShow
-                  ? "bg-emerald-500 !text-white shadow-sm shadow-emerald-500/30"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-emerald-600 !text-white"
+                  : "text-muted hover:text-ink"
               }`}
             >
               <Eye size={14} />
@@ -283,17 +283,17 @@ const TestimonialModal: React.FC<TestimonialModalProps> = ({
             <button
               type="button"
               onClick={() => setValue("is_show", false)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                 !isShow
-                  ? "bg-slate-500 !text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-ink !text-paper"
+                  : "text-muted hover:text-ink"
               }`}
             >
               <EyeOff size={14} />
               Sembunyikan
             </button>
           </div>
-          <p className="text-[11px] text-slate-500 ml-1">
+          <p className="text-[11px] text-muted ml-1">
             {isShow
               ? "Testimonial ini akan muncul di halaman depan website."
               : "Testimonial ini hanya disimpan di database (draft)."}
