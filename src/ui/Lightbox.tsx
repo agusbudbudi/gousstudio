@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, PanInfo, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { getLightboxDisplayUrl } from "../utils/imageResolver";
@@ -15,12 +15,49 @@ interface LightboxProps {
 
 const isCanva = (item?: PortfolioItem) => Boolean(item?.linkUrl?.includes("canva.com/design/"));
 
+const ImageFallback = ({ title }: { title: string }) => (
+  <div className="flex aspect-[4/5] w-full max-w-sm flex-col items-center justify-center rounded-2xl border border-paper/10 p-8 text-center">
+    <p className="gs-display text-3xl font-bold text-paper/40">{title}</p>
+    <p className="mt-3 text-sm text-paper/50">Gambar sedang tidak bisa dimuat.</p>
+  </div>
+);
+
+// One per slide (keyed by index), so each image owns its loading state. A shared state reset
+// in an effect raced the load event of preloaded images and left swiped-to slides spinning.
+const LightboxImage = ({ src, alt, title }: { src: string; alt: string; title: string }) => {
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Preloaded / cached: may have finished before React attached onLoad
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete) setStatus(img.naturalWidth ? "loaded" : "error");
+  }, []);
+
+  if (status === "error") return <ImageFallback title={title} />;
+  return (
+    <>
+      {status === "loading" && <Loader2 size={32} className="absolute animate-spin text-paper/40" aria-label="Memuat gambar" />}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        draggable={false}
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("error")}
+        className={`max-h-full w-full select-none object-contain md:w-auto md:max-w-full md:rounded-2xl transition-opacity duration-300 ${
+          status === "loaded" ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </>
+  );
+};
+
 // Full-screen work viewer (docs/DESIGN.md §2.11).
 const Lightbox = ({ items, currentIndex, onClose, onNavigate }: LightboxProps) => {
   const reduce = useReducedMotion();
   const item = items[currentIndex];
   const src = item ? getLightboxDisplayUrl(item) : null;
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const [direction, setDirection] = useState(0);
   const closeRef = useRef<HTMLButtonElement>(null);
   // A swipe ends with a click event; ignore it so swiping never closes the viewer.
@@ -32,8 +69,6 @@ const Lightbox = ({ items, currentIndex, onClose, onNavigate }: LightboxProps) =
     setDirection(delta);
     onNavigate(delta);
   };
-
-  useEffect(() => setStatus("loading"), [currentIndex]);
 
   // Preload neighbours so next/prev feel instant.
   useEffect(() => {
@@ -107,7 +142,7 @@ const Lightbox = ({ items, currentIndex, onClose, onNavigate }: LightboxProps) =
       </div>
 
       {/* Stage — click on empty space closes */}
-      <div className="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center px-4 py-4 md:px-24" onClick={onClose}>
+      <div className="relative flex min-h-0 flex-1 cursor-pointer items-center justify-center py-4 md:px-24" onClick={onClose}>
         {multiple && (
           <>
             <button
@@ -153,31 +188,16 @@ const Lightbox = ({ items, currentIndex, onClose, onNavigate }: LightboxProps) =
               // Only the image/embed itself keeps the viewer open; empty space around it closes.
               if (!draggedRef.current && e.target === e.currentTarget) onClose();
             }}
-            className={`relative flex h-full items-center justify-center ${isCanva(item) ? "w-full max-w-6xl cursor-default" : "max-w-full"} ${multiple && !isCanva(item) ? "cursor-grab active:cursor-grabbing" : ""}`}
+            className={`relative flex h-full items-center justify-center ${isCanva(item) ? "w-full max-w-6xl cursor-default" : "w-full md:w-auto md:max-w-full"} ${multiple && !isCanva(item) ? "cursor-grab active:cursor-grabbing" : ""}`}
           >
             {isCanva(item) ? (
-              <div className="aspect-video w-full max-w-5xl overflow-hidden rounded-2xl bg-ink-800">
+              <div className="aspect-video w-full max-w-5xl overflow-hidden bg-ink-800 md:rounded-2xl">
                 <iframe src={item.linkUrl} title={item.title} allowFullScreen className="h-full w-full border-0" />
               </div>
-            ) : src && status !== "error" ? (
-              <>
-                {status === "loading" && <Loader2 size={32} className="absolute animate-spin text-paper/40" aria-label="Memuat gambar" />}
-                <img
-                  src={src}
-                  alt={item.imgAlt || `${item.title} — ${category} oleh Gous Studio`}
-                  draggable={false}
-                  onLoad={() => setStatus("loaded")}
-                  onError={() => setStatus("error")}
-                  className={`max-h-full max-w-full select-none rounded-2xl object-contain transition-opacity duration-300 ${
-                    status === "loaded" ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              </>
+            ) : src ? (
+              <LightboxImage src={src} alt={item.imgAlt || `${item.title} — ${category} oleh Gous Studio`} title={item.title} />
             ) : (
-              <div className="flex aspect-[4/5] w-full max-w-sm flex-col items-center justify-center rounded-2xl border border-paper/10 p-8 text-center">
-                <p className="gs-display text-3xl font-bold text-paper/40">{item.title}</p>
-                <p className="mt-3 text-sm text-paper/50">Gambar sedang tidak bisa dimuat.</p>
-              </div>
+              <ImageFallback title={item.title} />
             )}
           </motion.div>
         </AnimatePresence>
