@@ -18,18 +18,18 @@ const CMSViewItem: React.FC<CMSViewItemProps> = ({
 }) => {
   return (
     <div
-      className={`flex justify-between py-2.5 px-1 border-b border-slate-50 last:border-0 ${className}`}
+      className={`flex justify-between py-2.5 px-1 border-b border-ink/[0.06] last:border-0 ${className}`}
     >
-      <span className="text-sm font-medium text-slate-600">{label}</span>
+      <span className="text-sm font-medium text-muted">{label}</span>
       <div className="flex flex-col items-end gap-1 text-right">
         <div className="flex items-center gap-2">
-          {Icon && <Icon size={14} className="text-slate-500" />}
-          <span className="text-sm font-bold text-slate-800 whitespace-normal">
+          {Icon && <Icon size={14} className="text-ink/40" />}
+          <span className="text-sm font-semibold text-ink whitespace-normal">
             {value || "—"}
           </span>
         </div>
         {subValue && (
-          <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="cms-pop-in">
             {subValue}
           </div>
         )}

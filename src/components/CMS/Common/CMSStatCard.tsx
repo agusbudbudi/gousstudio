@@ -17,21 +17,21 @@ const CMSStatCard: React.FC<CMSStatCardProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3 transition-colors ${className}`}>
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center  shrink-0 border ${
-        variant === "brand" 
-          ? "bg-brand-50 border-brand-100 text-brand-500" 
-          : "bg-slate-50 border-slate-100 text-slate-400"
+    <div className={`bg-white border border-ink/10 rounded-[16px] p-4 flex items-center gap-3 transition-colors ${className}`}>
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
+        variant === "brand"
+          ? "bg-violet-50 border-violet-100 text-violet-600"
+          : "bg-paper border-ink/10 text-ink/40"
       }`}>
         <Icon size={18} />
       </div>
       <div>
-        <p className={`text-[10px] font-bold   ${
-          variant === "brand" ? "text-brand-600" : "text-slate-400"
+        <p className={`gs-label text-[10px] ${
+          variant === "brand" ? "text-violet-700" : "text-muted"
         }`}>
           {label}
         </p>
-        <p className="text-lg font-bold text-slate-800 leading-none mt-0.5">
+        <p className="gs-display text-[22px] font-extrabold text-ink mt-1">
           {value}
         </p>
       </div>

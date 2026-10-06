@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import fs from 'fs'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiTarget = env.API_PROXY_TARGET || 'http://localhost:3000'
+
+  return {
   plugins: [
     tailwindcss(),
     react(),
@@ -12,8 +16,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: apiTarget,
         changeOrigin: true,
+        secure: true,
       }
     }
   },
@@ -25,6 +30,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            // Only used by the CMS import modal (dynamic import) — keep out of the shared vendor chunk
+            if (id.includes('/xlsx/')) {
+              return 'vendor-xlsx';
+            }
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
               return 'vendor-react';
             }
@@ -44,4 +53,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'framer-motion', 'lucide-react'],
   },
+  }
 })

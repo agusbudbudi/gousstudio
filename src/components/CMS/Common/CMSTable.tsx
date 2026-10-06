@@ -6,7 +6,7 @@ interface CMSTableProps {
 }
 
 export const CMSTableContainer: React.FC<CMSTableProps> = ({ children, className = "" }) => (
-  <div className={`bg-white border border-slate-200 rounded-xl overflow-x-auto custom-scrollbar ${className}`}>
+  <div className={`bg-white border border-ink/10 rounded-[16px] overflow-x-auto custom-scrollbar ${className}`}>
     <table className="w-full text-sm min-w-[800px]">
       {children}
     </table>
@@ -15,7 +15,7 @@ export const CMSTableContainer: React.FC<CMSTableProps> = ({ children, className
 
 export const CMSTableHeader: React.FC<CMSTableProps> = ({ children, className = "" }) => (
   <thead className="sticky top-0 z-20">
-    <tr className={`border-b border-slate-100 bg-slate-50 shadow-sm ${className}`}>
+    <tr className={`border-b border-ink/10 bg-paper ${className}`}>
       {children}
     </tr>
   </thead>
@@ -28,7 +28,7 @@ export const CMSTableHeaderCell: React.FC<CMSTableProps & { width?: string; alig
   align = "left" 
 }) => (
   <th 
-    className={`px-6 py-3 text-[10px] uppercase tracking-wider font-bold text-slate-400 ${
+    className={`gs-label px-6 py-3 text-[10px] font-normal text-muted ${
       align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"
     } ${className}`}
     style={width ? { width } : undefined}
@@ -44,7 +44,7 @@ export const CMSTableRow: React.FC<CMSTableProps & { onClick?: () => void }> = (
 }) => (
   <tr 
     onClick={onClick}
-    className={`hover:bg-slate-50/60 transition-colors group ${onClick ? "cursor-pointer" : ""} ${className}`}
+    className={`hover:bg-paper/70 transition-colors group ${onClick ? "cursor-pointer" : ""} ${className}`}
   >
     {children}
   </tr>

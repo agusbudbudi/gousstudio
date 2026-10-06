@@ -150,11 +150,8 @@ export function useTestimonials() {
     error,
     createTestimonial: createMutation.mutateAsync,
     updateTestimonial: updateMutation.mutateAsync,
-    deleteTestimonial: (id: string) => {
-      if (window.confirm("Hapus testimonial ini?")) {
-        return deleteMutation.mutateAsync(id);
-      }
-    },
+    // Callers confirm with the user first (TestimonialCMS uses useConfirm)
+    deleteTestimonial: deleteMutation.mutateAsync,
     reorderTestimonials: reorderMutation.mutateAsync,
     uploadAvatar,
     isSaving: createMutation.isPending || updateMutation.isPending || reorderMutation.isPending,

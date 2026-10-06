@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   const { action } = req.query;
-  const { CMS_PASSWORD, VITE_CMS_PASSWORD } = process.env;
-  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+  const { CMS_PASSWORD } = process.env;
+  const effectivePassword = CMS_PASSWORD;
   const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 
   // Helper to extract token

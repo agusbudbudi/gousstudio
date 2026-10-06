@@ -1,5 +1,7 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Filter, Plus, LayoutList, Columns, Clock } from "lucide-react";
+import { EASE } from "../../landing/primitives";
 import CMSSelect from "../Common/CMSSelect";
 import CMSSearchBar from "../Common/CMSSearchBar";
 import CMSButton from "../Common/CMSButton";
@@ -12,6 +14,12 @@ const STATUSES: string[] = [
   "REVISION",
   "DONE",
 ];
+
+const VIEW_MODES = [
+  { id: "LIST", label: "List", icon: LayoutList },
+  { id: "KANBAN", label: "Kanban", icon: Columns },
+  { id: "TIMELINE", label: "Timeline", icon: Clock },
+] as const;
 
 interface OrderFiltersProps {
   statusFilter: string;
@@ -58,43 +66,37 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
         />
       </div>
 
-      <div className="h-10 bg-slate-100 dark:bg-white/5 p-1 rounded-lg flex items-center gap-1 border border-slate-200 dark:border-white/10 shrink-0">
-        <button
-          onClick={() => setViewMode("LIST")}
-          className={`p-1.5 px-3 rounded-md flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-            viewMode === "LIST"
-              ? "bg-white dark:bg-white/10 text-brand-500 shadow-sm"
-              : "text-slate-400 hover:text-slate-600 dark:hover:!text-white"
-          }`}
-          title="List View"
-        >
-          <LayoutList size={14} />
-          <span className="hidden lg:block">List</span>
-        </button>
-        <button
-          onClick={() => setViewMode("KANBAN")}
-          className={`p-1.5 px-3 rounded-md flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-            viewMode === "KANBAN"
-              ? "bg-white dark:bg-white/10 text-brand-500 shadow-sm"
-              : "text-slate-400 hover:text-slate-600 dark:hover:!text-white"
-          }`}
-          title="Kanban View"
-        >
-          <Columns size={14} />
-          <span className="hidden lg:block">Kanban</span>
-        </button>
-        <button
-          onClick={() => setViewMode("TIMELINE")}
-          className={`p-1.5 px-3 rounded-md flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-            viewMode === "TIMELINE"
-              ? "bg-white dark:bg-white/10 text-brand-500 shadow-sm"
-              : "text-slate-400 hover:text-slate-600 dark:hover:!text-white"
-          }`}
-          title="Timeline View"
-        >
-          <Clock size={14} />
-          <span className="hidden lg:block">Timeline</span>
-        </button>
+      <div
+        role="tablist"
+        aria-label="Tampilan order"
+        className="flex h-10 shrink-0 items-center gap-1 rounded-full border border-ink/10 bg-white p-1"
+      >
+        {VIEW_MODES.map(({ id, label, icon: Icon }) => {
+          const active = viewMode === id;
+          return (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setViewMode(id)}
+              aria-label={`${label} View`}
+              title={`${label} View`}
+              className={`relative flex h-full items-center gap-2 rounded-full px-3 text-sm font-semibold transition-colors duration-200 ${
+                active ? "text-paper" : "text-muted hover:text-ink"
+              }`}
+            >
+              {active && (
+                <motion.span
+                  layoutId="order-view-pill"
+                  transition={{ duration: 0.35, ease: EASE }}
+                  className="absolute inset-0 rounded-full bg-ink"
+                />
+              )}
+              <Icon size={14} className="relative" />
+              <span className="relative hidden lg:block">{label}</span>
+            </button>
+          );
+        })}
       </div>
 
       <CMSButton onClick={onAdd} icon={Plus} className="shrink-0 ms-auto">

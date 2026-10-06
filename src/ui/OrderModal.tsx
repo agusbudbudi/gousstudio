@@ -1,256 +1,152 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import {
-  X,
-  Send,
-  Calendar,
-  MessageSquare,
-  User,
-  Phone,
-  ChevronDown,
-  CheckCircle2,
-  ExternalLink,
-  Tag,
-} from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Check, Loader2, X } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import CMSCombobox, {
-  ComboboxOption,
-} from "../components/CMS/Common/CMSCombobox";
-import CMSInput from "../components/CMS/Common/CMSInput";
 import { useAppStore } from "../store/useAppStore";
 import { orderSchema, OrderFormData } from "../utils/formSchemas";
-import { PricelistItem, OrderItem } from "../types";
-import { supabase } from "../utils/supabase";
+import { OrderItem } from "../types";
 import { CONFIG } from "../config/constants";
+import { formatRupiah, OTHER_GROUP, usePackages } from "../components/landing/useLandingData";
+import { parsePackageName } from "../components/landing/PackageCard";
+import { WhatsAppIcon } from "../components/landing/primitives";
+import PackageCombobox, { CUSTOM_PACKAGE } from "./PackageCombobox";
+
+const CUSTOM_DURATION_DAYS = 7;
+
+const isoDateIn = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+};
+
+const briefTemplate = (serviceName: string, deliverables: string[]) =>
+  serviceName === CUSTOM_PACKAGE || deliverables.length === 0
+    ? ""
+    : `Paket: ${parsePackageName(serviceName).name}\nYang termasuk:\n- ${deliverables.join("\n- ")}\n\nCatatan tambahan:\n`;
+
+const inputClass = (hasError: boolean) =>
+  `w-full rounded-2xl border bg-[#fff] px-4 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:outline-none focus:ring-4 ${
+    hasError
+      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
+      : "border-ink/15 focus:border-violet-600 focus:ring-violet-600/10"
+  }`;
+
+const Field: React.FC<{
+  id: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}> = ({ id, label, required, error, hint, children }) => (
+  <div>
+    <label htmlFor={id} className="mb-2 block text-sm font-semibold text-ink">
+      {label}
+      {required && <span className="ml-0.5 text-violet-600">*</span>}
+    </label>
+    {children}
+    {error ? (
+      <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-rose-600">
+        {error}
+      </p>
+    ) : (
+      hint && <p className="mt-1.5 text-sm text-muted">{hint}</p>
+    )}
+  </div>
+);
 
 const OrderModal = () => {
-  const {
-    isOrderModalOpen: isOpen,
-    closeOrderModal: onClose,
-    prefillData,
-  } = useAppStore();
+  const { isOrderModalOpen: isOpen, closeOrderModal, prefillData } = useAppStore();
+  const reduce = useReducedMotion();
+  const { data: packages = [], isLoading: loadingPackages, isError: packagesError } = usePackages(isOpen);
+
   const {
     register,
     handleSubmit,
-    control,
     setValue,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
-    defaultValues: {
-      name: "",
-      whatsapp: "",
-      selected_package: "",
-      design_category: "",
-      brief: "",
-      deadline: "",
-    },
+    defaultValues: { name: "", whatsapp: "", selected_package: "", design_category: "", brief: "", deadline: "", voucher_code: "" },
   });
 
-  const selectedPackage = watch("selected_package");
-  const currentCategory = watch("design_category");
-  const currentDeadline = watch("deadline");
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<OrderItem | null>(null);
+  const [waUrl, setWaUrl] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showVoucher, setShowVoucher] = useState(false);
+  const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
-  // Reset function
-  const handleResetAndClose = () => {
-    reset();
-    setIsSubmitted(false);
+  const selectedName = watch("selected_package");
+  const selectedPkg = packages.find((p) => p.serviceName === selectedName);
+
+
+  // Prefill from the CTA that opened the modal (package card, detail page, or default custom package).
+  useEffect(() => {
+    if (!isOpen) return;
     setSubmittedOrder(null);
-    onClose();
+    setSubmitError(null);
+    setShowVoucher(false);
+    const name: string = prefillData?.serviceName || CUSTOM_PACKAGE;
+    const deliverables: string[] = Array.isArray(prefillData?.deliverables) ? prefillData.deliverables : [];
+    const duration = Number(prefillData?.duration || (name === CUSTOM_PACKAGE ? CUSTOM_DURATION_DAYS : 0));
+    reset({
+      name: "",
+      whatsapp: "",
+      selected_package: name,
+      design_category: prefillData?.category || (name === CUSTOM_PACKAGE ? OTHER_GROUP.title : ""),
+      brief: briefTemplate(name, deliverables),
+      deadline: duration > 0 ? isoDateIn(duration) : "",
+      voucher_code: "",
+    });
+    const t = window.setTimeout(() => firstFieldRef.current?.focus(), 250);
+    return () => window.clearTimeout(t);
+  }, [isOpen, prefillData, reset]);
+
+  const choosePackage = (value: string) => {
+    const pkg = packages.find((p) => p.serviceName === value);
+    setValue("selected_package", value, { shouldValidate: true, shouldDirty: true });
+    setValue("design_category", pkg?.category || OTHER_GROUP.title);
+    setValue("deadline", isoDateIn(pkg?.duration || CUSTOM_DURATION_DAYS), { shouldValidate: true });
+    if (pkg) setValue("brief", briefTemplate(pkg.serviceName, pkg.deliverables));
   };
 
-  const [pricelistOptions, setPricelistOptions] = useState<PricelistItem[]>([]);
-  const [loadingPricelists, setLoadingPricelists] = useState(false);
-  const [pricelistsError, setPricelistsError] = useState<string | null>(null);
+  const close = () => {
+    reset();
+    setSubmittedOrder(null);
+    closeOrderModal();
+  };
 
-  // Fetch pricelists to build "Kebutuhan Desain" dropdown.
+  // Esc to close (same rule as the backdrop: not while the form has unsaved input)
+  // + lock page scroll while open.
+  const canDismissRef = useRef(true);
+  canDismissRef.current = !isDirty || !!submittedOrder;
   useEffect(() => {
     if (!isOpen) return;
-
-    // Always start with form (reset if coming from a previous success state)
-    setIsSubmitted(false);
-    setSubmittedOrder(null);
-
-    let cancelled = false;
-    const fetchPricelists = async () => {
-      try {
-        setLoadingPricelists(true);
-        setPricelistsError(null);
-        const { data, error } = await supabase
-          .from("pricelists")
-          .select("*")
-          .order("order_index", { ascending: true });
-
-        if (error) throw error;
-
-        if (cancelled) return;
-        setPricelistOptions((data as PricelistItem[]) || []);
-      } catch (err: any) {
-        if (!cancelled)
-          setPricelistsError(err?.message || "Failed to load pricelists");
-      } finally {
-        if (!cancelled) setLoadingPricelists(false);
-      }
-    };
-
-    fetchPricelists();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && canDismissRef.current && close();
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      cancelled = true;
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Prefill effect
-  useEffect(() => {
-    if (isOpen && prefillData) {
-      const deliverables = Array.isArray(prefillData.deliverables)
-        ? prefillData.deliverables
-        : [];
-
-      const briefText = `Package: ${
-        prefillData.serviceName
-      }\nDeliverables:\n- ${deliverables.join("\n- ")}`;
-
-      // Calculate auto-deadline
-      let deadlineStr = "";
-      if (prefillData.duration) {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + prefillData.duration);
-        deadlineStr = targetDate.toISOString().split("T")[0]; // YYYY-MM-DD
-      }
-
-      setValue("selected_package", prefillData.serviceName || selectedPackage);
-      setValue("design_category", prefillData.category || currentCategory);
-      setValue("brief", briefText || watch("brief"));
-      setValue("deadline", deadlineStr || currentDeadline);
-    }
-  }, [isOpen, prefillData, setValue]);
-
-  // When `selected_package` is set by a CTA (including default "Custom Package"),
-  // fill derived fields (category + deadline) from the matching pricelist record.
-  useEffect(() => {
-    if (!isOpen) return;
-    if (!pricelistOptions.length) return;
-    if (!selectedPackage) return;
-
-    const selectedRow = pricelistOptions.find(
-      (p) => p.servicename === selectedPackage,
-    );
-
-    // Fallback for Custom Package if not found in database yet
-    if (!selectedRow && selectedPackage === "Custom Package") {
-      const defaultCategory = "Other";
-      const defaultDeadline = !currentDeadline
-        ? (() => {
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + 7); // Default 7 days for custom
-            return targetDate.toISOString().split("T")[0];
-          })()
-        : currentDeadline;
-
-      if (
-        currentCategory === defaultCategory &&
-        currentDeadline === defaultDeadline
-      )
-        return;
-
-      setValue("design_category", currentCategory || defaultCategory);
-      setValue("deadline", defaultDeadline);
-      return;
-    }
-
-    if (!selectedRow) return;
-
-    const durationDays = Number(selectedRow.duration ?? 0);
-
-    const autoDeadline =
-      !currentDeadline && durationDays > 0
-        ? (() => {
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + durationDays);
-            return targetDate.toISOString().split("T")[0];
-          })()
-        : currentDeadline;
-
-    const shouldAutoCategory = !currentCategory || currentCategory === "Other";
-    const autoDesignCategory =
-      shouldAutoCategory && selectedRow.category
-        ? selectedRow.category
-        : currentCategory;
-
-    if (autoDeadline !== currentDeadline) {
-      setValue("deadline", autoDeadline);
-    }
-    if (autoDesignCategory !== currentCategory) {
-      setValue("design_category", autoDesignCategory);
-    }
-  }, [
-    isOpen,
-    pricelistOptions,
-    selectedPackage,
-    currentCategory,
-    currentDeadline,
-    setValue,
-  ]);
-
-  // Handle ESC key to close
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleResetAndClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [onClose]);
-
-  // Prepare options for Combobox
-  const comboboxOptions: ComboboxOption[] = [
-    ...(!pricelistOptions.some((p) => p.servicename === "Custom Package")
-      ? [
-          {
-            label: "Custom Package",
-            value: "Custom Package",
-            description: "Project desain kustom sesuai kebutuhan Anda",
-          },
-        ]
-      : []),
-    ...pricelistOptions.map((p) => ({
-      label: p.servicename || "No Name",
-      value: p.servicename || "No Value",
-      description: p.category || "",
-      rightElement: (
-        <span className="text-[10px] font-black text-brand-500/80 bg-brand-500/5 px-2 py-0.5 rounded border border-brand-500/10">
-          {p.duration} Hari
-        </span>
-      ),
-    })),
-  ];
-
-  if (!isOpen) return null;
-
   const onSubmit = async (data: OrderFormData) => {
+    setSubmitError(null);
     try {
-      // First, save to database
       const response = await fetch("/api/orders?action=create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderData: data,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderData: data }),
       });
+      if (!response.ok) throw new Error("Failed to save order");
+      const { order } = await response.json();
 
-      if (!response.ok) {
-        throw new Error("Failed to save order");
-      }
-
-      const result = await response.json();
-      const savedOrder = result.order;
-
-      // Then send WhatsApp message
       const message = `Halo Gous Studio, saya ingin order desain!
 
 *Nama:* ${data.name}
@@ -258,281 +154,255 @@ const OrderModal = () => {
 *Kebutuhan:* ${data.selected_package}
 *Detail Brief:* ${data.brief}
 *Deadline:* ${data.deadline}
-*Order Number:* ${savedOrder.order_number}`;
-
-      const waUrl = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, "_blank");
-
-      // Set Success State instead of closing
-      setSubmittedOrder(savedOrder);
-      setIsSubmitted(true);
-    } catch (error: any) {
+*Order Number:* ${order.order_number}`;
+      const url = `https://wa.me/${CONFIG.WA_NUMBER}?text=${encodeURIComponent(message)}`;
+      setWaUrl(url);
+      window.open(url, "_blank");
+      setSubmittedOrder(order);
+    } catch (error) {
       console.error("Error submitting order:", error);
-      alert("Terjadi kesalahan saat menyimpan order. Silakan coba lagi.");
+      setSubmitError("Order belum tersimpan karena koneksi bermasalah. Coba kirim lagi, atau chat kami langsung via WhatsApp.");
     }
   };
 
+  const whatsappField = register("whatsapp");
+  const voucherField = register("voucher_code");
+  const nameField = register("name");
+  const display = selectedPkg ? parsePackageName(selectedPkg.serviceName).name : selectedName;
+
   return (
-    <div className="fixed inset-0 z-[100] flex md:items-center md:justify-center items-end p-0 md:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div
-        className="neon-border border-white/10 w-full md:max-w-lg rounded-t-2xl md:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn relative flex flex-col max-h-[80vh] md:max-h-[90vh]"
-        style={{ backgroundColor: "var(--color-card)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Bottom Sheet Drag Handle (Mobile Only) */}
-        <div className="md:hidden flex justify-center pt-2 pb-2">
-          <div className="w-12 h-1 rounded-full bg-white/20"></div>
-        </div>
-
-        <div
-          className="px-4 py-4 md:px-6 md:py-4 pt-0 border-b border-white/10 flex items-center justify-between"
-          style={{ backgroundColor: "var(--color-glass-bg)" }}
-        >
-          <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">
-              {isSubmitted ? "Pesanan Diterima!" : "Form Order Desain"}
-            </h3>
-            <p className="text-slate-500 text-sm mt-1">
-              {isSubmitted
-                ? "Terima kasih telah memilih Gous Studio"
-                : "Lengkapi detail project Anda"}
-            </p>
-          </div>
-          <button
-            onClick={handleResetAndClose}
-            aria-label="Close Modal"
-            className="p-3 rounded-2xl hover:bg-white/10 text-slate-400 hover:text-white transition-all border border-transparent hover:border-white/10 cursor-pointer"
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[110] flex justify-end">
+          <motion.div
+            aria-hidden
+            className={`absolute inset-0 bg-ink/55 backdrop-blur-sm ${!isDirty || submittedOrder ? "cursor-pointer" : ""}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => (!isDirty || submittedOrder ? close() : undefined)}
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-modal-title"
+            initial={reduce ? { opacity: 0 } : { x: "100%" }}
+            animate={reduce ? { opacity: 1 } : { x: 0 }}
+            exit={reduce ? { opacity: 0 } : { x: "100%" }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="gs gs-white relative flex h-[100dvh] w-full flex-col overflow-hidden shadow-[-30px_0_80px_-20px_rgba(11,10,18,0.45)] sm:max-w-[560px] sm:border-l sm:border-ink/10"
           >
-            <X size={24} />
-          </button>
-        </div>
 
-        {isSubmitted ? (
-          <div className="flex-1 p-6 flex flex-col items-center justify-center text-center animate-fadeIn scroll-smooth overflow-y-auto">
-            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 neon-glow shadow-emerald-500/20 shadow-lg border border-emerald-500/20">
-              <CheckCircle2 size={40} className="text-emerald-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Order Berhasil Dibuat!
-            </h3>
-            <p className="text-slate-400 text-sm mb-8 max-w-[320px] leading-relaxed">
-              Pesanan Anda telah tercatat dalam sistem kami. WhatsApp konfirmasi
-              juga telah dibuka di tab baru.
-            </p>
-
-            <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 text-left backdrop-blur-md">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">
-                    Order ID
-                  </span>
-                  <span className="text-brand-400 font-mono font-bold text-lg">
-                    #{submittedOrder?.order_number}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">
-                    Status
-                  </span>
-                  <span className="text-emerald-500 font-bold text-[12px] px-3 py-1 bg-emerald-500/10 rounded-md border border-emerald-500/20">
-                    DIKIRIM
-                  </span>
-                </div>
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-ink/10 px-6 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] md:px-8 md:pt-7">
+              <div>
+                <p className="gs-label text-violet-600">{submittedOrder ? "Order diterima" : "Form order"}</p>
+                <h2 id="order-modal-title" className="gs-display mt-2 text-[32px] font-extrabold text-ink">
+                  {submittedOrder ? "Terima kasih." : "Ceritakan project-mu."}
+                </h2>
               </div>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Tutup form order"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:border-ink/40 hover:bg-ink/[0.04]"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-              <div className="pt-6 border-t border-white/10">
-                <p className="text-xs text-slate-400 mb-4 font-medium italic">
-                  Gunakan link di bawah ini untuk memantau progres desain Anda
-                  secara real-time:
+            {submittedOrder ? (
+              <div className="flex-1 overflow-y-auto px-6 py-7 md:px-8">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-[#fff]">
+                  <Check size={28} strokeWidth={2.5} />
+                </div>
+                <p className="mt-5 max-w-[42ch] leading-relaxed text-ink/80">
+                  Order kamu sudah tercatat. WhatsApp konfirmasi dibuka di tab baru — kirim pesannya supaya kami bisa
+                  langsung mulai.
                 </p>
-                <a
-                  href={`/order/${submittedOrder?.order_number}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2.5 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs transition-all border border-white/5 hover:border-white/20 group w-full"
-                >
-                  <ExternalLink
-                    size={14}
-                    className="group-hover:scale-110 transition-transform"
-                  />
-                  <span>Lacak Pesanan Saya</span>
-                </a>
-              </div>
-            </div>
 
-            <button
-              onClick={handleResetAndClose}
-              className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-xl shadow-brand-500/20 active:scale-[0.98] text-sm cursor-pointer"
-            >
-              Selesai & Tutup
-            </button>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex-1 flex flex-col overflow-hidden"
-          >
-            <div className="flex-1 px-4 py-4 md:p-6 overflow-y-auto">
-              <div className="space-y-4 md:space-y-6">
-                {/* Nama */}
-                <CMSInput
-                  label="Nama Lengkap"
-                  required
-                  leftIcon={<User size={18} />}
-                  placeholder="Masukkan nama Anda"
-                  {...register("name")}
-                  error={errors.name?.message}
-                  variant="glass"
-                />
-
-                {/* WhatsApp */}
-                <CMSInput
-                  label="Nomor WhatsApp"
-                  required
-                  leftIcon={<Phone size={18} />}
-                  type="tel"
-                  placeholder="Contoh: 08123456789"
-                  {...register("whatsapp")}
-                  onChange={(
-                    e: React.ChangeEvent<
-                      HTMLInputElement | HTMLTextAreaElement
-                    >,
-                  ) => {
-                    const target = e.target as HTMLInputElement;
-                    target.value = target.value.replace(/\D/g, "");
-                    register("whatsapp").onChange(e);
-                  }}
-                  error={errors.whatsapp?.message}
-                  variant="glass"
-                />
-
-                {/* Service Dropdown */}
-                <div className="relative">
-                  <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 ml-1">
-                    Kebutuhan Desain <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative group">
-                    <Controller
-                      name="selected_package"
-                      control={control}
-                      render={({ field }) => (
-                        <CMSCombobox
-                          placeholder={
-                            loadingPricelists
-                              ? "Memuat paket..."
-                              : "Klik untuk mencari paket desain..."
-                          }
-                          leftIcon={<MessageSquare size={18} />}
-                          value={field.value}
-                          onChange={(val) => {
-                            field.onChange(val);
-                          }}
-                          onSelectOption={(opt) => {
-                            const selected = opt.value;
-                            const selectedRow = pricelistOptions.find(
-                              (p) => p.servicename === selected,
-                            );
-
-                            setValue(
-                              "design_category",
-                              selectedRow?.category ||
-                                (selected === "Custom Package"
-                                  ? "Other"
-                                  : currentCategory),
-                            );
-
-                            // auto-fill deadline only if user hasn't selected one
-                            const durationDays = Number(
-                              selectedRow?.duration ||
-                                (selected === "Custom Package" ? 7 : 0),
-                            );
-                            if (durationDays > 0) {
-                              const targetDate = new Date();
-                              targetDate.setDate(
-                                targetDate.getDate() + durationDays,
-                              );
-                              setValue(
-                                "deadline",
-                                targetDate.toISOString().split("T")[0],
-                              );
-                            }
-                          }}
-                          options={comboboxOptions}
-                          disabled={loadingPricelists}
-                          variant="glass"
-                        />
-                      )}
-                    />
+                <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-ink/10">
+                  <div className="bg-paper p-5">
+                    <dt className="gs-label text-muted">Nomor order</dt>
+                    <dd className="mt-2 font-mono text-lg font-bold text-ink">#{submittedOrder.order_number}</dd>
                   </div>
-                  {errors.selected_package && (
-                    <p className="text-rose-400 text-xs mt-1 ml-1 font-medium">
-                      {errors.selected_package.message}
+                  <div className="bg-paper p-5">
+                    <dt className="gs-label text-muted">Paket</dt>
+                    <dd className="mt-2 line-clamp-2 font-semibold text-ink">{display}</dd>
+                  </div>
+                </dl>
+
+                <div className="mt-6 flex flex-col gap-2">
+                  <a
+                    href={`/order/${submittedOrder.order_number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink font-semibold text-paper transition-colors hover:bg-ink-700"
+                  >
+                    Lacak pesanan <ArrowUpRight size={18} />
+                  </a>
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-ink/15 font-semibold text-ink transition-colors hover:border-ink/40"
+                  >
+                    <WhatsAppIcon className="h-5 w-5 text-green-600" /> WhatsApp belum terbuka? Buka lagi
+                  </a>
+                  <button type="button" onClick={close} className="h-11 text-sm font-semibold text-muted hover:text-ink">
+                    Selesai
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex min-h-0 flex-1 flex-col">
+                <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6 md:px-8">
+                  {/* Package */}
+                  <div>
+                    <label htmlFor="order-package" className="mb-2 block text-sm font-semibold text-ink">
+                      Kebutuhan desain<span className="ml-0.5 text-violet-600">*</span>
+                    </label>
+                    <PackageCombobox
+                      id="order-package"
+                      packages={packages}
+                      value={selectedName}
+                      onSelect={choosePackage}
+                      loading={loadingPackages}
+                      invalid={Boolean(errors.selected_package)}
+                      describedBy={errors.selected_package ? "order-package-error" : undefined}
+                    />
+                    {errors.selected_package && (
+                      <p id="order-package-error" role="alert" className="mt-1.5 text-sm text-rose-600">
+                        {errors.selected_package.message}
+                      </p>
+                    )}
+                    {packagesError && (
+                      <p className="mt-1.5 text-sm text-muted">
+                        Daftar paket gagal dimuat — pilih Custom Package dan jelaskan kebutuhanmu di brief.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field id="order-name" label="Nama lengkap" required error={errors.name?.message}>
+                      <input
+                        id="order-name"
+                        autoComplete="name"
+                        placeholder="Nama kamu"
+                        aria-invalid={Boolean(errors.name)}
+                        aria-describedby={errors.name ? "order-name-error" : undefined}
+                        className={`${inputClass(Boolean(errors.name))} h-12`}
+                        {...nameField}
+                        ref={(el) => {
+                          nameField.ref(el);
+                          firstFieldRef.current = el;
+                        }}
+                      />
+                    </Field>
+                    <Field id="order-wa" label="Nomor WhatsApp" required error={errors.whatsapp?.message}>
+                      <input
+                        id="order-wa"
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        placeholder="08123456789"
+                        aria-invalid={Boolean(errors.whatsapp)}
+                        aria-describedby={errors.whatsapp ? "order-wa-error" : undefined}
+                        className={`${inputClass(Boolean(errors.whatsapp))} h-12`}
+                        {...whatsappField}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/\D/g, "");
+                          whatsappField.onChange(e);
+                        }}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field
+                    id="order-brief"
+                    label="Detail brief"
+                    required
+                    error={errors.brief?.message}
+                    hint="Ceritakan bisnismu, gaya yang kamu suka, warna, dan referensi (boleh link)."
+                  >
+                    <textarea
+                      id="order-brief"
+                      rows={5}
+                      placeholder="Contoh: Saya butuh logo untuk kedai kopi di Bekasi, gaya minimalis hangat, warna cokelat & krem…"
+                      aria-invalid={Boolean(errors.brief)}
+                      aria-describedby={errors.brief ? "order-brief-error" : undefined}
+                      className={`${inputClass(Boolean(errors.brief))} resize-y py-3 leading-relaxed`}
+                      {...register("brief")}
+                    />
+                  </Field>
+
+                  <Field
+                    id="order-deadline"
+                    label="Desain dibutuhkan tanggal"
+                    required
+                    error={errors.deadline?.message}
+                    hint={selectedPkg?.duration ? `Diisi otomatis sesuai durasi paket (${selectedPkg.duration} hari kerja). Boleh diubah.` : undefined}
+                  >
+                    <input
+                      id="order-deadline"
+                      type="date"
+                      min={isoDateIn(1)}
+                      aria-invalid={Boolean(errors.deadline)}
+                      className={`${inputClass(Boolean(errors.deadline))} h-12 [color-scheme:light]`}
+                      {...register("deadline")}
+                    />
+                  </Field>
+
+                  {showVoucher ? (
+                    <Field id="order-voucher" label="Kode voucher" error={errors.voucher_code?.message}>
+                      <input
+                        id="order-voucher"
+                        placeholder="REFXXXXX"
+                        autoFocus
+                        className={`${inputClass(Boolean(errors.voucher_code))} h-12 font-mono uppercase tracking-wider`}
+                        {...voucherField}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                          voucherField.onChange(e);
+                        }}
+                      />
+                    </Field>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowVoucher(true)}
+                      className="text-sm font-semibold text-violet-700 underline-offset-4 hover:underline"
+                    >
+                      + Punya kode voucher?
+                    </button>
+                  )}
+
+                  {submitError && (
+                    <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                      {submitError}
                     </p>
                   )}
                 </div>
 
-                {pricelistsError && (
-                  <p className="text-[10px] text-rose-400 font-bold">
-                    Gagal memuat daftar paket: {pricelistsError}
+                <div className="border-t border-ink/10 bg-[#fff] px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 md:px-8 md:pb-6">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-violet-600 text-base font-semibold text-[#fff] transition-[background-color,transform] hover:bg-violet-700 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70"
+                  >
+                    {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <WhatsAppIcon className="h-5 w-5" />}
+                    {isSubmitting ? "Menyimpan order…" : "Kirim order via WhatsApp"}
+                  </button>
+                  <p className="mt-2.5 text-center text-[13px] text-muted">
+                    Order tersimpan dulu, lalu WhatsApp terbuka untuk konfirmasi.
                   </p>
-                )}
-
-                {/* Brief */}
-                <CMSInput
-                  label="Detail Brief"
-                  required
-                  isTextArea
-                  rows={4}
-                  placeholder="Jelaskan kebutuhan desain Anda secara singkat..."
-                  {...register("brief")}
-                  error={errors.brief?.message}
-                  variant="glass"
-                />
-
-                {/* Deadline */}
-                <CMSInput
-                  label="Desain Harus Ready Tanggal"
-                  required
-                  leftIcon={<Calendar size={18} />}
-                  type="date"
-                  {...register("deadline")}
-                  error={errors.deadline?.message}
-                  variant="glass"
-                  className="[color-scheme:light] dark:[color-scheme:dark]"
-                />
-
-                {/* Voucher Code */}
-                <CMSInput
-                  label="Kode Voucher (Opsional)"
-                  leftIcon={<Tag size={18} />}
-                  placeholder="Contoh: REFXXXXX"
-                  {...register("voucher_code")}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                    const target = e.target as HTMLInputElement;
-                    target.value = target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-                    register("voucher_code").onChange(e);
-                  }}
-                  error={errors.voucher_code?.message}
-                  variant="glass"
-                />
-              </div>
-            </div>
-
-            {/* Fixed Footer Button */}
-            <div className="px-2 py-4 md:p-4 border-t border-white/10 bg-gradient-to-t from-[var(--color-card)] to-transparent">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 neon-glow hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:pointer-events-none"
-              >
-                <Send size={20} />{" "}
-                {isSubmitting ? "Mengirim..." : "Kirim ke WhatsApp"}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };
 

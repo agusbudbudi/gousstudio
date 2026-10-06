@@ -21,19 +21,10 @@ const CMSCard: React.FC<CMSCardProps> = ({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      whileHover={
-        hoverEffect && onClick
-          ? {
-              y: -4,
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }
-          : undefined
-      }
       onClick={onClick}
-      className={`bg-white dark:bg-white/5 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all relative overflow-hidden ${
+      className={`relative overflow-hidden rounded-[16px] border border-ink/10 bg-white transition-colors duration-200 ${
         onClick ? "cursor-pointer group" : ""
-      } ${className}`}
+      } ${hoverEffect && onClick ? "hover:border-ink/25" : ""} ${className}`}
       {...props}
     >
       {children}

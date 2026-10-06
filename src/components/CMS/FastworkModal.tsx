@@ -140,7 +140,7 @@ const FastworkModal: React.FC<FastworkModalProps> = ({
             error={errors.image?.message}
           />
           {watchImage && (
-            <div className="mt-3 w-full h-32 rounded-xl overflow-hidden border border-slate-100 bg-slate-50/50">
+            <div className="mt-3 w-full h-32 rounded-[14px] overflow-hidden border border-ink/[0.06] bg-paper/50">
               <img
                 src={watchImage}
                 alt="preview"
@@ -176,28 +176,28 @@ const FastworkModal: React.FC<FastworkModalProps> = ({
 
         {/* Toggles */}
         <div className="grid grid-cols-2 gap-4">
-          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
+          <label className="flex items-center gap-3 px-4 py-3 bg-paper border border-ink/10 rounded-[10px] cursor-pointer hover:border-violet-400 transition-all group">
             <input
               type="checkbox"
               {...register("rehire")}
-              className="w-5 h-5 accent-brand-500 rounded-lg"
+              className="w-5 h-5 accent-violet-600 rounded-[10px]"
             />
             <div>
-              <p className="text-sm font-bold text-slate-700">Rehire Rate</p>
-              <p className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
+              <p className="text-sm font-bold text-ink">Rehire Rate</p>
+              <p className="text-xs text-ink/45 font-medium leading-tight mt-0.5">
                 Klien pernah order ulang
               </p>
             </div>
           </label>
-          <label className="flex items-center gap-3 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-brand-400 transition-all group">
+          <label className="flex items-center gap-3 px-4 py-3 bg-paper border border-ink/10 rounded-[10px] cursor-pointer hover:border-violet-400 transition-all group">
             <input
               type="checkbox"
               {...register("installment")}
-              className="w-5 h-5 accent-brand-500 rounded-lg"
+              className="w-5 h-5 accent-violet-600 rounded-[10px]"
             />
             <div>
-              <p className="text-sm font-bold text-slate-700">Cicilan</p>
-              <p className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
+              <p className="text-sm font-bold text-ink">Cicilan</p>
+              <p className="text-xs text-ink/45 font-medium leading-tight mt-0.5">
                 Tersedia opsi cicilan
               </p>
             </div>

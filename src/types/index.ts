@@ -2,7 +2,10 @@ export interface PortfolioItem {
   id?: string;
   title: string;
   description: string;
-  category: string;
+  // Parent service (services.id); null when not assigned
+  service_id?: number | null;
+  // Embedded parent service, when fetched with `service:services(...)`
+  service?: { id: number; slug: string; title: string; order?: number } | null;
   tags?: string[];
   image?: string;
   imgalt?: string;
@@ -13,13 +16,13 @@ export interface PortfolioItem {
   role?: string;
   tools?: string[];
   order_index?: number;
+  // Optional "example of this package" link
   pricelist_id?: string;
 }
 
 export interface PricelistItem {
   id?: string;
   servicename: string;
-  category: string;
   description?: string;
   finalprice: number;
   retailprice?: number;
@@ -29,6 +32,10 @@ export interface PricelistItem {
   order_index?: number;
   deliverables?: string[];
   isShowToCustomer?: boolean;
+  // Parent service (services.id); null for packages without one
+  service_id?: number | null;
+  // Embedded parent service, when fetched with `service:services(...)`
+  service?: { id: number; slug: string; title: string } | null;
 }
 
 export interface OrderItem {
@@ -76,9 +83,6 @@ export interface ReferralCode {
 }
 
 export interface AppState {
-  theme: string;
-  toggleTheme: () => void;
-  setTheme: (theme: string) => void;
   isOrderModalOpen: boolean;
   prefillData: any;
   openOrderModal: (data?: any) => void;
@@ -117,6 +121,7 @@ export interface ClientItem {
   company?: string;
   notes?: string;
   photo_url?: string;
+  magic_link_token?: string;
   created_at: string;
 }
 

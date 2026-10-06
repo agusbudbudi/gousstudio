@@ -37,14 +37,15 @@ export default async function handler(req, res) {
         const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
         const orderNumber = `GS-${dateStr}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         
-        const { data: priceRow } = await supabase.from('pricelists').select('*').eq('servicename', orderData.selected_package).single();
+        // Parent service embedded: an order's design_category is the package's service title
+        const { data: priceRow } = await supabase.from('pricelists').select('*, service:services(title)').eq('servicename', orderData.selected_package).single();
         if (!priceRow) return res.status(400).json({ message: 'Package not found' });
 
         const payload = {
           order_number: orderNumber,
           full_name: orderData.name,
           phone_number: orderData.whatsapp,
-          design_category: orderData.design_category || priceRow.category,
+          design_category: orderData.design_category || priceRow.service?.title || 'Lainnya',
           selected_package: orderData.selected_package,
           brief_detail: orderData.brief,
           deadline: orderData.deadline,

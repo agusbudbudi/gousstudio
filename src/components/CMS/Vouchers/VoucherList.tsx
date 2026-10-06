@@ -61,22 +61,22 @@ const VoucherList: React.FC<VoucherListProps> = ({ referrals }) => {
         <CMSTableHeaderCell>Used On</CMSTableHeaderCell>
         <CMSTableHeaderCell align="right">Date Issued</CMSTableHeaderCell>
       </CMSTableHeader>
-      <tbody className="divide-y divide-slate-100">
+      <tbody className="divide-y divide-ink/[0.06]">
         {referrals.map((item) => (
           <CMSTableRow key={item.id}>
             <CMSTableCell>
               <div className="flex items-center gap-3">
-                <span className="font-mono font-bold text-brand-600 bg-brand-50/50 px-3 py-1.5 rounded-lg border border-brand-100 text-sm">
+                <span className="font-mono font-bold text-violet-700 bg-violet-50/50 px-3 py-1.5 rounded-[10px] border border-violet-100 text-sm">
                   {item.code}
                 </span>
                 <button
                   onClick={() => copyToClipboard(item.code, item.id)}
-                  className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                  className={`p-1.5 rounded-[10px] border transition-all cursor-pointer ${
                     copiedId === item.id
                       ? "bg-emerald-50 border-emerald-500/50 text-emerald-600"
-                      : "bg-white border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-500/50"
+                      : "bg-white border-ink/10 text-ink/45 hover:text-violet-700 hover:border-violet-600/50"
                   }`}
-                  title="Salin Kode"
+                  aria-label="Salin Kode" title="Salin Kode"
                 >
                   {copiedId === item.id ? <Check size={12} /> : <Copy size={12} />}
                 </button>
@@ -86,19 +86,19 @@ const VoucherList: React.FC<VoucherListProps> = ({ referrals }) => {
             <CMSTableCell>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-slate-900 font-bold text-sm tracking-tight">
+                  <span className="text-ink font-bold text-sm tracking-tight">
                     {item.orders?.full_name || "N/A"}
                   </span>
                   <a
                     href={`/cms/orders/${item.orders?.order_number}`}
-                    className="text-brand-500 hover:scale-110 transition-all p-1 hover:bg-brand-50 rounded-md"
-                    title="Lihat Detail Order"
+                    className="text-ink/45 hover:text-ink transition-colors p-1.5 hover:bg-ink/[0.05] rounded-full"
+                    aria-label="Lihat Detail Order" title="Lihat Detail Order"
                   >
                     <ExternalLink size={12} />
                   </a>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold">
-                  <span className="bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                <div className="flex items-center gap-1.5 text-ink/45 text-[10px] font-bold">
+                  <span className="gs-label text-[10px] bg-paper border border-ink/10 px-2 py-0.5 rounded-full">
                     #{item.orders?.order_number || "ORDER-ERR"}
                   </span>
                 </div>
@@ -106,18 +106,18 @@ const VoucherList: React.FC<VoucherListProps> = ({ referrals }) => {
             </CMSTableCell>
             
             <CMSTableCell>
-              <span className="text-emerald-600 font-black text-xs uppercase tracking-tight">
+              <span className="text-emerald-700 font-bold text-xs">
                 {item.discount_value}% OFF
               </span>
             </CMSTableCell>
             
             <CMSTableCell>
               {item.is_used ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest uppercase bg-slate-100 text-slate-500 border border-slate-200">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full gs-label text-[10px] bg-paper text-muted border border-ink/10">
                   USED
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest uppercase bg-emerald-50 text-emerald-600 border border-emerald-500/30">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full gs-label text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-500/30">
                   ACTIVE
                 </span>
               )}
@@ -126,28 +126,28 @@ const VoucherList: React.FC<VoucherListProps> = ({ referrals }) => {
             <CMSTableCell>
               {item.is_used && item.used_on_order ? (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-900 font-bold text-[11px]">
+                  <span className="text-ink font-bold text-[11px]">
                     #{item.used_on_order}
                   </span>
                   <a
                     href={`/cms/orders/${item.used_on_order}`}
-                    className="text-brand-500 hover:scale-110 transition-all p-1 hover:bg-brand-50 rounded-md"
-                    title="Lihat Order Pengguna"
+                    className="text-ink/45 hover:text-ink transition-colors p-1.5 hover:bg-ink/[0.05] rounded-full"
+                    aria-label="Lihat Order Pengguna" title="Lihat Order Pengguna"
                   >
                     <ExternalLink size={10} />
                   </a>
                 </div>
               ) : (
-                <span className="text-slate-300 text-[10px] uppercase font-bold tracking-wider">-</span>
+                <span className="text-ink/30 text-xs">-</span>
               )}
             </CMSTableCell>
             
             <CMSTableCell align="right">
               <div className="flex flex-col items-end">
-                <span className="text-slate-900 text-[11px] font-bold leading-none mb-1">
+                <span className="text-ink text-[11px] font-bold leading-none mb-1">
                   {formatDate(item.created_at)}
                 </span>
-                <span className="text-slate-400 text-[10px] font-medium leading-none">
+                <span className="text-ink/45 text-[10px] font-medium leading-none">
                   {formatTime(item.created_at)}
                 </span>
               </div>

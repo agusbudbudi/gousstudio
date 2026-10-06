@@ -46,40 +46,40 @@ const KanbanCard = ({
   return (
     <CMSCard
       onClick={() => onSelect(order.order_number)}
-      className="p-3 border border-slate-100 dark:border-white/10 hover:!border-brand-200 transition-all"
+      className="p-3.5 hover:!border-ink/25"
       hoverEffect={false}
     >
       <div className="flex items-start justify-between mb-4">
         <CMSBadge
           variant="brand"
-          className="text-[10px] !rounded-lg border border-brand-100/50 !rounded-sm"
+          className="!text-[10px]"
         >
           #{order.order_number}
         </CMSBadge>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <MoreHorizontal size={14} className="text-slate-400" />
+          <MoreHorizontal size={14} className="text-ink/45" />
         </div>
       </div>
 
       <div className="space-y-4 mb-3">
-        <div className="text-[13px] !font-black !text-slate-900 dark:!text-slate-100 truncate">
+        <div className="truncate text-sm font-semibold text-ink">
           {order.selected_package}
         </div>
 
         {order.brief_detail && (
-          <div className="text-[11px] !text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed -mt-2.5 mb-2">
+          <div className="text-[11px] !text-muted line-clamp-2 leading-relaxed -mt-2.5 mb-2">
             {order.brief_detail}
           </div>
         )}
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400 font-bold text-[11px] truncate pl-0.5">
-            <User size={14} className="text-slate-400/80" />
+          <div className="flex items-center gap-2.5 text-muted font-medium text-xs truncate pl-0.5">
+            <User size={14} className="text-ink/[0.36]" />
             {order.full_name}
           </div>
           {order.deadline && (
-            <div className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400 font-bold text-[10px] pl-0.5">
-              <Calendar size={14} className="text-brand-500/80" />
+            <div className="flex items-center gap-2.5 text-muted font-medium text-xs pl-0.5">
+              <Calendar size={14} className="text-violet-600" />
               {new Date(order.deadline).toLocaleDateString("id-ID", {
                 day: "numeric",
                 month: "short",
@@ -90,11 +90,11 @@ const KanbanCard = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-white/5">
+      <div className="flex items-center justify-between pt-3 border-t border-ink/[0.04]">
         <CMSBadge
           variant="status"
           status="DONE"
-          className="!text-[10px] !font-black !py-1 !px-2 border border-emerald-100/50"
+          className="!text-[11px] !py-1 !px-2.5"
         >
           {Number(order.final_price || 0) === 0
             ? "GRATIS"
@@ -109,9 +109,9 @@ const KanbanCard = ({
               onMove(order.id, nextStatus);
             }}
             loading={loading}
-            className="!p-0 !h-auto !text-slate-400 hover:!text-brand-500 hover:!bg-transparent group/btn transition-all"
+            className="!p-0 !h-auto !text-ink/45 hover:!text-violet-700 hover:!bg-transparent group/btn"
           >
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+            <div className="gs-label flex items-center gap-1.5 text-[10px]">
               {loading ? "..." : "Next Step"}
               <ChevronRight
                 size={12}
@@ -151,20 +151,18 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({
           return (
             <div
               key={status}
-              className="w-80 flex flex-col h-full bg-white/50 dark:bg-white/5 rounded-xl relative overflow-hidden"
+              className="relative flex h-full w-80 flex-col overflow-hidden rounded-[16px] border border-ink/10 bg-paper-200/40"
             >
-              <div className="p-4 border-b !border-slate-100 dark:border-white/10 flex items-center justify-between bg-white dark:bg-white/5 relative z-10">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-[10px] font-bold !text-black">
-                    {status}
-                  </h3>
-                  <div className="bg-brand-50/70 !text-brand-700 text-[10px] font-bold px-1 py-0.5 rounded-md border border-brand-500/30 min-w-[18px] h-[18px] flex items-center justify-center">
+              <div className="relative z-10 flex items-center justify-between border-b border-ink/10 bg-white px-4 py-3.5">
+                <div className="flex items-center gap-2.5">
+                  <h3 className="gs-label text-[10px] text-ink">{status}</h3>
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1.5 text-[10px] font-semibold text-paper">
                     {columnOrders.length}
-                  </div>
+                  </span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 custom-scrollbar min-h-[600px] bg-transparent dark:bg-transparent">
+              <div className="flex-1 overflow-y-auto p-3 custom-scrollbar min-h-[600px] bg-transparent">
                 {columnOrders.length > 0 ? (
                   <AnimatePresence mode="popLayout">
                     <div className="space-y-3">
@@ -180,8 +178,8 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({
                     </div>
                   </AnimatePresence>
                 ) : (
-                  <div className="h-24 flex items-center justify-center border-1 border-dashed border-slate-200 dark:border-white/10 rounded-lg">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400/80">
+                  <div className="flex h-24 items-center justify-center rounded-[12px] border border-dashed border-ink/15">
+                    <span className="gs-label text-[10px] text-ink/35">
                       Section Kosong
                     </span>
                   </div>

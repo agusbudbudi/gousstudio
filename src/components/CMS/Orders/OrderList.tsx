@@ -64,23 +64,23 @@ const OrderList: React.FC<OrderListProps> = ({
         <CMSTableHeader>
           <CMSTableHeaderCell>Order ID & Tanggal</CMSTableHeaderCell>
           <CMSTableHeaderCell>Pelanggan</CMSTableHeaderCell>
-          <CMSTableHeaderCell>Paket / Kategori</CMSTableHeaderCell>
+          <CMSTableHeaderCell>Paket / Layanan</CMSTableHeaderCell>
           <CMSTableHeaderCell align="right">Final Price</CMSTableHeaderCell>
           <CMSTableHeaderCell className="hidden md:table-cell">Deadline</CMSTableHeaderCell>
           <CMSTableHeaderCell>Status</CMSTableHeaderCell>
           <CMSTableHeaderCell />
         </CMSTableHeader>
-        <tbody className="divide-y divide-slate-50">
+        <tbody className="divide-y divide-ink/[0.04]">
           {paginatedOrders.map((order) => (
             <CMSTableRow key={order.id}>
               <CMSTableCell>
                 <button
                   onClick={() => onSelectOrder(order.order_number)}
-                  className="font-bold text-brand-500 hover:text-brand-600 hover:underline transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                  className="flex items-center gap-1 whitespace-nowrap font-semibold text-violet-700 underline-offset-2 transition-colors hover:text-violet-900 hover:underline"
                 >
                   #{order.order_number}
                 </button>
-                <div className="text-[10px] text-slate-500 mt-1 whitespace-nowrap">
+                <div className="text-[10px] text-muted mt-1 whitespace-nowrap">
                   {new Date(order.created_at).toLocaleDateString("id-ID", {
                     day: "2-digit",
                     month: "short",
@@ -92,27 +92,27 @@ const OrderList: React.FC<OrderListProps> = ({
               </CMSTableCell>
               <CMSTableCell>
                 <div className="flex items-center gap-2">
-                  <div className="font-bold text-slate-700 text-sm">
+                  <div className="font-bold text-ink text-sm">
                     {order.full_name}
                   </div>
                   {order.payment_proof_url && (
                     <div
-                      className="px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[8px] font-bold flex items-center gap-1"
+                      className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700"
                       title="Bukti Bayar Tersedia"
                     >
                       <ImageIcon size={8} /> BUKTI
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-slate-600 mt-0.5 font-medium">
+                <div className="text-xs text-ink/70 mt-0.5 font-medium">
                   {order.phone_number}
                 </div>
               </CMSTableCell>
               <CMSTableCell>
-                <div className="font-bold text-slate-700 text-xs">
+                <div className="font-bold text-ink text-xs">
                   {order.selected_package}
                 </div>
-                <div className="text-[10px] text-brand-500 font-bold mt-0.5">
+                <div className="text-[10px] text-violet-600 font-bold mt-0.5">
                   {order.design_category}
                 </div>
               </CMSTableCell>
@@ -125,12 +125,12 @@ const OrderList: React.FC<OrderListProps> = ({
               </CMSTableCell>
               <CMSTableCell className="hidden md:table-cell">
                 {order.deadline ? (
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                    <Calendar size={12} className="text-slate-500" />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                    <Calendar size={12} className="text-muted" />
                     {new Date(order.deadline).toLocaleDateString("id-ID")}
                   </div>
                 ) : (
-                  <span className="text-slate-300">—</span>
+                  <span className="text-ink/30">—</span>
                 )}
               </CMSTableCell>
               <CMSTableCell>
@@ -145,7 +145,7 @@ const OrderList: React.FC<OrderListProps> = ({
                   loading={updatingId === order.id}
                   icon={Trash2}
                   iconSize={14}
-                  title="Hapus Order"
+                  aria-label="Hapus Order" title="Hapus Order"
                 />
               </CMSTableCell>
             </CMSTableRow>
@@ -155,19 +155,19 @@ const OrderList: React.FC<OrderListProps> = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex-shrink-0 mt-4 rounded-xl">
+        <div className="flex-shrink-0 mt-4 rounded-[14px]">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs font-medium text-slate-600 text-center sm:text-left">
+            <div className="text-xs font-medium text-ink/70 text-center sm:text-left">
               Menampilkan{" "}
-              <span className="font-bold text-slate-700">
+              <span className="font-bold text-ink">
                 {(currentPage - 1) * itemsPerPage + 1}
               </span>{" "}
               -{" "}
-              <span className="font-bold text-slate-700">
+              <span className="font-bold text-ink">
                 {Math.min(currentPage * itemsPerPage, orders.length)}
               </span>{" "}
               dari{" "}
-              <span className="font-bold text-slate-700">
+              <span className="font-bold text-ink">
                 {orders.length}
               </span>{" "}
               order
@@ -176,7 +176,7 @@ const OrderList: React.FC<OrderListProps> = ({
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:hover:bg-transparent transition-all cursor-pointer"
+                className="p-1.5 rounded-[10px] border border-ink/10 text-ink/45 hover:text-violet-700 hover:border-violet-200 hover:bg-violet-50 disabled:opacity-50 disabled:hover:text-ink/45 disabled:hover:border-ink/10 disabled:hover:bg-transparent transition-all cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -188,13 +188,14 @@ const OrderList: React.FC<OrderListProps> = ({
                     const showEllipsis = i > 0 && p - arr[i - 1] > 1;
                     return (
                       <React.Fragment key={p}>
-                        {showEllipsis && <span className="text-slate-400 px-1">...</span>}
+                        {showEllipsis && <span className="text-ink/45 px-1">...</span>}
                         <button
                           onClick={() => setCurrentPage(p)}
-                          className={`min-w-[30px] h-[30px] rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          aria-current={currentPage === p ? "page" : undefined}
+                          className={`h-[30px] min-w-[30px] rounded-full border text-xs font-semibold transition-colors duration-200 ${
                             currentPage === p
-                              ? "bg-brand-500 !text-white shadow-md shadow-brand-500/20"
-                              : "text-slate-500 hover:bg-slate-50 border border-transparent hover:border-slate-200"
+                              ? "border-ink bg-ink text-paper"
+                              : "border-transparent text-muted hover:border-ink/15 hover:bg-white hover:text-ink"
                           }`}
                         >
                           {p}
@@ -207,7 +208,7 @@ const OrderList: React.FC<OrderListProps> = ({
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 disabled:opacity-50 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:hover:bg-transparent transition-all cursor-pointer"
+                className="p-1.5 rounded-[10px] border border-ink/10 text-ink/45 hover:text-violet-700 hover:border-violet-200 hover:bg-violet-50 disabled:opacity-50 disabled:hover:text-ink/45 disabled:hover:border-ink/10 disabled:hover:bg-transparent transition-all cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>

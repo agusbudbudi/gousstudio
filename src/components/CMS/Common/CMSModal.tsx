@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useId } from "react";
 import { X } from "lucide-react";
 
 interface CMSModalProps {
@@ -18,6 +18,18 @@ const CMSModal: React.FC<CMSModalProps> = ({
   footer,
   maxWidth = "max-w-2xl",
 }) => {
+  const titleId = useId();
+
+  // Close on Escape (same as clicking the backdrop)
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   // Prevent scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -36,27 +48,28 @@ const CMSModal: React.FC<CMSModalProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-5">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-300"
+        className="cms-modal-backdrop absolute inset-0 cursor-pointer bg-ink/45"
         onClick={onClose}
       />
 
       {/* Modal Container */}
       <div
-        className={`relative bg-white w-full ${maxWidth} rounded-xl  flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200 border border-white/20`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={`cms-modal-panel relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-[20px] border border-ink/10 bg-white ${maxWidth}`}
       >
         {/* Header */}
-        <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 z-10">
-          <div>
-            <h2 className="text-md font-bold text-slate-800">{title}</h2>
-          </div>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-ink/10 bg-white px-6 py-4">
+          <h2 id={titleId} className="gs-display text-[20px] font-extrabold leading-tight text-ink">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-brand-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100 group cursor-pointer"
+            aria-label="Tutup"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink/45 transition-colors duration-200 hover:bg-ink/[0.05] hover:text-ink"
           >
-            <X
-              size={18}
-              className="group-hover:rotate-90 transition-transform duration-300"
-            />
+            <X size={18} />
           </button>
         </div>
 
@@ -67,7 +80,7 @@ const CMSModal: React.FC<CMSModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex items-center justify-end gap-3 sticky bottom-0 z-10">
+          <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-ink/10 bg-paper px-6 py-4">
             {footer}
           </div>
         )}

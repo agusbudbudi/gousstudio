@@ -11,11 +11,10 @@ export default async function handler(req, res) {
     VITE_SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY, 
     CMS_PASSWORD, 
-    VITE_CMS_PASSWORD 
   } = process.env;
 
   const effectiveUrl = SUPABASE_URL || VITE_SUPABASE_URL;
-  const effectivePassword = CMS_PASSWORD || VITE_CMS_PASSWORD;
+  const effectivePassword = CMS_PASSWORD;
 
   const cookies = (req.headers.cookie || '').split(';');
   let cmsToken = null;
@@ -42,7 +41,6 @@ export default async function handler(req, res) {
     const flatData = data.map((item, index) => ({
       ...(item.id ? { id: item.id } : {}),
       slug: item.slug,
-      category: item.category,
       servicename: item.servicename,
       description: item.description,
       retailprice: item.retailprice,
@@ -53,6 +51,10 @@ export default async function handler(req, res) {
       deliverables: item.deliverables || [],
       order_index: index,
       is_show_to_customer: item.is_show_to_customer ?? item.isShowToCustomer ?? false,
+      // Parent service. Only sent when present so saves keep working before the migration adds the column.
+      ...(Object.prototype.hasOwnProperty.call(item, 'service_id')
+        ? { service_id: item.service_id ? parseInt(item.service_id, 10) : null }
+        : {}),
     }));
 
     // Fetch existing IDs to find deleted items

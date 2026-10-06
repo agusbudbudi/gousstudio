@@ -3,6 +3,24 @@
 
 <head>
   <meta charset="UTF-8" />
+  <!-- Paint light pages with their own background from the first frame, before CSS/JS load
+       (App.tsx keeps these attributes in sync after load) -->
+  <script>
+    (function () {
+      var p = location.pathname;
+      var root = document.documentElement;
+      if (p === '/cms' || p.indexOf('/cms/') === 0) {
+        root.setAttribute('data-cms-shell', '');
+      } else {
+        // Every other route (including the 404 page) is on the brand shell
+        root.setAttribute('data-gs-shell', '');
+      }
+    })();
+  </script>
+  <style>
+    html[data-gs-shell], html[data-gs-shell] body { background-color: #f7f6f2; }
+    html[data-cms-shell], html[data-cms-shell] body { background-color: #fbfbf9; }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Primary Meta Tags -->
@@ -43,7 +61,7 @@
     "@type": "Organization",
     "name": "Gous Studio",
     "url": "https://gousstudio.com",
-    "logo": "https://gousstudio.com/img/logo.png",
+    "logo": "https://gousstudio.com/brand/logo-mark-512.png",
     "description": "Creative Design Studio spesialisasi Brand Identity, Logo, Social Media Design & Poster di Jakarta",
     "foundingDate": "2019",
     "address": {
@@ -68,9 +86,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="icon" type="image/png" href="/favicon.png" />
+  <!-- Brand mark (generated from public/gous-studio-logo.png, recolored to violet; see public/brand) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png" />
   <link rel="stylesheet" href="./src/index.css" />
 </head>
 

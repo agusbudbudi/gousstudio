@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Ticket, RefreshCcw } from "lucide-react";
+import { Ticket, RefreshCcw } from "lucide-react";
+import CMSTableSkeleton from "./Common/CMSTableSkeleton";
+import CMSEmptyState from "./Common/CMSEmptyState";
+import { AlertTriangle, RotateCw } from "lucide-react";
+import CMSButton from "./Common/CMSButton";
 import CMSHeader from "./CMSHeader";
 import VoucherList from "./Vouchers/VoucherList";
 import CMSStatCard from "./Common/CMSStatCard";
@@ -50,8 +54,8 @@ const VoucherCMS: React.FC = () => {
           <button
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="p-2.5 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-brand-600 hover:border-brand-500/50 transition-all cursor-pointer disabled:opacity-50"
-            title="Refresh Data"
+            className="p-2.5 rounded-[10px] border border-ink/10 bg-white text-muted hover:text-violet-700 hover:border-violet-600/50 transition-all cursor-pointer disabled:opacity-50"
+            aria-label="Refresh Data" title="Refresh Data"
           >
             <RefreshCcw size={18} className={isRefetching ? "animate-spin" : ""} />
           </button>
@@ -76,15 +80,19 @@ const VoucherCMS: React.FC = () => {
 
       <div className="flex-1 min-h-0 flex flex-col pt-2">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-            <p className="text-slate-400 font-medium font-['Neue_Machina']">Memuat data voucher...</p>
-          </div>
+          <CMSTableSkeleton rows={6} columns={4} label="Memuat data voucher..." />
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center max-w-md mx-auto mt-12">
-            <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-            <p className="text-slate-500 text-sm">{(error as Error).message}</p>
-          </div>
+          <CMSEmptyState
+            icon={AlertTriangle}
+            iconClassName="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-[20px]"
+            title="Voucher gagal dimuat"
+            description={String((error as Error).message)}
+            action={
+              <CMSButton variant="secondary" icon={RotateCw} onClick={() => refetch()}>
+                Coba lagi
+              </CMSButton>
+            }
+          />
         ) : (
           <VoucherList referrals={filteredReferrals} />
         )}

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "dev:prod": "API_PROXY_TARGET=https://gousstudio.vercel.app vite",
     "build": "vite build",
     "preview": "vite preview",
     "vercel": "npx vercel dev",
@@ -30,6 +31,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.99.3",
     "@tanstack/react-query": "^5.95.2",
+    "@vercel/blob": "^2.8.0",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.38.0",
     "html-to-image": "^1.11.13",
@@ -40,6 +42,7 @@
     "react-helmet-async": "^3.0.0",
     "react-hook-form": "^7.72.0",
     "react-router-dom": "^7.13.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   }

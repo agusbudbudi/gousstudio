@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, Tag, Layout, List, Plus, Trash2, Shapes } from "lucide-react";
+import { Save, List, Plus, Trash2, Shapes } from "lucide-react";
 
 import CMSModal from "./Common/CMSModal";
 import CMSButton from "./Common/CMSButton";
@@ -12,38 +12,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { servicesSchema, ServicesFormData } from "../../utils/formSchemas";
 import { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { ServiceItem } from "../../types";
-
-const ICON_OPTIONS = [
-  "Image",
-  "Shapes",
-  "Instagram",
-  "TrendingUp",
-  "Star",
-  "Zap",
-  "Palette",
-  "Monitor",
-  "ShoppingBag",
-  "FileText",
-  "Briefcase",
-  "Megaphone",
-  "Globe",
-  "Camera",
-  "Video",
-  "PenTool",
-  "Layers",
-  "Award",
-];
-
-const COLOR_OPTIONS = [
-  { value: "brand", label: "Brand (Ungu)", preview: "bg-purple-500" },
-  { value: "orange", label: "Orange", preview: "bg-orange-500" },
-  { value: "pink", label: "Pink", preview: "bg-pink-500" },
-  { value: "blue", label: "Blue", preview: "bg-blue-500" },
-  { value: "green", label: "Green", preview: "bg-green-500" },
-  { value: "red", label: "Red", preview: "bg-red-500" },
-  { value: "yellow", label: "Yellow", preview: "bg-yellow-500" },
-  { value: "teal", label: "Teal", preview: "bg-teal-500" },
-];
 
 // DEFAULT_FORM no longer fundamentally needed as defaultValues handles it, but kept structure
 
@@ -64,7 +32,6 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<ServicesFormData>({
     resolver: zodResolver(servicesSchema),
@@ -82,7 +49,6 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
   const [newIncluded, setNewIncluded] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedColor = watch("color");
 
   useEffect(() => {
     if (initialData) {
@@ -126,6 +92,10 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
       const result = {
         ...(initialData || {}),
         ...data,
+        // Not edited in the form anymore (unused on the site); keep stored values or fill defaults
+        icon: initialData?.icon || data.icon || "Layers",
+        color: initialData?.color || data.color || "brand",
+        category: initialData?.category || data.category || data.title,
         included,
       };
       onSave(result);
@@ -165,8 +135,14 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-3"
       >
-        {/* Slug + Category */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Title + Slug */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_200px]">
+          <CMSInput
+            label="Nama Layanan"
+            placeholder="e.g. Logo Design"
+            {...register("title")}
+            error={errors.title?.message}
+          />
           <CMSInput
             label="Slug ID"
             placeholder="e.g. logo"
@@ -174,21 +150,7 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
             error={errors.slug?.message}
             disabled={!!initialData}
           />
-          <CMSInput
-            label="Kategori"
-            placeholder="e.g. Brand Identity"
-            {...register("category")}
-            error={errors.category?.message}
-          />
         </div>
-
-        {/* Title */}
-        <CMSInput
-          label="Nama Layanan"
-          placeholder="e.g. Logo Design"
-          {...register("title")}
-          error={errors.title?.message}
-        />
 
         {/* Description */}
         <CMSInput
@@ -200,48 +162,10 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
           error={errors.description?.message}
         />
 
-        {/* Icon + Color */}
-        <div className="grid grid-cols-2 gap-4">
-          <CMSSelect
-            label="Icon (Lucide)"
-            icon={Tag}
-            error={errors.icon?.message}
-            {...register("icon")}
-          >
-            {ICON_OPTIONS.map((ic) => (
-              <option key={ic} value={ic}>
-                {ic}
-              </option>
-            ))}
-          </CMSSelect>
-
-          <CMSSelect
-            label="Warna Tema"
-            icon={({ className }: { className?: string }) => {
-              const colorPreview =
-                COLOR_OPTIONS.find((c) => c.value === selectedColor)?.preview ||
-                "bg-slate-300";
-              return (
-                <span
-                  className={`w-3.5 h-3.5 rounded-sm ${colorPreview} shrink-0 ${className || ""}`}
-                />
-              );
-            }}
-            error={errors.color?.message}
-            {...register("color")}
-          >
-            {COLOR_OPTIONS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </CMSSelect>
-        </div>
-
         {/* Included Features */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-slate-600 ml-1">
-            Fitur yang Disertakan
+          <label className="text-sm font-medium text-ink/70 ml-1">
+            Deliverables (tampil di kartu layanan landing)
           </label>
           <div className="flex items-start gap-2">
             <div className="flex-1">
@@ -270,9 +194,9 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
             {included.map((feat: string, i: number) => (
               <div
                 key={i}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/50 border border-slate-100 rounded-lg group hover:border-brand-200 transition-all"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-paper/50 border border-ink/[0.06] rounded-[10px] group hover:border-violet-200 transition-all"
               >
-                <span className="text-sm font-medium text-slate-700 flex-1">
+                <span className="text-sm font-medium text-ink flex-1">
                   {feat}
                 </span>
                 <CMSButton
@@ -280,13 +204,13 @@ const ServicesModal: React.FC<ServicesModalProps> = ({
                   type="button"
                   onClick={() => removeIncluded(i)}
                   icon={Trash2}
-                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:!text-rose-500 hover:!bg-rose-50"
+                  className="!p-1.5 opacity-0 group-hover:opacity-100 text-ink/45 hover:!text-rose-500 hover:!bg-rose-50"
                 />
               </div>
             ))}
           </div>
           {included.length === 0 && (
-            <p className="text-xs text-slate-400 italic px-2">
+            <p className="text-xs text-ink/45 italic px-2">
               Belum ada fitur ditambahkan.
             </p>
           )}

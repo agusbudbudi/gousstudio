@@ -33,6 +33,8 @@ interface PricelistListProps {
   onReorder: (index: number, direction: "up" | "down") => void;
   onToggleVisibility: (index: number) => void;
   isSearchingOrFiltering: boolean;
+  // service id -> title; omitted until pricelists.service_id exists
+  serviceTitles?: Record<number, string>;
 }
 
 const PricelistList: React.FC<PricelistListProps> = ({
@@ -43,6 +45,7 @@ const PricelistList: React.FC<PricelistListProps> = ({
   onReorder,
   onToggleVisibility,
   isSearchingOrFiltering,
+  serviceTitles,
 }) => {
 
   if (filteredItems.length === 0) {
@@ -75,25 +78,25 @@ const PricelistList: React.FC<PricelistListProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="group flex items-start gap-4 bg-white border border-slate-200 hover:border-brand-500/30 rounded-lg p-4 transition-colors"
+              className="group flex items-start gap-4 bg-white border border-ink/10 hover:border-violet-600/30 rounded-[10px] p-4 transition-colors"
             >
               {/* Reorder */}
               {!isSearchingOrFiltering && (
-                <div className="flex flex-col items-center gap-0.5 min-w-[32px] border-r border-slate-50 pr-3 pt-1">
+                <div className="flex flex-col items-center gap-0.5 min-w-[32px] border-r border-ink/[0.04] pr-3 pt-1">
                   <button
                     disabled={index === 0}
                     onClick={() => onReorder(index, "up")}
-                    className={`p-1.5 rounded-lg border transition-all ${index === 0 ? "text-slate-100 border-transparent cursor-not-allowed" : "text-slate-300 border-transparent hover:border-brand-500/50 hover:text-brand-500 hover:scale-110 active:scale-95 cursor-pointer"}`}
+                    className={`p-1.5 rounded-[10px] border transition-all ${index === 0 ? "text-ink/10 border-transparent cursor-not-allowed" : "text-ink/30 border-transparent hover:border-violet-600/50 hover:text-violet-600 hover:scale-110 active:scale-95 cursor-pointer"}`}
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
-                  <span className="text-[10px] font-bold text-slate-400 font-mono">
+                  <span className="text-[10px] font-bold text-ink/45 font-mono">
                     {(index + 1).toString().padStart(2, "0")}
                   </span>
                   <button
                     disabled={index === items.length - 1}
                     onClick={() => onReorder(index, "down")}
-                    className={`p-1.5 rounded-lg border transition-all ${index === items.length - 1 ? "text-slate-100 border-transparent cursor-not-allowed" : "text-slate-300 border-transparent hover:border-brand-500/50 hover:text-brand-500 hover:scale-110 active:scale-95 cursor-pointer"}`}
+                    className={`p-1.5 rounded-[10px] border transition-all ${index === items.length - 1 ? "text-ink/10 border-transparent cursor-not-allowed" : "text-ink/30 border-transparent hover:border-violet-600/50 hover:text-violet-600 hover:scale-110 active:scale-95 cursor-pointer"}`}
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -108,7 +111,13 @@ const PricelistList: React.FC<PricelistListProps> = ({
                 <div className="flex items-start gap-3 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <CMSBadge variant="brand">{item.category}</CMSBadge>
+                      {item.service_id && serviceTitles?.[item.service_id] ? (
+                        <CMSBadge variant="brand">{serviceTitles[item.service_id]}</CMSBadge>
+                      ) : (
+                        <CMSBadge className="!bg-amber-50 !text-amber-800 !border-amber-200">
+                          Tanpa layanan
+                        </CMSBadge>
+                      )}
                       {discount > 0 && (
                         <CMSBadge className="!bg-green-50 !text-green-700 !border-green-200">
                           -{discount}% OFF
@@ -120,26 +129,26 @@ const PricelistList: React.FC<PricelistListProps> = ({
                           Publik
                         </CMSBadge>
                       ) : (
-                        <CMSBadge className="!bg-slate-100 !text-slate-400 !border-slate-200 !flex !items-center !gap-1">
+                        <CMSBadge className="!bg-ink/5 !text-ink/45 !border-ink/10 !flex !items-center !gap-1">
                           <EyeOff size={10} />
                           Hidden
                         </CMSBadge>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-500 transition-colors leading-tight">
+                    <h3 className="text-sm font-bold text-ink group-hover:text-violet-600 transition-colors leading-tight">
                       {item.servicename || "Untitled"}
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                    <p className="text-[11px] text-muted mt-0.5 line-clamp-1">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Pricing */}
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-slate-400 line-through">
+                    <p className="text-[10px] text-ink/45 line-through">
                       {formatPrice(item.retailprice)}
                     </p>
-                    <p className="text-sm font-bold text-brand-500">
+                    <p className="text-sm font-bold text-violet-600">
                       {formatPrice(item.finalprice)}
                     </p>
                   </div>
@@ -147,27 +156,31 @@ const PricelistList: React.FC<PricelistListProps> = ({
 
                 {/* Meta */}
                 <div className="flex items-center gap-4 mt-2">
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500">
+                  <span className="flex items-center gap-1 text-[10px] text-muted">
                     <Clock className="w-3 h-3" />
                     {item.duration} hari
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-500">
+                  <span className="flex items-center gap-1 text-[10px] text-muted">
                     <RefreshCw className="w-3 h-3" />
                     {item.isrevisionunlimited
                       ? "Unlimited revisi"
                       : `${item.totalrevision}x revisi`}
                   </span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-ink/45">
                     {(item.deliverables || []).length} deliverables
                   </span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col items-center gap-1 pl-3 border-l border-slate-50 self-center">
+              <div className="flex flex-col items-center gap-1 pl-3 border-l border-ink/[0.04] self-center">
                 {/* Visibility Quick Toggle */}
                 <button
-                  title={
+                  aria-label={
+                    item.isShowToCustomer
+                      ? "Sembunyikan dari customer"
+                      : "Tampilkan ke customer"
+                  } title={
                     item.isShowToCustomer
                       ? "Sembunyikan dari customer"
                       : "Tampilkan ke customer"
@@ -176,10 +189,10 @@ const PricelistList: React.FC<PricelistListProps> = ({
                     e.stopPropagation();
                     onToggleVisibility(index);
                   }}
-                  className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                  className={`p-2 rounded-[10px] border transition-all cursor-pointer ${
                     item.isShowToCustomer
                       ? "text-emerald-500 border-emerald-200 bg-emerald-50 hover:bg-emerald-100"
-                      : "text-slate-400 border-slate-200 bg-slate-50 hover:bg-slate-100 hover:text-slate-600"
+                      : "text-ink/45 border-ink/10 bg-paper hover:bg-ink/5 hover:text-ink/70"
                   }`}
                 >
                   {item.isShowToCustomer ? (
@@ -193,7 +206,7 @@ const PricelistList: React.FC<PricelistListProps> = ({
                   onClick={() => onEdit(item, index)}
                   icon={Edit3}
                   iconSize={16}
-                  title="Edit"
+                  aria-label="Edit" title="Edit"
                   className="!p-2"
                 />
                 <CMSButton
@@ -204,7 +217,7 @@ const PricelistList: React.FC<PricelistListProps> = ({
                   }}
                   icon={Trash2}
                   iconSize={16}
-                  title="Hapus"
+                  aria-label="Hapus" title="Hapus"
                   className="!p-2"
                 />
               </div>

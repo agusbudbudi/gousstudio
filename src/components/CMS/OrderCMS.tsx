@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader2, ExternalLink } from "lucide-react";
+import { AlertTriangle, ExternalLink, RotateCw } from "lucide-react";
+import CMSTableSkeleton from "./Common/CMSTableSkeleton";
+import CMSEmptyState from "./Common/CMSEmptyState";
+import CMSButton from "./Common/CMSButton";
 
 import { OrderItem, PricelistItem, ClientItem } from "../../types";
 import { useToast } from "../../hooks/useToast";
@@ -9,6 +12,7 @@ import { useOrders } from "../../hooks/useOrders";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { useConfirm } from "./Common/CMSConfirmDialog";
 import CMSHeader from "./CMSHeader";
 import OrderFilters from "./Orders/OrderFilters";
 import OrderList from "./Orders/OrderList";
@@ -20,6 +24,7 @@ const OrderCMS: React.FC = () => {
   const { addToast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { confirm, confirmDialog } = useConfirm();
   const { orderNumber } = useParams<{ orderNumber?: string }>();
 
   const {
@@ -34,6 +39,15 @@ const OrderCMS: React.FC = () => {
     deleteOrder,
   } = useOrders();
 
+  const handleDeleteOrder = async (id: string, orderNumber: string) => {
+    const ok = await confirm({
+      title: `Hapus order #${orderNumber}?`,
+      description: "Order beserta datanya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.",
+      destructive: true,
+    });
+    return ok ? deleteOrder(id, orderNumber) : false;
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +59,11 @@ const OrderCMS: React.FC = () => {
   const { data: pricelists = [] } = useQuery({
     queryKey: ["pricelists"],
     queryFn: async () => {
-      const { data } = await supabase.from("pricelists").select("*").order("order_index");
+      // Embed the parent service: an order's design_category is the package's service
+      const { data } = await supabase
+        .from("pricelists")
+        .select("*, service:services(id, slug, title)")
+        .order("order_index");
       return (data as PricelistItem[]) || [];
     }
   });
@@ -138,14 +156,14 @@ const OrderCMS: React.FC = () => {
           selectedOrder ? (
             <div className="flex items-center gap-2">
               <span>Order Detail</span>
-              <span className="text-slate-300 mx-1">-</span>
-              <span className="text-brand-600 text-xl">{selectedOrder.order_number}</span>
+              <span className="text-ink/30 mx-1">-</span>
+              <span className="text-violet-700 text-xl">{selectedOrder.order_number}</span>
               <a
                 href={`${window.location.origin}/order/${selectedOrder.order_number}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-brand-500 rounded-lg hover:bg-brand-50 transition-all flex items-center justify-center ms-2"
-                title="Buka Halaman Publik"
+                className="p-1.5 text-violet-600 rounded-[10px] hover:bg-violet-50 transition-all flex items-center justify-center ms-2"
+                aria-label="Buka Halaman Publik" title="Buka Halaman Publik"
               >
                 <ExternalLink size={16} />
               </a>
@@ -171,15 +189,25 @@ const OrderCMS: React.FC = () => {
       </CMSHeader>
 
       {loading && orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-40">
-          <Loader2 size={40} className="text-brand-500 animate-spin mb-4" />
-          <p className="text-slate-400 font-medium">Memuat data order...</p>
+        <div className="pt-6">
+          <CMSTableSkeleton rows={8} columns={6} label="Memuat data order..." />
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-8 text-center">
-          <p className="text-red-500 font-bold mb-2">Gagal memuat data</p>
-          <p className="text-slate-500 text-sm">{error}</p>
-        </div>
+        <CMSEmptyState
+          icon={AlertTriangle}
+          iconClassName="w-16 h-16 bg-rose-50 border border-rose-100 text-rose-500 rounded-[20px]"
+          title="Order gagal dimuat"
+          description={String(error)}
+          action={
+            <CMSButton
+              variant="secondary"
+              icon={RotateCw}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["orders"] })}
+            >
+              Coba lagi
+            </CMSButton>
+          }
+        />
       ) : selectedOrder ? (
         <OrderForm
           order={selectedOrder}
@@ -205,7 +233,7 @@ const OrderCMS: React.FC = () => {
               itemsPerPage={ITEMS_PER_PAGE}
               updatingId={updatingId}
               onSelectOrder={(orderNumber) => navigate(`/cms/orders/${orderNumber}`)}
-              onDeleteOrder={deleteOrder}
+              onDeleteOrder={handleDeleteOrder}
             />
           )}
 
@@ -226,6 +254,7 @@ const OrderCMS: React.FC = () => {
           )}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 };

@@ -69,16 +69,17 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
       <div className="mb-10 last:mb-0">
         <div className="flex items-center gap-3 mb-6">
           <div
-            className={`p-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 ${colorClass}`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 bg-white ${colorClass}`}
           >
-            {React.createElement(icon, { size: 18 })}
+            {React.createElement(icon, { size: 16 })}
           </div>
-          <h3 className="text-xs font-bold !text-black flex items-center gap-2">
-            <span className="uppercase tracking-widest">{title}</span>
-            <div className="bg-brand-50/70 !text-brand-700 text-[10px] font-bold px-1 py-0.5 rounded-md border border-brand-500/30 min-w-[18px] h-[18px] flex items-center justify-center">
+          <h3 className="flex items-center gap-2.5">
+            <span className="gs-label text-ink">{title}</span>
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1.5 text-[10px] font-semibold text-paper">
               {items.length}
-            </div>
+            </span>
           </h3>
+          <span aria-hidden className="h-px flex-1 bg-ink/10" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -86,42 +87,42 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
             <CMSCard
               key={order.id}
               onClick={() => onSelectOrder(order.order_number)}
-              className="p-5 border border-transparent hover:!border-brand-200 transition-all"
+              className="p-5 hover:!border-ink/25"
               hoverEffect={false}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black text-brand-500 tracking-widest uppercase">
+                  <div className="gs-label text-[10px] text-violet-700">
                     #{order.order_number}
                   </div>
-                  <h4 className="text-sm font-black !text-slate-900 dark:!text-slate-100 group-hover:text-brand-500 transition-colors truncate">
+                  <h4 className="truncate text-base font-semibold text-ink transition-colors group-hover:text-violet-700">
                     {order.full_name}
                   </h4>
                 </div>
                 <CMSBadge
                   variant="status"
                   status={order.status}
-                  className="!text-[9px] !px-2 !py-0.5 border border-slate-100/50"
+                  className="!text-[10px] !px-2 !py-0.5"
                 >
                   {order.status}
                 </CMSBadge>
               </div>
 
               {order.brief_detail && (
-                <div className="text-[11px] !text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-3">
+                <div className="text-[11px] !text-muted line-clamp-2 leading-relaxed mb-3">
                   {order.brief_detail}
                 </div>
               )}
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-white/5 p-2 rounded-lg border border-slate-100/50 dark:border-white/5">
-                  <Package size={14} className="text-slate-400/80" />
+                <div className="flex items-center gap-2.5 rounded-[10px] border border-ink/[0.06] bg-paper p-2 text-xs font-medium text-muted">
+                  <Package size={14} className="text-ink/[0.36]" />
                   <span className="truncate">{order.selected_package}</span>
                 </div>
 
                 <div className="flex items-center justify-between mt-auto pt-2">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tight text-slate-400">
-                    <CalendarIcon size={12} className="text-brand-500/80" />
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted">
+                    <CalendarIcon size={12} className="text-violet-600" />
                     {order.deadline
                       ? new Date(order.deadline).toLocaleDateString("id-ID", {
                           day: "numeric",
@@ -130,8 +131,8 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
                         })
                       : "-"}
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-500 group-hover:!text-white transition-all border border-slate-100 dark:border-white/10">
-                    <ChevronRight size={14} />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-ink/10 bg-white text-ink/50 transition-colors duration-200 group-hover:border-ink group-hover:bg-ink group-hover:text-paper">
+                    <ChevronRight size={14} className="transition-transform duration-200 group-hover:translate-x-px" />
                   </div>
                 </div>
               </div>
@@ -171,7 +172,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
         "🔵 Agenda Minggu Ini",
         groups.thisWeek,
         CalendarIcon,
-        "text-brand-500",
+        "text-violet-600",
       )}
       {renderSection(
         "🟢 Mendatang",
@@ -183,7 +184,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
         "⚪ Tanpa Deadline",
         groups.noDeadline,
         CalendarIcon,
-        "text-slate-400",
+        "text-ink/45",
       )}
     </div>
   );

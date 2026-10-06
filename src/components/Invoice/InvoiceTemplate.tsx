@@ -1,17 +1,7 @@
 import React from "react";
 import { OrderItem } from "../../types";
 import { CONFIG } from "../../config/constants";
-import {
-  FileText,
-  User,
-  Phone,
-  Package,
-  Zap,
-  Clock,
-  CreditCard,
-  CheckCircle2,
-  Calendar,
-} from "lucide-react";
+import { CheckCircle2, Clock, RefreshCw } from "lucide-react";
 
 interface InvoiceTemplateProps {
   order: OrderItem;
@@ -26,331 +16,197 @@ const formatPrice = (price: number) =>
     minimumFractionDigits: 0,
   }).format(price);
 
-export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
-  order,
-  packageData,
-  type = "INVOICE",
-}) => {
-  const displayPackageData = packageData || order.package_details;
+const formatDate = (value: string, withTime = false) =>
+  new Date(value).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+  });
+
+const Label: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className = "" }) => (
+  <p className={`gs-label text-[10px] text-[#5b5966] ${className}`}>{children}</p>
+);
+
+/**
+ * Printable invoice / proforma, captured to PNG with html-to-image (OrderForm in the CMS and the
+ * public order page). Fixed 800px width; brand styling per docs/DESIGN.md §2 (paper + ink, violet).
+ */
+export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ order, packageData, type = "INVOICE" }) => {
+  const pkg = packageData || order.package_details;
+  const isProforma = type === "PROFORMA";
+  const subtotal = order.price || pkg?.original_price || 0;
+  const discount =
+    Number(order.discount_value) > 0
+      ? order.discount_type === "percentage"
+        ? (subtotal * (order.discount_value || 0)) / 100
+        : order.discount_value || 0
+      : 0;
 
   return (
     <div
       id={`invoice-${order.order_number}`}
-      className="bg-white text-slate-900 p-10 w-[800px] min-h-[1000px] font-sans relative overflow-hidden"
-      style={{ colorScheme: "light" }}
+      className="relative flex min-h-[1000px] w-[800px] flex-col overflow-hidden bg-white px-14 pb-14 pt-12 text-[#0b0a12]"
+      style={{ colorScheme: "light", fontFamily: "var(--font-body)" }}
     >
-      {/* Decorative Brand Header */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full -mr-32 -mt-32"></div>
-
-      {/* Header Section */}
-      <div className="flex justify-between items-start mb-12 relative z-10">
+      {/* Header */}
+      <header className="flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            {CONFIG.COMPANY_LOGO ? (
-              <img
-                src={CONFIG.COMPANY_LOGO}
-                alt={CONFIG.COMPANY_NAME}
-                className="w-12 h-12 object-contain"
-              />
-            ) : (
-              <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center">
-                <Zap className="text-white" size={20} />
-              </div>
+          <div className="flex items-center">
+            {CONFIG.COMPANY_LOGO && (
+              <img src={CONFIG.COMPANY_LOGO} alt="" className="h-11 w-11 object-contain" />
             )}
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none uppercase">
-                {CONFIG.COMPANY_NAME}
-              </h1>
-              <p className="text-[10px] font-bold text-brand-500 uppercase tracking-[0.2em] mt-1">
-                Elevated Visual Experience
-              </p>
-            </div>
+            <p className="gs-display text-[28px] font-extrabold leading-none">
+              Gous<span className="text-[#7c3aed]">Studio</span>
+            </p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-slate-600">{CONFIG.COMPANY_ADDRESS}</p>
-            <p className="text-xs text-slate-600">{CONFIG.COMPANY_EMAIL}</p>
-            <p className="text-xs text-slate-600">{CONFIG.COMPANY_PHONE}</p>
+          <div className="mt-5 space-y-1 text-xs leading-relaxed text-[#5b5966]">
+            {CONFIG.COMPANY_ADDRESS && <p>{CONFIG.COMPANY_ADDRESS}</p>}
+            {CONFIG.COMPANY_EMAIL && <p>{CONFIG.COMPANY_EMAIL}</p>}
+            {CONFIG.COMPANY_PHONE && <p>{CONFIG.COMPANY_PHONE}</p>}
           </div>
         </div>
 
         <div className="text-right">
-          <h2 className="text-4xl font-black text-slate-200 tracking-tighter mb-2">
-            {type === "PROFORMA" ? "PROFORMA INVOICE" : "INVOICE"}
-          </h2>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-brand-600">
-              #{order.order_number}
-            </p>
-            <p className="text-xs text-slate-600 flex items-center justify-end gap-1">
-              <Calendar size={12} />
-              {new Date(order.created_at).toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
+          <p className="gs-display text-[44px] font-extrabold leading-none">
+            {isProforma ? "Proforma" : "Invoice"}
+            <span className="text-[#7c3aed]">.</span>
+          </p>
+          <p className="gs-label mt-3 text-[12px] text-[#6d28d9]">#{order.order_number}</p>
+          <p className="mt-1 text-xs text-[#5b5966]">{formatDate(order.created_at)}</p>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-2 gap-12 mb-12 relative z-10">
-        {/* Bill To */}
+      <div className="mt-10 h-px bg-[#0b0a12]" />
+
+      {/* Parties */}
+      <section className="mt-8 grid grid-cols-2 gap-12">
         <div>
-          <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-            <User size={12} className="text-brand-500" /> PELANGGAN
-          </h3>
-          <div className="space-y-2">
-            <p className="text-lg font-black text-slate-800">
-              {order.full_name}
-            </p>
-            <p className="text-sm text-slate-600 flex items-center gap-2">
-              <Phone size={14} className="text-slate-400" />{" "}
-              {order.phone_number}
-            </p>
-          </div>
+          <Label>01 — Ditagihkan kepada</Label>
+          <p className="mt-3 text-lg font-semibold">{order.full_name}</p>
+          <p className="mt-1 text-sm text-[#5b5966]">{order.phone_number}</p>
         </div>
-
-        {/* Project Details */}
         <div>
-          <h3 className="text-[10px] font-black uppercase text-slate-600 tracking-widest mb-4 border-b border-slate-100 pb-2 flex items-center gap-2">
-            <Package size={12} className="text-brand-500" /> DETAIL PROJECT
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <p className="text-[10px] font-bold text-slate-600 uppercase">
-                Kategori
-              </p>
-              <p className="text-sm font-bold text-slate-700">
-                {order.design_category}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-600 uppercase">
-                Paket Pilihan
-              </p>
-              <p className="text-sm font-bold text-brand-600 flex items-center gap-1">
-                <Zap size={14} /> {order.selected_package}
-              </p>
-            </div>
-          </div>
+          <Label>02 — Detail project</Label>
+          <p className="mt-3 text-lg font-semibold">{order.selected_package}</p>
+          <p className="mt-1 text-sm text-[#5b5966]">{order.design_category}</p>
         </div>
-      </div>
+      </section>
 
-      {/* Main Items Table Shadow Head */}
-      <div className="mb-12 relative z-10">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-slate-50 border-y border-slate-100">
-              <th className="py-4 px-6 text-left text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                Deskripsi Layanan
-              </th>
-              <th className="py-4 px-6 text-right text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                Harga
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            <tr>
-              <td className="py-8 px-6">
-                <p className="text-base font-black text-slate-800 mb-1">
-                  {order.selected_package}
-                </p>
-                <div className="flex gap-4 mt-2">
-                  {displayPackageData && (
-                    <>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded">
-                        <RefreshCw size={10} className="text-brand-500" />
-                        {displayPackageData.isrevisionunlimited
-                          ? "Unlimited Rev"
-                          : `${displayPackageData.totalrevision}x Rev`}
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded">
-                        <Clock size={10} className="text-brand-500" />
-                        Est. {displayPackageData.duration} Days
-                      </div>
-                    </>
-                  )}
-                </div>
-                {order.brief_detail && (
-                  <p className="mt-4 text-[11px] text-slate-600 leading-relaxed border-l-2 border-slate-100 pl-4">
-                    {order.brief_detail.length > 400
-                      ? `${order.brief_detail.substring(0, 400)}...`
-                      : order.brief_detail}
-                  </p>
-                )}
-              </td>
-              <td className="py-8 px-6 text-right font-black text-slate-800">
-                {formatPrice(
-                  order.price || displayPackageData?.original_price || 0,
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Summary Section */}
-      <div className="flex justify-end mb-12 relative z-10">
-        <div className="w-80 space-y-3">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest">
-              Subtotal
-            </span>
-            <span className="text-slate-800 font-bold">
-              {formatPrice(
-                order.price || displayPackageData?.original_price || 0,
-              )}
-            </span>
+      {/* Items */}
+      <section className="mt-10">
+        <div className="flex justify-between border-y border-[#0b0a12]/10 bg-[#f7f6f2] px-5 py-3">
+          <Label>Deskripsi layanan</Label>
+          <Label>Harga</Label>
+        </div>
+        <div className="flex items-start justify-between gap-10 border-b border-[#0b0a12]/10 px-5 py-6">
+          <div className="min-w-0">
+            <p className="text-base font-semibold">{order.selected_package}</p>
+            {pkg && (
+              <div className="mt-3 flex gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#0b0a12]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#0b0a12]/70">
+                  <RefreshCw size={11} className="text-[#7c3aed]" />
+                  {pkg.isrevisionunlimited ? "Revisi unlimited" : `${pkg.totalrevision}x revisi`}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#0b0a12]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#0b0a12]/70">
+                  <Clock size={11} className="text-[#7c3aed]" />
+                  Estimasi {pkg.duration} hari
+                </span>
+              </div>
+            )}
+            {order.brief_detail && (
+              <p className="mt-4 border-l-2 border-[#ddd6fe] pl-4 text-[12px] leading-relaxed text-[#5b5966]">
+                {order.brief_detail.length > 400 ? `${order.brief_detail.substring(0, 400)}...` : order.brief_detail}
+              </p>
+            )}
           </div>
+          <p className="shrink-0 text-base font-semibold tabular-nums">{formatPrice(subtotal)}</p>
+        </div>
+      </section>
 
-          {Number(order.discount_value) > 0 && (
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-600 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+      {/* Totals */}
+      <section className="mt-6 flex justify-end">
+        <dl className="w-80 space-y-3 text-sm">
+          <div className="flex justify-between">
+            <dt className="text-[#5b5966]">Subtotal</dt>
+            <dd className="font-semibold tabular-nums">{formatPrice(subtotal)}</dd>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between gap-4">
+              <dt className="flex items-center gap-1.5 text-[#5b5966]">
                 Diskon
                 {order.voucher_code && (
-                  <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black tracking-wider uppercase">
+                  <span className="gs-label rounded-full bg-[#f5f3ff] px-2 py-0.5 text-[9px] text-[#5b21b6]">
                     {order.voucher_code}
                   </span>
                 )}
                 {order.discount_type === "percentage" && (
-                  <span className="text-brand-500 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded text-[8px] font-black">
+                  <span className="rounded-full bg-[#f5f3ff] px-2 py-0.5 text-[10px] font-semibold text-[#5b21b6]">
                     {order.discount_value}%
                   </span>
                 )}
-              </span>
-              <span className="text-rose-500 font-black">
-                -{" "}
-                {formatPrice(
-                  order.discount_type === "percentage"
-                    ? ((order.price || displayPackageData?.original_price || 0) *
-                        (order.discount_value || 0)) /
-                        100
-                    : order.discount_value || 0,
-                )}
-              </span>
+              </dt>
+              <dd className="font-semibold tabular-nums text-[#e11d48]">−{formatPrice(discount)}</dd>
             </div>
           )}
-
-          <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-            <span className="text-slate-900 font-black uppercase text-xs tracking-[0.2em]">
-              Total
-            </span>
-            <span className="text-2xl font-black text-brand-600">
-              {Number(order.final_price) === 0
-                ? "GRATIS"
-                : formatPrice(order.final_price || 0)}
-            </span>
+          <div className="flex items-end justify-between border-t border-[#0b0a12] pt-4">
+            <dt className="gs-label text-[11px]">Total</dt>
+            <dd className="gs-display text-[32px] font-extrabold leading-none tabular-nums">
+              {Number(order.final_price) === 0 ? "Gratis" : formatPrice(order.final_price || 0)}
+            </dd>
           </div>
-        </div>
-      </div>
+        </dl>
+      </section>
 
-      {/* Payment Information */}
-      <div className="bg-brand-500/[0.03] border border-brand-500/10 rounded-2xl p-8 mb-12 relative z-10">
-        <div className="flex items-start justify-between">
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase text-brand-600 tracking-[0.2em] flex items-center gap-2">
-              <CreditCard size={14} /> INFORMASI PEMBAYARAN
-            </h4>
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
-                  Metode
-                </p>
-                <p className="text-sm font-black text-slate-700 uppercase">
-                  {order.payment_method?.replace(/_/g, " ") || "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
-                  Status
-                </p>
-                {type === "PROFORMA" ? (
-                  <div className="flex items-center gap-2 text-rose-500 font-black text-sm uppercase">
-                    UNPAID
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-emerald-600 font-black text-sm">
-                    <CheckCircle2 size={16} /> LUNAS
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
-                  Nominal Dibayar
-                </p>
-                <p className="text-sm font-black text-slate-700">
-                  {formatPrice(order.paid_amount || order.final_price || 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
-                  Waktu Verifikasi
-                </p>
-                <p className="text-sm font-bold text-slate-700">
-                  {type === "PROFORMA" ? "-" : (order.paid_at
-                    ? new Date(order.paid_at).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "-")}
-                </p>
-              </div>
-            </div>
+      {/* Payment */}
+      <section className="mt-10 flex items-start justify-between gap-8 rounded-[20px] border border-[#0b0a12]/10 bg-[#f7f6f2] p-7">
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-4">
+            <Label className="!text-[#0b0a12]">03 — Informasi pembayaran</Label>
+            {isProforma ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#fde68a] bg-[#fffbeb] px-3 py-1 text-[11px] font-semibold text-[#92400e]">
+                <Clock size={12} /> Belum dibayar
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#a7f3d0] bg-[#ecfdf5] px-3 py-1 text-[11px] font-semibold text-[#047857]">
+                <CheckCircle2 size={12} /> Lunas
+              </span>
+            )}
           </div>
-
-          {CONFIG.COMPANY_STAMP && type === "INVOICE" && (
-            <div className="w-32 h-32 relative -rotate-12 opacity-80">
-              <img
-                src={CONFIG.COMPANY_STAMP}
-                alt="PAID STAMP"
-                className="w-full h-full object-contain"
-              />
+          <dl className="mt-5 grid grid-cols-3 gap-6">
+            <div>
+              <dt className="text-[11px] text-[#5b5966]">Metode</dt>
+              <dd className="mt-1 text-sm font-semibold capitalize">
+                {order.payment_method?.replace(/_/g, " ").toLowerCase() || "—"}
+              </dd>
             </div>
-          )}
+            <div>
+              <dt className="text-[11px] text-[#5b5966]">Nominal dibayar</dt>
+              <dd className="mt-1 text-sm font-semibold tabular-nums">
+                {isProforma ? "—" : formatPrice(order.paid_amount || order.final_price || 0)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-[#5b5966]">Waktu verifikasi</dt>
+              <dd className="mt-1 text-sm font-semibold">
+                {!isProforma && order.paid_at ? formatDate(order.paid_at, true) : "—"}
+              </dd>
+            </div>
+          </dl>
         </div>
-      </div>
 
-      {/* Footer Branding */}
-      <div className="text-center pt-8 border-t border-slate-100 mt-auto relative z-10">
-        <p className="text-sm font-bold text-slate-800 mb-1">
-          Terima kasih telah mempercayakan mahakarya Anda kepada kami.
-        </p>
-        <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-medium">
-          {CONFIG.COMPANY_NAME} &bull; Elevated Visual Experience
-        </p>
-      </div>
+        {CONFIG.COMPANY_STAMP && !isProforma && (
+          <img src={CONFIG.COMPANY_STAMP} alt="Lunas" className="h-28 w-28 shrink-0 -rotate-12 object-contain opacity-80" />
+        )}
+      </section>
 
-      <div className="absolute bottom-0 left-0 w-full h-2 bg-brand-gradient"></div>
+      {/* Footer */}
+      <footer className="mt-auto pt-12 text-center">
+        <p className="gs-display text-[20px] font-extrabold">Terima kasih sudah memercayakan desain Anda kepada kami.</p>
+        <p className="gs-label mt-3 text-[10px] text-[#5b5966]">{CONFIG.COMPANY_NAME} · Creative Design Studio</p>
+      </footer>
+
+      <div className="absolute bottom-0 left-0 h-2 w-full bg-[#7c3aed]" aria-hidden />
     </div>
   );
 };
-
-// Helper components for Reicon support inside the template if needed
-const RefreshCw = ({
-  className,
-  size,
-}: {
-  className?: string;
-  size?: number;
-}) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size || 24}
-    height={size || 24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-    <path d="M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-    <path d="M3 21v-5h5" />
-  </svg>
-);

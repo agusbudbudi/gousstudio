@@ -22,7 +22,6 @@ interface CMSComboboxProps {
   onCreateNew?: (inputValue: string) => void;
   createNewText?: (inputValue: string) => string;
   notFoundText?: string;
-  variant?: "cms" | "glass";
 }
 
 const CMSCombobox: React.FC<CMSComboboxProps> = ({
@@ -38,11 +37,9 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
   onCreateNew,
   createNewText,
   notFoundText = "Tidak ditemukan",
-  variant = "cms",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isGlass = variant === "glass";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +67,6 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
         placeholder={placeholder}
         disabled={disabled}
         value={value}
-        variant={variant}
         onChange={(e) => {
           onChange(e.target.value);
           if (!isOpen) setIsOpen(true);
@@ -82,15 +78,11 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
 
       {isOpen && !disabled && (
         <div 
-          className={`absolute top-[calc(100%+8px)] z-50 w-full border rounded-2xl max-h-[210px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 shadow-2xl overflow-hidden ${
-            isGlass 
-              ? "bg-[var(--color-card)] border-white/10 backdrop-blur-xl" 
-              : "bg-white border-slate-200"
-          }`}
+          className="absolute top-[calc(100%+8px)] z-50 w-full border max-h-[210px] overflow-y-auto custom-scrollbar cms-pop-in overflow-hidden rounded-[14px] bg-white border-ink/10 shadow-[0_16px_32px_-16px_rgb(11_10_18/0.2)]"
         >
           {filteredOptions.length === 0 ? (
             <div className="px-5 py-6 text-center">
-              <p className={`text-xs font-medium ${isGlass ? "text-[var(--color-text-muted)]" : "text-slate-500"}`}>
+              <p className="text-xs font-medium text-muted">
                 {notFoundText}
               </p>
               {onCreateNew && createNewText && value && (
@@ -100,7 +92,7 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
                     onCreateNew(value);
                     setIsOpen(false);
                   }}
-                  className="mt-3 text-xs font-bold text-brand-500 cursor-pointer py-2 px-4 border border-brand-500/30 rounded-xl hover:bg-brand-500/10 transition-colors"
+                  className="mt-3 text-xs font-bold text-violet-600 cursor-pointer py-2 px-4 border border-violet-600/30 rounded-[14px] hover:bg-violet-600/10 transition-colors"
                 >
                   {createNewText(value)}
                 </button>
@@ -116,34 +108,24 @@ const CMSCombobox: React.FC<CMSComboboxProps> = ({
                   if (onSelectOption) onSelectOption(opt);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-5 py-4 transition-all flex items-center justify-between group border-b last:border-0 cursor-pointer ${
-                  isGlass
-                    ? "border-white/5 hover:bg-white/5"
-                    : "border-slate-50 hover:bg-brand-50"
-                }`}
+                className="w-full text-left px-5 py-4 transition-all flex items-center justify-between group border-b last:border-0 cursor-pointer border-ink/[0.04] hover:bg-violet-50"
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold transition-colors ${
-                      isGlass 
-                        ? "text-[var(--color-text-title)] group-hover:text-brand-500" 
-                        : "text-slate-700 group-hover:text-brand-600"
-                    }`}>
+                    <span className="text-xs font-bold transition-colors text-ink group-hover:text-violet-700">
                       {opt.label}
                     </span>
                     {opt.rightElement}
                   </div>
                   {opt.description && (
-                    <p className={`text-[11px] font-medium mt-0.5 ${isGlass ? "text-[var(--color-text-muted)]" : "text-slate-500"}`}>
+                    <p className="text-[11px] font-medium mt-0.5 text-muted">
                       {opt.description}
                     </p>
                   )}
                 </div>
                 <ChevronRight
                   size={14}
-                  className={`transition-all group-hover:translate-x-0.5 ${
-                    isGlass ? "text-white/20 group-hover:text-brand-500" : "text-slate-200 group-hover:text-brand-400"
-                  }`}
+                  className="transition-all group-hover:translate-x-0.5 text-ink/20 group-hover:text-violet-400"
                 />
               </button>
             ))
