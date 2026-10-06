@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
+import { LayoutGroup, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ArrowUpRight, Search, X } from 'lucide-react';
 import Lightbox from '../ui/Lightbox';
 import LandingNavbar from '../components/landing/LandingNavbar';
@@ -9,6 +9,7 @@ import LandingFooter from '../components/landing/LandingFooter';
 import FinalCta from '../components/landing/FinalCta';
 import StickyCta from '../components/landing/StickyCta';
 import { Container, EASE, Eyebrow, Skeleton, WaButton, WorkImage } from '../components/landing/primitives';
+import { Masonry } from '../components/landing/Masonry';
 import {
   LEGACY_WORK_CATEGORY_TO_SERVICE,
   usePortfolio,
@@ -318,11 +319,12 @@ const PortfolioPage = () => {
               </div>
             ) : (
               <>
-                <ul className="columns-1 gap-5 sm:columns-2 md:columns-3 lg:columns-4">
-                  <AnimatePresence initial={false}>
-                    {shown.map((item, i) => (
+                <Masonry
+                  items={shown}
+                  renderItem={(item, i) => (
                       <motion.li
                         key={item.id || `${item.title}-${i}`}
+                        layout={reduce ? false : "position"}
                         initial={reduce ? false : { opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: EASE, delay: Math.min(i % PAGE_SIZE, 8) * 0.04 }}
@@ -334,9 +336,8 @@ const PortfolioPage = () => {
                           onError={() => handleImageError(item.id || item.title)}
                         />
                       </motion.li>
-                    ))}
-                  </AnimatePresence>
-                </ul>
+                  )}
+                />
 
                 <div className="mt-6 flex flex-col items-center gap-4">
                   <p className="text-sm text-muted">

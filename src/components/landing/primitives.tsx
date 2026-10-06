@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { waLink, WA_DEFAULT_MESSAGE } from "./content";
@@ -179,7 +179,15 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className = "" }) =
   <div className={`animate-pulse rounded-2xl bg-paper-300/60 ${className}`} />
 );
 
-// Portfolio image with a sized placeholder (no collapse / layout shift), fade-in, and error fallback.
+// Natural aspect ratio (w / h) of images already loaded this session, so a
+// re-render (filter change, revisit) reserves the right height up front.
+const aspectCache = new Map<string, number>();
+
+// Inline so it can't be overridden by a caller's `transition-*` class
+// (two transition utilities on one element: only the later one in the CSS wins).
+const IMG_TRANSITION = "opacity 600ms ease-out, transform 700ms cubic-bezier(0.16,1,0.3,1)";
+
+// Portfolio image with a sized placeholder, fade-in, and error fallback.
 export const WorkImage: React.FC<{
   src: string;
   alt: string;
@@ -190,12 +198,26 @@ export const WorkImage: React.FC<{
   onError?: () => void;
 }> = ({ src, alt, fallbackLabel, className = "", placeholderClassName = "aspect-[4/5]", eager = false, onError }) => {
   const [state, setState] = useState<"loading" | "loaded" | "error">(src ? "loading" : "error");
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     if (!src) {
       onError?.();
     }
   }, [src, onError]);
+
+  // Already in the browser cache: show it right away instead of flashing the placeholder.
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth) handleLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
+
+  const handleLoad = () => {
+    const img = imgRef.current;
+    if (img?.naturalWidth && img.naturalHeight) aspectCache.set(src, img.naturalWidth / img.naturalHeight);
+    setState("loaded");
+  };
 
   const handleError = () => {
     setState("error");
@@ -211,18 +233,27 @@ export const WorkImage: React.FC<{
     );
   }
 
+  const knownRatio = aspectCache.get(src);
   return (
     <>
-      {state === "loading" && <div aria-hidden className={`w-full animate-pulse bg-paper-300/60 ${placeholderClassName}`} />}
+      {state === "loading" && (
+        <div
+          aria-hidden
+          className={`w-full animate-pulse bg-paper-300/60 ${placeholderClassName}`}
+          style={knownRatio ? { aspectRatio: knownRatio } : undefined}
+        />
+      )}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={eager ? "high" : "auto"}
-        onLoad={() => setState("loaded")}
+        onLoad={handleLoad}
         onError={handleError}
-        className={`${className} transition-opacity duration-500 ${state === "loaded" ? "opacity-100" : "absolute opacity-0"}`}
+        style={{ transition: IMG_TRANSITION }}
+        className={`${className} ${state === "loaded" ? "opacity-100" : "absolute opacity-0"}`}
       />
     </>
   );

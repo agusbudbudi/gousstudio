@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import Lightbox from "../../ui/Lightbox";
 
 import { Container, EASE, SectionHeader, Skeleton, WaButton, WorkImage } from "./primitives";
+import { Masonry } from "./Masonry";
 import { usePortfolio, workGroup, workGroups } from "./useLandingData";
 
-// Masonry (CSS columns) so every piece keeps its native aspect ratio.
+// Masonry so every piece keeps its native aspect ratio, ordered left → right.
 const LIMIT = 12;
 const SKELETON_HEIGHTS = ["h-[380px]", "h-[280px]", "h-[340px]", "h-[260px]", "h-[300px]", "h-[360px]", "h-[270px]", "h-[330px]"];
 
@@ -105,19 +106,22 @@ const SelectedWork: React.FC = () => {
                 Minta contoh karya
               </WaButton>
             </div>
-          ) : (
+          ) : isLoading ? (
             <ul className="mt-8 columns-1 gap-5 sm:columns-2 md:columns-3 lg:columns-4">
-              {isLoading
-                ? SKELETON_HEIGHTS.map((h) => (
-                    <li key={h} className="mb-8 break-inside-avoid">
-                      <Skeleton className={`w-full ${h}`} />
-                    </li>
-                  ))
-                : (
-                  <AnimatePresence initial={false}>
-                    {visible.map((work, i) => (
+              {SKELETON_HEIGHTS.map((h) => (
+                <li key={h} className="mb-8 break-inside-avoid">
+                  <Skeleton className={`w-full ${h}`} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Masonry
+              className="mt-8"
+              items={visible}
+              renderItem={(work, i) => (
                       <motion.li
                         key={`${filter}-${work.id || work.title}`}
+                        layout="position"
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 8) * 0.04 }}
@@ -151,10 +155,8 @@ const SelectedWork: React.FC = () => {
                           </div>
                         </button>
                       </motion.li>
-                    ))}
-                  </AnimatePresence>
-                )}
-            </ul>
+              )}
+            />
           )}
 
           {!isLoading && !isError && visible.length === 0 && (
