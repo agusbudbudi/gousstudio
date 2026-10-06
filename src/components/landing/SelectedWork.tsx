@@ -41,7 +41,7 @@ const SelectedWork: React.FC = () => {
   }, [works, filter, failedIds]);
 
   return (
-    <section id="karya" aria-labelledby="karya-title" className="scroll-mt-20 py-20 md:py-32">
+    <section id="karya" aria-labelledby="karya-title" className="py-20 md:py-32">
       <Container>
         <SectionHeader
           id="karya-title"
@@ -107,9 +107,9 @@ const SelectedWork: React.FC = () => {
               </WaButton>
             </div>
           ) : isLoading ? (
-            <ul className="mt-8 columns-1 gap-5 sm:columns-2 md:columns-3 lg:columns-4">
+            <ul className="mt-8 columns-2 gap-3 sm:gap-5 md:columns-3 lg:columns-4">
               {SKELETON_HEIGHTS.map((h) => (
-                <li key={h} className="mb-8 break-inside-avoid">
+                <li key={h} className="mb-6 break-inside-avoid sm:mb-8">
                   <Skeleton className={`w-full ${h}`} />
                 </li>
               ))}
@@ -125,7 +125,7 @@ const SelectedWork: React.FC = () => {
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 8) * 0.04 }}
-                        className="mb-8 break-inside-avoid"
+                        className="mb-6 break-inside-avoid sm:mb-8"
                       >
                         <button
                           type="button"
@@ -133,23 +133,23 @@ const SelectedWork: React.FC = () => {
                           className="group block w-full text-left"
                           aria-label={`Lihat ${work.title}`}
                         >
-                          <div className="relative overflow-hidden rounded-[20px] bg-paper-200">
+                          <div className="relative isolate overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
                             <WorkImage
                               src={work.src}
                               alt={work.imgAlt || `${work.title} — ${workGroup(work).title} oleh Gous Studio`}
                               fallbackLabel={work.title}
                               onError={() => handleImageError(work.id || work.title)}
-                              className="block h-auto w-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+                              className="block h-auto w-full group-hover:scale-[1.03]"
                             />
                             <span className="absolute bottom-4 right-4 flex h-11 w-11 translate-y-2 items-center justify-center rounded-full bg-paper text-ink opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                               <ArrowUpRight size={20} />
                             </span>
                           </div>
-                          <div className="mt-3 flex items-baseline justify-between gap-3">
+                          <div className="mt-3">
                             <h3 className="text-base font-semibold leading-snug text-ink transition-transform duration-300 group-hover:translate-x-1">
                               {work.title}
                             </h3>
-                            <span className="gs-label shrink-0 text-muted">
+                            <span className="gs-label mt-1 hidden text-muted sm:block">
                               {workGroup(work).title}
                             </span>
                           </div>

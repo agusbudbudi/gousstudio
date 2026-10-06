@@ -28,14 +28,14 @@ const isCanva = (item: WorkItem) => Boolean(item.linkUrl?.includes('canva.com/de
 
 const WorkCard: React.FC<{ item: WorkItem; onOpen: () => void; onError?: () => void }> = ({ item, onOpen, onError }) => (
   <button type="button" onClick={onOpen} className="group block w-full text-left" aria-label={`Lihat ${item.title}`}>
-    <div className="relative overflow-hidden rounded-[20px] bg-paper-200">
+    <div className="relative isolate overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
       {item.src ? (
         <WorkImage
           src={item.src}
           alt={item.imgAlt || `${item.title} — ${workGroup(item).title} oleh Gous Studio`}
           fallbackLabel={item.title}
           onError={onError}
-          className="block w-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+          className="block w-full group-hover:scale-[1.03]"
         />
       ) : isCanva(item) ? (
         <div className="pointer-events-none relative aspect-video w-full">
@@ -50,14 +50,14 @@ const WorkCard: React.FC<{ item: WorkItem; onOpen: () => void; onError?: () => v
         <ArrowUpRight size={20} />
       </span>
     </div>
-    <div className="mt-3 flex items-baseline justify-between gap-4">
+    <div className="mt-3">
       <h2 className="font-semibold leading-snug text-ink transition-transform duration-300 group-hover:translate-x-1">
         {item.title}
       </h2>
-      <span className="gs-label shrink-0 text-muted">{workGroup(item).title}</span>
+      <span className="gs-label mt-1 hidden text-muted sm:block">{workGroup(item).title}</span>
     </div>
     {item.tags && item.tags.length > 0 && (
-      <p className="mt-1 truncate text-sm text-muted">{item.tags.slice(0, 3).join(' · ')}</p>
+      <p className="mt-1 hidden truncate text-sm text-muted sm:block">{item.tags.slice(0, 3).join(' · ')}</p>
     )}
   </button>
 );
@@ -281,9 +281,9 @@ const PortfolioPage = () => {
         <section aria-label="Daftar karya" className="py-12 md:py-16">
           <Container>
             {isLoading ? (
-              <div className="columns-1 gap-5 sm:columns-2 md:columns-3 lg:columns-4">
+              <div className="columns-2 gap-3 sm:gap-5 md:columns-3 lg:columns-4">
                 {['h-[340px]', 'h-[260px]', 'h-[420px]', 'h-[300px]', 'h-[380px]', 'h-[280px]'].map((h) => (
-                  <Skeleton key={h} className={`mb-8 w-full break-inside-avoid ${h}`} />
+                  <Skeleton key={h} className={`mb-6 w-full break-inside-avoid sm:mb-8 ${h}`} />
                 ))}
               </div>
             ) : isError ? (
@@ -328,7 +328,7 @@ const PortfolioPage = () => {
                         initial={reduce ? false : { opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: EASE, delay: Math.min(i % PAGE_SIZE, 8) * 0.04 }}
-                        className="mb-8 break-inside-avoid"
+                        className="mb-6 break-inside-avoid sm:mb-8"
                       >
                         <WorkCard
                           item={item}

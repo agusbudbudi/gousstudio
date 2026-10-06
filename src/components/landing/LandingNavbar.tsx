@@ -123,7 +123,7 @@ const LandingNavbar: React.FC = () => {
                     <Link
                       to={item.href}
                       onClick={() => setOpen(false)}
-                      className="gs-display flex items-baseline justify-between py-4 text-4xl font-bold text-ink"
+                      className="gs-display flex items-baseline justify-between py-3.5 text-2xl font-bold text-ink"
                     >
                       {item.label}
                       <span className="gs-label text-muted">0{i + 1}</span>

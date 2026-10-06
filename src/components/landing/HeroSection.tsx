@@ -67,8 +67,6 @@ const MarqueeWork: React.FC<{ work: WorkItem; eager: boolean; hidden: boolean }>
 // Availability pill above the headline; set to false to hide it.
 const SHOW_AVAILABILITY = true;
 
-const monthName = new Intl.DateTimeFormat("id-ID", { month: "long" }).format(new Date());
-
 const HeroSection: React.FC = () => {
   const reduce = useReducedMotion();
   const { data: works = [], isLoading } = usePortfolio();
@@ -118,13 +116,13 @@ const HeroSection: React.FC = () => {
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
-            className="gs-label inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-paper/85 px-3.5 py-2 text-ink/80 shadow-[0_8px_24px_-12px_rgba(11,10,18,0.25)] backdrop-blur-md"
+            className="gs-label inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border border-ink/10 bg-paper/85 px-3.5 py-2 text-ink/80 shadow-[0_8px_24px_-12px_rgba(11,10,18,0.25)] backdrop-blur-md"
           >
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60 motion-reduce:hidden" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
             </span>
-            Available — slot project {monthName} terbuka
+            Slot project tersedia
           </motion.p>
         )}
 

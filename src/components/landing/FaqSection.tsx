@@ -74,7 +74,7 @@ const FaqSection: React.FC<{ index?: string }> = ({ index = "08" }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-  <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 border-t border-ink/10 py-20 md:py-32">
+  <section id="faq" aria-labelledby="faq-title" className="border-t border-ink/10 py-20 md:py-32">
     <Helmet>
       <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
     </Helmet>

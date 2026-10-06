@@ -37,7 +37,7 @@ const TestimonialsSection: React.FC = () => {
       <Container>
         <SectionHeader id="testi-title" index="04" eyebrow="Kata Klien" title="Mereka sudah merasakan bedanya." />
 
-        <div className="-mx-5 mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 scrollbar-hide md:mx-0 md:grid md:grid-cols-12 md:gap-5 md:overflow-visible md:px-0">
+        <div className="-mx-5 mt-14 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto overflow-y-hidden px-5 pb-2 scrollbar-hide md:mx-0 md:grid md:grid-cols-12 md:gap-5 md:overflow-visible md:px-0">
           <Reveal className="w-[88%] shrink-0 snap-start md:col-span-7 md:w-auto">
             <figure className="flex h-full flex-col justify-between gap-10 rounded-[24px] border border-violet-200 bg-violet-50 p-7 md:p-12">
               <span aria-hidden className="gs-display text-7xl leading-none text-violet-500">“</span>

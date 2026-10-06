@@ -10,7 +10,7 @@ const AboutSection: React.FC = () => {
   const [photoFailed, setPhotoFailed] = useState(false);
 
   return (
-    <section id="tentang" aria-labelledby="tentang-title" className="scroll-mt-20 py-20 md:py-32">
+    <section id="tentang" aria-labelledby="tentang-title" className="py-20 md:py-32">
       <Container className="grid gap-12 md:grid-cols-12 md:gap-10">
         <Reveal className="md:col-span-5">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[24px] bg-violet-600">
