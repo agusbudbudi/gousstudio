@@ -105,7 +105,11 @@ export const SectionHeader: React.FC<{
       </h2>
     </Reveal>
     {(description || action) && (
-      <Reveal className="flex flex-col gap-4 md:col-span-4 md:items-start" delay={0.1}>
+      // Action alone sits flush right; with a description, both stay left-aligned as a block
+      <Reveal
+        className={`flex flex-col gap-4 md:col-span-4 ${description ? "md:items-start" : "md:items-end"}`}
+        delay={0.1}
+      >
         {description && (
           <p className={`max-w-[42ch] text-base leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}>
             {description}
@@ -185,7 +189,7 @@ const aspectCache = new Map<string, number>();
 
 // Inline so it can't be overridden by a caller's `transition-*` class
 // (two transition utilities on one element: only the later one in the CSS wins).
-const IMG_TRANSITION = "opacity 600ms ease-out, transform 700ms cubic-bezier(0.16,1,0.3,1)";
+const IMG_TRANSITION = "opacity 600ms ease-out, scale 900ms cubic-bezier(0.22,1,0.36,1), transform 900ms cubic-bezier(0.22,1,0.36,1)";
 
 // Portfolio image with a sized placeholder, fade-in, and error fallback.
 export const WorkImage: React.FC<{
@@ -252,7 +256,7 @@ export const WorkImage: React.FC<{
         fetchPriority={eager ? "high" : "auto"}
         onLoad={handleLoad}
         onError={handleError}
-        style={{ transition: IMG_TRANSITION }}
+        style={{ transition: IMG_TRANSITION, willChange: "scale", backfaceVisibility: "hidden" }}
         className={`${className} ${state === "loaded" ? "opacity-100" : "absolute opacity-0"}`}
       />
     </>

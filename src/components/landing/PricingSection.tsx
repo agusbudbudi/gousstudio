@@ -14,7 +14,7 @@ const PricingSection: React.FC = () => {
   );
 
   return (
-    <section id="harga" aria-labelledby="harga-title" className="scroll-mt-20 bg-paper-200/60 py-20 md:py-32">
+    <section id="harga" aria-labelledby="harga-title" className="bg-paper-200/60 py-20 md:py-32">
       <Container>
         <SectionHeader
           id="harga-title"

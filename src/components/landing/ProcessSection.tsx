@@ -9,7 +9,7 @@ const ProcessSection: React.FC = () => {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 55%"] });
 
   return (
-    <section id="proses" aria-labelledby="proses-title" className="scroll-mt-20 border-t border-ink/10 py-20 md:py-32">
+    <section id="proses" aria-labelledby="proses-title" className="border-t border-ink/10 py-20 md:py-32">
       <Container>
         <SectionHeader
           id="proses-title"

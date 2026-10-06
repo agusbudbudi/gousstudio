@@ -373,23 +373,23 @@ const PricelistDetailPage = () => {
                 </Link>
               }
             />
-            <ul className={`mt-12 grid grid-cols-2 gap-x-5 gap-y-8 ${visibleWorks.length % 4 === 0 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+            <ul className={`mt-12 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-5 sm:gap-y-8 ${visibleWorks.length % 4 === 0 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
               {visibleWorks.map((w, i) => (
                 <Reveal as="li" key={w.id || i} delay={(i % 4) * 0.05}>
                   <button type="button" onClick={() => setLightboxIndex(i)} className="group block w-full text-left" aria-label={`Lihat ${w.title}`}>
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-paper-200">
+                    <div className="relative isolate aspect-[4/5] overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
                       <WorkImage
                         src={w.src}
                         alt={w.imgAlt || `${w.title} oleh Gous Studio`}
                         fallbackLabel={w.title}
                         onError={() => handleWorkError(w.id || w.title)}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+                        className="absolute inset-0 h-full w-full object-cover group-hover:scale-[1.03]"
                         placeholderClassName="absolute inset-0"
                       />
                     </div>
-                    <div className="mt-3 flex items-baseline justify-between gap-3">
+                    <div className="mt-3">
                       <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{w.title}</p>
-                      <span className="gs-label hidden shrink-0 text-muted sm:inline">{workGroup(w).title}</span>
+                      <span className="gs-label mt-1 hidden text-muted sm:block">{workGroup(w).title}</span>
                     </div>
                   </button>
                 </Reveal>

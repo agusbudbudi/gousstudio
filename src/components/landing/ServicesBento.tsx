@@ -45,7 +45,7 @@ const ServiceTile: React.FC<{
 }> = ({ service, index, price, image, featured }) => {
   const preview = (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-paper-200 ${
+      className={`relative isolate overflow-hidden rounded-2xl bg-paper-200 [transform:translateZ(0)] ${
         featured ? "mt-8 min-h-[220px] flex-1" : "h-full min-h-[136px]"
       }`}
     >
@@ -54,7 +54,7 @@ const ServiceTile: React.FC<{
           src={image.src}
           alt={`Contoh ${service.title} oleh Gous Studio`}
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] [will-change:scale] [backface-visibility:hidden] group-hover:scale-[1.03]"
         />
       ) : (
         <span aria-hidden className="gs-display absolute inset-0 flex items-center justify-center px-4 text-center text-[22px] font-extrabold text-ink/10">
@@ -167,7 +167,7 @@ const ServicesBento: React.FC = () => {
   const layout = layoutFor(tiles.length);
 
   return (
-    <section id="layanan" aria-labelledby="layanan-title" className="scroll-mt-20 bg-paper-200/60 py-20 md:py-32">
+    <section id="layanan" aria-labelledby="layanan-title" className="bg-paper-200/60 py-20 md:py-32">
       <Container>
         <SectionHeader
           id="layanan-title"

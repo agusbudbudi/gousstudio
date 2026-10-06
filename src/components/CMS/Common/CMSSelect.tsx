@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -115,33 +116,13 @@ const CMSSelect = forwardRef<HTMLSelectElement, CMSSelectProps>(
       [ref],
     );
 
-    // Uncontrolled: react-hook-form writes `el.value` directly (register + reset/setValue)
-    // without firing an event, so mirror those writes into internal state.
-    useEffect(() => {
+    // Uncontrolled: react-hook-form writes `el.value` directly (in its ref callback, on
+    // register and after reset/setValue) without firing an event. Refs attach before this
+    // layout effect runs, so reading the native value after every commit catches each write.
+    useLayoutEffect(() => {
       const el = nativeRef.current;
       if (!el || isControlled) return;
-      const desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
-      if (!desc?.get || !desc.set) return;
-      const { get, set } = desc;
-      Object.defineProperty(el, "value", {
-        configurable: true,
-        get: () => get.call(el),
-        set: (v: unknown) => {
-          set.call(el, v);
-          setInternalValue(String(v ?? ""));
-        },
-      });
-      setInternalValue(get.call(el));
-      return () => {
-        delete (el as { value?: string }).value;
-      };
-    }, [isControlled]);
-
-    // Keep the native value in step once its <option> exists (options may load after reset)
-    useEffect(() => {
-      const el = nativeRef.current;
-      if (!el || isControlled || el.value === internalValue) return;
-      el.value = internalValue;
+      if (el.value !== internalValue) setInternalValue(el.value);
     });
 
     // Sync activeIdx when opening

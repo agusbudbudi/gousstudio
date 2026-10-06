@@ -59,12 +59,12 @@ const FastworkStrip: React.FC = () => {
                       rel="noopener noreferrer"
                       className="group flex h-full flex-col"
                     >
-                      <div className="relative aspect-video w-full overflow-hidden rounded-[20px] bg-paper-200">
+                      <div className="relative isolate aspect-video w-full overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
                         <img
                           src={item.image}
                           alt={item.title}
                           loading="lazy"
-                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] [will-change:scale] [backface-visibility:hidden] group-hover:scale-[1.03]"
                         />
                         <span className="absolute bottom-4 right-4 flex h-11 w-11 translate-y-2 items-center justify-center rounded-full bg-paper text-ink opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                           <ArrowUpRight size={20} />

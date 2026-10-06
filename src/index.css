@@ -250,7 +250,13 @@ html[data-gs-shell] body::-webkit-scrollbar-thumb:hover {
 .gs-marquee {
   animation: gs-marquee var(--gs-marquee-duration, 40s) linear infinite;
 }
-.gs-marquee-wrap:hover .gs-marquee,
+/* Pause on hover only with a real pointer: touch browsers keep :hover "stuck" after a tap,
+   which would leave the marquee paused until the user taps somewhere else. */
+@media (hover: hover) and (pointer: fine) {
+  .gs-marquee-wrap:hover .gs-marquee {
+    animation-play-state: paused;
+  }
+}
 .gs-marquee-wrap:focus-within .gs-marquee {
   animation-play-state: paused;
 }

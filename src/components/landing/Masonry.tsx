@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 
-// Column count per Tailwind breakpoint: base 1, sm 2, md 3, lg 4.
+// Column count per Tailwind breakpoint: base 2, md 3, lg 4.
 const BREAKPOINTS: [query: string, cols: number][] = [
   ["(min-width: 1024px)", 4],
   ["(min-width: 768px)", 3],
-  ["(min-width: 640px)", 2],
 ];
 
 const currentColumns = () =>
   typeof window === "undefined"
-    ? 1
-    : BREAKPOINTS.find(([q]) => window.matchMedia(q).matches)?.[1] ?? 1;
+    ? 2
+    : BREAKPOINTS.find(([q]) => window.matchMedia(q).matches)?.[1] ?? 2;
 
 export function useColumnCount() {
   const [cols, setCols] = useState(currentColumns);
@@ -42,7 +41,7 @@ export function Masonry<T>({ items, renderItem, className = "" }: MasonryProps<T
   items.forEach((item, index) => columns[index % cols].push({ item, index }));
 
   return (
-    <div className={`flex items-start gap-5 ${className}`}>
+    <div className={`flex items-start gap-3 sm:gap-5 ${className}`}>
       {columns.map((col, c) => (
         <ul key={c} className="flex min-w-0 flex-1 flex-col">
           <AnimatePresence initial={false}>
