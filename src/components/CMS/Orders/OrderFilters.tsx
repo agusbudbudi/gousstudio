@@ -13,6 +13,7 @@ const STATUSES: string[] = [
   "REVIEWED",
   "REVISION",
   "DONE",
+  "CANCELLED",
 ];
 
 const VIEW_MODES = [

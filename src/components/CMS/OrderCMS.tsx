@@ -19,6 +19,7 @@ import OrderList from "./Orders/OrderList";
 import OrderForm from "./Orders/OrderForm";
 import OrderKanban from "./Orders/OrderKanban";
 import OrderTimeline from "./Orders/OrderTimeline";
+import { getAdminAction } from "../../utils/orderFlow";
 
 const OrderCMS: React.FC = () => {
   const { addToast } = useToast();
@@ -36,6 +37,7 @@ const OrderCMS: React.FC = () => {
     createOrder,
     updateOrder,
     updateOrderStatus,
+    logRevision,
     deleteOrder,
   } = useOrders();
 
@@ -140,10 +142,21 @@ const OrderCMS: React.FC = () => {
         navigate(`/cms/orders/${newOrder.order_number}`);
       }
     } else if (selectedOrder) {
-      const payload = { ...data, package_details: selectedPricelist || undefined };
+      // Send only what the admin changed. Status moves through the status actions, and resending
+      // untouched fields from the form's copy would revert changes made meanwhile (a client
+      // revision request, a webhook flag appended to internal_notes, a new revision deadline).
+      const { status: _status, ...details } = data;
+      const base = selectedOrder as unknown as Record<string, unknown>;
+      const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+      const changed = Object.fromEntries(
+        Object.entries(details).filter(([key, value]) => !same(value, base[key])),
+      ) as Partial<OrderItem>;
+      const payload = { ...changed, package_details: selectedPricelist || undefined };
       await updateOrder(selectedOrder.id, payload);
     }
   };
+
+  const needsActionCount = orders.filter((o) => getAdminAction(o)).length;
 
   const handleStatusUpdate = async (id: string, newStatus: string, additionalUpdates: any = {}) => {
     return await updateOrderStatus(id, newStatus, additionalUpdates);
@@ -172,7 +185,11 @@ const OrderCMS: React.FC = () => {
             "Data Orders"
           )
         }
-        countText={!selectedOrder ? `${orders.length} order terdaftar` : undefined}
+        countText={
+          !selectedOrder
+            ? `${orders.length} order terdaftar${needsActionCount ? ` · ${needsActionCount} butuh aksi` : ""}`
+            : undefined
+        }
         onBack={selectedOrder ? () => navigate("/cms/orders") : undefined}
       >
         {!selectedOrder && (
@@ -218,6 +235,8 @@ const OrderCMS: React.FC = () => {
           onCancel={() => navigate("/cms/orders")}
           onSave={handleSaveOrder}
           onStatusUpdate={handleStatusUpdate}
+          onUpdate={(id, updates) => updateOrder(id, updates)}
+          onLogRevision={logRevision}
           onClientAdded={(newClient) =>
             queryClient.setQueryData(["clients"], (old: ClientItem[] | undefined) => [newClient, ...(old || [])])
           }

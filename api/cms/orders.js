@@ -1,4 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { buildRevisionEntry } from "../_lib/orders.js";
+
+const STALE_STATUS_MESSAGE = 'Status order sudah berubah (mis. klien baru minta revisi). Muat ulang lalu coba lagi.';
 
 function getCmsToken(req) {
   const cookies = (req.headers.cookie || '').split(';');
@@ -46,19 +49,66 @@ export default async function handler(req, res) {
     case 'update':
       if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
       try {
-        const { data, error } = await supabase.from('orders').update(req.body.updates).eq('id', req.body.id).select().single();
+        const { id, updates, expectedStatus } = req.body;
+        let query = supabase.from('orders').update(updates).eq('id', id);
+        // Status transitions are guarded on the status the admin saw, so they can't silently
+        // override something the client (or a webhook) did while the CMS view was open
+        if (expectedStatus) query = query.eq('status', expectedStatus);
+        const { data, error } = await query.select().maybeSingle();
         if (error) throw error;
+        if (!data) {
+          return expectedStatus
+            ? res.status(409).json({ message: STALE_STATUS_MESSAGE })
+            : res.status(404).json({ message: 'Order not found' });
+        }
 
         // If payment is manually confirmed, mark the associated voucher as used
-        if (req.body.updates.paid_amount !== undefined && data.referral_id) {
+        if (updates.paid_amount !== undefined && data.referral_id) {
           await supabase.from('referral_codes').update({ is_used: true }).eq('id', data.referral_id);
         }
 
-        // If order reverting to DRAFT or CANCELLED, release the voucher
-        if ((req.body.updates.status === 'DRAFT' || req.body.updates.status === 'CANCELLED') && data.referral_id) {
+        // If an unpaid order reverts to DRAFT or is CANCELLED, release the voucher. A paid order
+        // keeps it used: the payment is still held (or awaiting a manual refund).
+        if ((updates.status === 'DRAFT' || updates.status === 'CANCELLED') && data.referral_id && !data.paid_at) {
           await supabase.from('referral_codes').update({ is_used: false }).eq('id', data.referral_id);
         }
 
+        return res.status(200).json({ success: true, data });
+      } catch (e) { return res.status(500).json({ message: e.message }); }
+
+    case 'log-revision':
+      if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+      try {
+        // Admin-logged REVIEWED → REVISION. Built from the current row (not the CMS's copy) so a
+        // revision the client just submitted isn't overwritten or counted twice.
+        const { id, notes, deadline } = req.body || {};
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .select('id, status, revision_count, revision_notes, review_url, package_details, selected_package')
+          .eq('id', id)
+          .single();
+        if (orderError || !order) return res.status(404).json({ message: 'Order not found' });
+        if (order.status !== 'REVIEWED') return res.status(409).json({ message: STALE_STATUS_MESSAGE });
+
+        const { round, revisionNotes } = await buildRevisionEntry(supabase, order, {
+          notes: typeof notes === 'string' ? notes.trim() : '',
+          source: 'admin',
+        });
+        const { data, error } = await supabase
+          .from('orders')
+          .update({
+            status: 'REVISION',
+            revision_count: round,
+            revision_notes: revisionNotes,
+            approved_at: null,
+            ...(deadline ? { deadline } : {}),
+          })
+          .eq('id', order.id)
+          .eq('status', 'REVIEWED')
+          .select()
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return res.status(409).json({ message: STALE_STATUS_MESSAGE });
         return res.status(200).json({ success: true, data });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 

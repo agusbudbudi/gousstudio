@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Package, Clock, Building2, ChevronRight, TrendingUp, FileDown, LayoutDashboard, Gift, Copy, Check, ArrowUpRight } from "lucide-react";
+import { Package, Clock, Building2, ChevronRight, TrendingUp, FileDown, Eye, LayoutDashboard, Gift, Copy, Check, ArrowUpRight } from "lucide-react";
 import { buttonClass, Eyebrow } from "../components/landing/primitives";
 import {
   ClientPage,
@@ -30,6 +30,7 @@ interface PortalOrder {
   created_at: string;
   payment_proof_url?: string;
   deliverables_url?: string;
+  review_url?: string;
 }
 
 interface PortalVoucher {
@@ -98,8 +99,8 @@ const ClientPortal: React.FC = () => {
     );
   }
 
-  const activeOrders = orders.filter((o) => !["DONE", "DRAFT"].includes(o.status)).length;
-  const totalSpent = orders.reduce((sum, o) => sum + (o.final_price || o.price || 0), 0);
+  const activeOrders = orders.filter((o) => !["DONE", "DRAFT", "CANCELLED"].includes(o.status)).length;
+  const totalSpent = orders.filter((o) => o.status !== "CANCELLED").reduce((sum, o) => sum + (o.final_price || o.price || 0), 0);
 
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -218,6 +219,16 @@ const ClientPortal: React.FC = () => {
                           {formatIDR(order.final_price || order.price)}
                         </p>
                       </div>
+                      {order.review_url && order.status === "REVIEWED" && (
+                        <a
+                          href={order.review_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative z-10 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100"
+                        >
+                          <Eye size={16} /> Lihat Draft
+                        </a>
+                      )}
                       {order.deliverables_url && order.status === "DONE" && (
                         <a
                           href={order.deliverables_url}

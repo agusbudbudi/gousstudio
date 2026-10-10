@@ -33,7 +33,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
   };
 
   orders.forEach((order) => {
-    if (order.status === "DONE") return;
+    if (order.status === "DONE" || order.status === "CANCELLED") return;
 
     if (!order.deadline) {
       groups.noDeadline.push(order);

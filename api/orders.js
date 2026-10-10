@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { buildRevisionEntry } from "./_lib/orders.js";
 
 // Rate limiter
 const ipRequests = new Map();
@@ -12,6 +13,16 @@ function isRateLimited(ip) {
   requests.push(now);
   ipRequests.set(ip, requests);
   return requests.length > maxRequests;
+}
+
+// Public endpoints: never expose admin-only fields to whoever holds the order link.
+// Notes on admin-logged revisions are internal summaries, so only the entry itself is kept.
+function toPublicOrder(order) {
+  const { internal_notes: _internal, ...rest } = order;
+  if (Array.isArray(rest.revision_notes)) {
+    rest.revision_notes = rest.revision_notes.map((n) => (n.source === 'admin' ? { ...n, notes: '' } : n));
+  }
+  return rest;
 }
 
 export default async function handler(req, res) {
@@ -65,8 +76,9 @@ export default async function handler(req, res) {
       if (req.method !== 'GET') return res.status(405).json({ message: 'Method not allowed' });
       try {
         const { orderNumber } = req.query;
-        const { data: order, error } = await supabase.from('orders').select('*').eq('order_number', orderNumber).single();
-        if (error || !order) return res.status(404).json({ message: 'Not found' });
+        const { data: row, error } = await supabase.from('orders').select('*').eq('order_number', orderNumber).single();
+        if (error || !row) return res.status(404).json({ message: 'Not found' });
+        const order = toPublicOrder(row);
 
         let priceData = order.package_details || null;
         if (!priceData && order.selected_package) {
@@ -106,14 +118,83 @@ export default async function handler(req, res) {
         if (!orderNumber || !paymentProofUrl) {
           return res.status(400).json({ message: 'Order number and proof URL are required' });
         }
+        // Proof can only change while payment is still pending — not after it was confirmed
         const { data, error } = await supabase
           .from('orders')
           .update({ payment_proof_url: paymentProofUrl })
           .eq('order_number', orderNumber)
-          .select()
-          .single();
+          .eq('status', 'WAITING FOR PAYMENT')
+          .select('order_number, status, payment_proof_url')
+          .maybeSingle();
         if (error) throw error;
+        if (!data) return res.status(409).json({ message: 'Bukti bayar hanya bisa diupload saat order menunggu pembayaran.' });
         return res.status(200).json({ success: true, order: data });
+      } catch (e) { return res.status(500).json({ message: e.message }); }
+
+    case 'request-revision':
+      if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+      try {
+        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+        if (isRateLimited(ip)) return res.status(429).json({ message: 'Terlalu banyak permintaan. Coba lagi sebentar.' });
+
+        const { orderNumber } = req.body || {};
+        const notes = typeof req.body?.notes === 'string' ? req.body.notes.trim() : '';
+        if (!orderNumber) return res.status(400).json({ message: 'Order number is required' });
+        if (notes.length < 10) return res.status(400).json({ message: 'Catatan revisi minimal 10 karakter.' });
+        if (notes.length > 3000) return res.status(400).json({ message: 'Catatan revisi maksimal 3000 karakter.' });
+
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .select('id, status, revision_count, revision_notes, review_url, approved_at, package_details, selected_package')
+          .eq('order_number', orderNumber)
+          .single();
+        if (orderError || !order) return res.status(404).json({ message: 'Order not found' });
+        if (order.status !== 'REVIEWED') {
+          return res.status(400).json({ message: 'Revisi hanya bisa diminta saat draft sedang direview.' });
+        }
+        if (order.approved_at) {
+          return res.status(400).json({ message: 'Draft ini sudah kamu setujui. Hubungi kami jika masih ada perubahan.' });
+        }
+
+        const { round, revisionNotes } = await buildRevisionEntry(supabase, order, { notes, source: 'client' });
+
+        // Guard on status so a double submit (or an admin action meanwhile) can't count the same revision twice
+        const { data, error } = await supabase
+          .from('orders')
+          .update({ status: 'REVISION', revision_count: round, revision_notes: revisionNotes })
+          .eq('id', order.id)
+          .eq('status', 'REVIEWED')
+          .is('approved_at', null)
+          .select()
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return res.status(409).json({ message: 'Permintaan revisi sudah terkirim.' });
+
+        return res.status(200).json({ success: true, order: toPublicOrder(data) });
+      } catch (e) { return res.status(500).json({ message: e.message }); }
+
+    case 'approve-draft':
+      if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+      try {
+        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+        if (isRateLimited(ip)) return res.status(429).json({ message: 'Terlalu banyak permintaan. Coba lagi sebentar.' });
+
+        const { orderNumber } = req.body || {};
+        if (!orderNumber) return res.status(400).json({ message: 'Order number is required' });
+
+        // Marks the current draft as approved; the admin still completes the order (DONE + final files)
+        const { data, error } = await supabase
+          .from('orders')
+          .update({ approved_at: new Date().toISOString() })
+          .eq('order_number', orderNumber)
+          .eq('status', 'REVIEWED')
+          .is('approved_at', null)
+          .select()
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return res.status(409).json({ message: 'Draft hanya bisa disetujui saat sedang direview.' });
+
+        return res.status(200).json({ success: true, order: toPublicOrder(data) });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 
     case 'submit-feedback':

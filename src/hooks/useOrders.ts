@@ -40,11 +40,22 @@ export function useOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, updates, silent }: { id: string; updates: Partial<OrderItem>; silent?: boolean }) => {
+    mutationFn: async ({
+      id,
+      updates,
+      silent,
+      expectedStatus,
+    }: {
+      id: string;
+      updates: Partial<OrderItem>;
+      silent?: boolean;
+      /** Server rejects the update (409) when the order is no longer in this status. */
+      expectedStatus?: string;
+    }) => {
       const res = await fetch("/api/cms/orders?action=update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, updates }),
+        body: JSON.stringify({ id, updates, expectedStatus }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.message || "Failed to update order");
@@ -61,11 +72,35 @@ export function useOrders() {
     onError: (err, variables, context) => {
       queryClient.setQueryData(["orders"], context?.previousOrders);
       addToast(`Gagal update order: ${err.message}`, "error");
+      // The order may have changed server-side (409) — show its current state
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
     onSuccess: (data) => {
       if (!data.silent) {
         addToast("Detail order berhasil diperbarui.", "success");
       }
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+
+  const logRevisionMutation = useMutation({
+    mutationFn: async ({ id, notes, deadline }: { id: string; notes: string; deadline?: string }) => {
+      const res = await fetch("/api/cms/orders?action=log-revision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, notes, deadline }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to log revision");
+      return result.data as OrderItem;
+    },
+    onSuccess: (order) => {
+      addToast(`Order #${order.order_number} masuk revisi ke-${order.revision_count}`, "success");
+    },
+    onError: (err: Error) => {
+      addToast(`Gagal mencatat revisi: ${err.message}`, "error");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
@@ -100,9 +135,14 @@ export function useOrders() {
     }
   };
 
-  const updateOrder = async (id: string, updates: Partial<OrderItem>, silent: boolean = false): Promise<boolean> => {
+  const updateOrder = async (
+    id: string,
+    updates: Partial<OrderItem>,
+    silent: boolean = false,
+    expectedStatus?: string,
+  ): Promise<boolean> => {
     try {
-      await updateMutation.mutateAsync({ id, updates, silent });
+      await updateMutation.mutateAsync({ id, updates, silent, expectedStatus });
       return true;
     } catch {
       return false;
@@ -111,13 +151,25 @@ export function useOrders() {
 
   const updateOrderStatus = async (id: string, newStatus: string, additionalUpdates: any = {}) => {
     if (id === "NEW") return false;
-    const success = await updateOrder(id, { status: newStatus, ...additionalUpdates }, true);
+    // Guard on the status the admin is looking at, so a stale view can't override a client action
+    const currentStatus = orders.find((o) => o.id === id)?.status;
+    const success = await updateOrder(id, { status: newStatus, ...additionalUpdates }, true, currentStatus);
     if (success) {
       const orderNumber = orders.find((o) => o.id === id)?.order_number || id;
       addToast(`Status order #${orderNumber} diperbarui ke ${newStatus}`, "success");
       return true;
     }
     return false;
+  };
+
+  // Admin-logged REVIEWED → REVISION; the server appends the history entry to the current row
+  const logRevision = async (id: string, notes: string, deadline?: string) => {
+    try {
+      await logRevisionMutation.mutateAsync({ id, notes, deadline });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   // Callers confirm with the user first (OrderCMS uses useConfirm)
@@ -136,6 +188,8 @@ export function useOrders() {
     error: error?.message || null,
     updatingId: updateMutation.isPending
       ? updateMutation.variables?.id
+      : logRevisionMutation.isPending
+      ? logRevisionMutation.variables?.id
       : deleteMutation.isPending
       ? deleteMutation.variables?.id
       : null,
@@ -143,6 +197,7 @@ export function useOrders() {
     createOrder,
     updateOrder,
     updateOrderStatus,
+    logRevision,
     deleteOrder,
   };
 }

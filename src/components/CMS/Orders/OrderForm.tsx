@@ -14,6 +14,10 @@ import {
   Phone,
   MessageCircle,
   ExternalLink,
+  Ban,
+  RotateCcw,
+  Pencil,
+  Eye,
   Calendar,
   Image as ImageIcon,
   Maximize2,
@@ -32,11 +36,25 @@ import { OrderItem, PricelistItem, ClientItem } from "../../../types";
 import { useToast } from "../../../hooks/useToast";
 import CMSInput from "../Common/CMSInput";
 import CMSSelect from "../Common/CMSSelect";
+import CMSDatePicker from "../Common/CMSDatePicker";
 import CMSCombobox from "../Common/CMSCombobox";
 import CMSViewItem from "../Common/CMSViewItem";
 import CMSBadge from "../Common/CMSBadge";
 import CMSButton from "../Common/CMSButton";
-import CMSModal from "../Common/CMSModal";
+import { useConfirm } from "../Common/CMSConfirmDialog";
+import {
+  CompleteOrderModal,
+  type OrderUpdateFn,
+  RequestRevisionModal,
+  SendForReviewModal,
+  VerifyPaymentModal,
+} from "./OrderStatusModals";
+import {
+  addWorkingDays,
+  formatRevisionQuota,
+  getRevisionQuota,
+  REVISION_DAYS,
+} from "../../../utils/orderFlow";
 import ClientModal from "../ClientModal";
 import { InvoiceTemplate } from "../../Invoice/InvoiceTemplate";
 
@@ -72,6 +90,7 @@ const cmsOrderValidationSchema = z.object({
       "REVISION",
       "REVIEWED",
       "DONE",
+      "CANCELLED",
     ])
     .optional(),
   is_sandbox: z.boolean().nullable().optional(),
@@ -100,6 +119,8 @@ interface OrderFormProps {
     newStatus: string,
     additionalUpdates?: any,
   ) => Promise<boolean>;
+  onUpdate: OrderUpdateFn;
+  onLogRevision: (id: string, notes: string, deadline?: string) => Promise<boolean>;
   onClientAdded: (client: ClientItem) => void;
 }
 
@@ -112,6 +133,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
   onCancel,
   onSave,
   onStatusUpdate,
+  onUpdate,
+  onLogRevision,
   onClientAdded,
 }) => {
   const { addToast } = useToast();
@@ -140,13 +163,26 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
-  const [isSelesaiModalOpen, setIsSelesaiModalOpen] = useState(false);
-  const [confirmingStatus, setConfirmingStatus] = useState(false);
-  const [deliverablesInput, setDeliverablesInput] = useState("");
+  const [completeMode, setCompleteMode] = useState<"complete" | "edit" | null>(null);
   const [isVerifyPaymentModalOpen, setIsVerifyPaymentModalOpen] =
     useState(false);
-  const [verifyPaymentMethod, setVerifyPaymentMethod] = useState("");
-  const [verifyPaidAmount, setVerifyPaidAmount] = useState<number | "">("");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
+
+  const handleCancelOrder = async () => {
+    const paid = !["DRAFT", "WAITING FOR PAYMENT"].includes(order.status);
+    const ok = await confirm({
+      title: `Batalkan order #${order.order_number}?`,
+      description: paid
+        ? "Order ini sudah dibayar. Status akan menjadi CANCELLED — refund ke klien perlu diproses manual."
+        : "Status akan menjadi CANCELLED dan voucher yang terpakai dilepas kembali.",
+      confirmLabel: "Batalkan Order",
+      cancelLabel: "Kembali",
+      destructive: true,
+    });
+    if (ok) await onStatusUpdate(order.id, "CANCELLED");
+  };
   const [isValidatingVoucher, setIsValidatingVoucher] = useState(false);
   const [voucherData, setVoucherData] = useState<any>(null);
   const [voucherError, setVoucherError] = useState<string | null>(null);
@@ -167,6 +203,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
     order.status !== "DRAFT" && order.package_details
       ? order.package_details
       : pricelists.find((p) => p.servicename === formValues.selected_package);
+  const revisionQuota = getRevisionQuota(selectedPricelist);
+  const revisionCount = order.revision_count ?? 0;
 
   const calculateDaysLeft = (deadlineDateStr?: string) => {
     if (!deadlineDateStr) return null;
@@ -214,7 +252,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
     if (newDiscType === "percentage" && newDiscVal > 100) newDiscVal = 100;
     if (newDiscType === "fixed" && newDiscVal > newPrice) newDiscVal = newPrice;
 
-    setValue(field, value, { shouldValidate: true });
+    // Inputs hand us strings; the schema expects numbers for price/discount.
+    if (field === "price") setValue("price", newPrice, { shouldValidate: true });
+    else if (field === "discount_value")
+      setValue("discount_value", newDiscVal, { shouldValidate: true });
+    else setValue("discount_type", value, { shouldValidate: true });
     if (
       field !== "discount_value" &&
       newDiscVal !== formValues.discount_value
@@ -361,6 +403,110 @@ const OrderForm: React.FC<OrderFormProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 max-w-7xl mx-auto">
           {/* Left Column */}
           <div className="lg:col-span-8 space-y-4">
+            {/* Brief & Notes */}
+            <div className="bg-white border border-ink/10 rounded-[20px]">
+              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
+                <h3 className="gs-label text-ink flex items-center gap-2">
+                  <FileText size={12} className="text-ink/45" /> Brief &
+                  Catatan Project
+                </h3>
+              </div>
+              <div className="p-5 space-y-6">
+                <Controller
+                  name="brief_detail"
+                  control={control}
+                  render={({ field }) => (
+                    <CMSInput
+                      label="Detail Brief Pelanggan"
+                      isTextArea
+                      isBold={false}
+                      error={errors.brief_detail?.message as string}
+                      className="min-h-[100px] !bg-white"
+                      {...field}
+                    />
+                  )}
+                />
+                {(order.revision_notes?.length ?? 0) > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-ink/70 ml-1 flex items-center gap-1.5">
+                      <RefreshCw size={13} className="text-rose-500" />
+                      Catatan Revisi Klien
+                    </p>
+                    <ol className="space-y-2">
+                      {[...(order.revision_notes ?? [])].reverse().map((note, i) => (
+                        <li
+                          key={`${note.round}-${note.created_at}`}
+                          className={`rounded-[14px] border p-3.5 ${
+                            i === 0 && order.status === "REVISION"
+                              ? "border-rose-200 bg-rose-50/60"
+                              : "border-ink/10 bg-paper/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+                              Revisi ke-{note.round}
+                              {note.extra && (
+                                <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-px text-[10px] font-semibold text-amber-800">
+                                  Ekstra
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-[11px] text-muted">
+                              {new Date(note.created_at).toLocaleString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          {note.notes ? (
+                            <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink/80">
+                              {note.notes}
+                            </p>
+                          ) : (
+                            <p className="mt-1.5 text-sm italic text-muted">
+                              Dicatat admin dari CMS, tanpa catatan klien.
+                            </p>
+                          )}
+                          {note.review_url && (
+                            <a
+                              href={note.review_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-700 hover:underline"
+                              title={note.review_url}
+                            >
+                              <Eye size={12} className="shrink-0" />
+                              <span className="shrink-0">Draft yang direview:</span>
+                              <span className="truncate font-medium">{note.review_url}</span>
+                              <ExternalLink size={12} className="shrink-0" />
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                <div className="pt-4 border-t border-ink/[0.04]">
+                  <Controller
+                    name="internal_notes"
+                    control={control}
+                    render={({ field }) => (
+                      <CMSInput
+                        label="Catatan Internal Admin"
+                        isTextArea
+                        isBold={false}
+                        className="min-h-[64px] !bg-paper/50"
+                        {...field}
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Paket & Layanan */}
             <div className="bg-white border border-ink/10 rounded-[20px]">
               <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
@@ -686,47 +832,6 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 )}
               </div>
             </div>
-
-            {/* Brief & Notes */}
-            <div className="bg-white border border-ink/10 rounded-[20px]">
-              <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between rounded-t-[15px]">
-                <h3 className="gs-label text-ink flex items-center gap-2">
-                  <FileText size={12} className="text-ink/45" /> Brief &
-                  Catatan Project
-                </h3>
-              </div>
-              <div className="p-5 space-y-6">
-                <Controller
-                  name="brief_detail"
-                  control={control}
-                  render={({ field }) => (
-                    <CMSInput
-                      label="Detail Brief Pelanggan"
-                      isTextArea
-                      isBold={false}
-                      error={errors.brief_detail?.message as string}
-                      className="min-h-[100px] !bg-white"
-                      {...field}
-                    />
-                  )}
-                />
-                <div className="pt-4 border-t border-ink/[0.04]">
-                  <Controller
-                    name="internal_notes"
-                    control={control}
-                    render={({ field }) => (
-                      <CMSInput
-                        label="Catatan Internal Admin"
-                        isTextArea
-                        isBold={false}
-                        className="min-h-[64px] !bg-paper/50"
-                        {...field}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column */}
@@ -749,6 +854,46 @@ const OrderForm: React.FC<OrderFormProps> = ({
                   }
                 />
 
+                <CMSViewItem
+                  label="Total Revisi"
+                  icon={RefreshCw}
+                  value={
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold tabular-nums">
+                        {formatRevisionQuota(revisionCount, revisionQuota) ??
+                          `${revisionCount}x`}
+                      </span>
+                      {revisionQuota !== null && revisionCount > revisionQuota && (
+                        <CMSBadge className="!bg-amber-50 !text-amber-800 !border-amber-200">
+                          +{revisionCount - revisionQuota} ekstra
+                        </CMSBadge>
+                      )}
+                    </span>
+                  }
+                />
+
+                {order.status === "REVIEWED" && (
+                  <CMSViewItem
+                    label="Persetujuan Klien"
+                    icon={CheckCircle2}
+                    value={
+                      order.approved_at ? (
+                        <CMSBadge variant="status" status="DONE">
+                          Disetujui{" "}
+                          {new Date(order.approved_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </CMSBadge>
+                      ) : (
+                        <span className="text-sm text-muted">Menunggu review klien</span>
+                      )
+                    }
+                  />
+                )}
+
                 {order.created_at && (
                   <CMSViewItem
                     label="Dibuat pada"
@@ -762,20 +907,35 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     })}
                   />
                 )}
-                {order.status === "DRAFT" ? (
+                {order.status === "DRAFT" || order.status === "REVISION" ? (
                   <div className="pt-2">
                     <Controller
                       name="deadline"
                       control={control}
                       render={({ field }) => (
-                        <CMSInput
-                          label="Deadline Target"
-                          type="date"
-                          leftIcon={<Calendar size={14} />}
-                          error={errors.deadline?.message as string}
-                          value={field.value ? field.value.split("T")[0] : ""}
-                          onChange={field.onChange}
-                        />
+                        <>
+                          <CMSDatePicker
+                            label="Deadline Target"
+                            error={errors.deadline?.message as string}
+                            value={field.value ? field.value.split("T")[0] : ""}
+                            onChange={(value) => field.onChange(value || null)}
+                            clearable
+                          />
+                          {order.status === "REVISION" && (
+                            <div className="mt-1.5 ml-1 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                              <span>Atur ulang untuk revisi ini, lalu Simpan Perubahan.</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  field.onChange(addWorkingDays(REVISION_DAYS))
+                                }
+                                className="font-semibold text-violet-700 hover:underline"
+                              >
+                                +{REVISION_DAYS} hari kerja
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
                     />
                   </div>
@@ -784,7 +944,22 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     label="Deadline Target"
                     className="!border-0"
                     value={
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={12} className="text-ink/30" />
+                          <span>
+                            {order.deadline
+                              ? new Date(order.deadline).toLocaleDateString(
+                                  "id-ID",
+                                  {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "—"}
+                          </span>
+                        </div>
                         {order.status !== "DONE" && order.deadline && (
                           <CMSBadge
                             variant={
@@ -806,41 +981,74 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 : `Terlambat ${Math.abs(calculateDaysLeft(order.deadline) ?? 0)} Hari`}
                           </CMSBadge>
                         )}
-                        <Calendar size={12} className="text-ink/30" />
-                        <span>
-                          {order.deadline
-                            ? new Date(order.deadline).toLocaleDateString(
-                                "id-ID",
-                                {
-                                  day: "numeric",
-                                  month: "long",
-                                  year: "numeric",
-                                },
-                              )
-                            : "—"}
-                        </span>
                       </div>
                     }
                   />
                 )}
-                {order.status === "DONE" && order.deliverables_url && (
+                {order.review_url &&
+                  ["REVIEWED", "REVISION", "DONE"].includes(order.status) && (
                   <div className="pt-2.5">
                     <div className="flex flex-col gap-1.5 p-3 bg-paper rounded-[10px]">
-                      <label className="text-sm font-medium text-ink/70 flex items-center gap-1.5">
-                        <FileText size={14} className="text-muted" />{" "}
-                        Deliverables Link
-                      </label>
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="text-sm font-medium text-ink/70 flex items-center gap-1.5">
+                          <Eye size={14} className="text-muted" /> Draft
+                          Desain
+                        </label>
+                        {order.status === "REVIEWED" && (
+                          <button
+                            type="button"
+                            onClick={() => setIsReviewModalOpen(true)}
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-50"
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </button>
+                        )}
+                      </div>
                       <a
-                        href={order.deliverables_url}
+                        href={order.review_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-1 font-bold text-sm w-full"
                       >
-                        <span className="truncate">
-                          {order.deliverables_url}
-                        </span>
+                        <span className="truncate">{order.review_url}</span>
                         <ExternalLink size={14} className="shrink-0" />
                       </a>
+                    </div>
+                  </div>
+                )}
+                {order.status === "DONE" && (
+                  <div className="pt-2.5">
+                    <div className="flex flex-col gap-1.5 p-3 bg-paper rounded-[10px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="text-sm font-medium text-ink/70 flex items-center gap-1.5">
+                          <FileText size={14} className="text-muted" />{" "}
+                          Deliverables Link
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCompleteMode("edit")}
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-violet-700 hover:bg-violet-50"
+                        >
+                          <Pencil size={12} />
+                          {order.deliverables_url ? "Edit" : "Tambah"}
+                        </button>
+                      </div>
+                      {order.deliverables_url ? (
+                        <a
+                          href={order.deliverables_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-violet-600 hover:text-violet-700 hover:underline flex items-center gap-1 font-bold text-sm w-full"
+                        >
+                          <span className="truncate">
+                            {order.deliverables_url}
+                          </span>
+                          <ExternalLink size={14} className="shrink-0" />
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted">Belum ada link file final.</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1314,21 +1522,6 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     />
                   </div>
                 </div>
-                {order.status === "WAITING FOR PAYMENT" && (
-                  <CMSButton
-                    type="button"
-                    onClick={() => {
-                      setVerifyPaidAmount(
-                        order.final_price ?? order.price ?? 0,
-                      );
-                      setVerifyPaymentMethod("Manual Transfer");
-                      setIsVerifyPaymentModalOpen(true);
-                    }}
-                    className="w-full mt-2 py-3"
-                  >
-                    Konfirmasi Pembayaran
-                  </CMSButton>
-                )}
               </div>
             )}
           </div>
@@ -1337,6 +1530,28 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
       {/* Footer Controls */}
       <div className="absolute bottom-0 left-0 right-0 p-3 bg-paper/85 backdrop-blur-md border-t border-ink/10 flex justify-end gap-3 z-30 px-6 md:px-8">
+        {order.id !== "NEW" && !["DONE", "CANCELLED"].includes(order.status) && (
+          <CMSButton
+            type="button"
+            variant="ghost"
+            icon={Ban}
+            className="mr-auto !text-rose-600 hover:!bg-rose-50"
+            onClick={handleCancelOrder}
+          >
+            Batalkan Order
+          </CMSButton>
+        )}
+        {order.status === "CANCELLED" && (
+          <CMSButton
+            type="button"
+            variant="ghost"
+            icon={RotateCcw}
+            className="mr-auto"
+            onClick={() => onStatusUpdate(order.id, "DRAFT")}
+          >
+            Buka Kembali sebagai Draft
+          </CMSButton>
+        )}
         <CMSButton variant="ghost" type="button" onClick={onCancel}>
           Batal
         </CMSButton>
@@ -1352,13 +1567,32 @@ const OrderForm: React.FC<OrderFormProps> = ({
             Minta Pembayaran
           </CMSButton>
         )}
+        {order.status === "WAITING FOR PAYMENT" && (
+          <CMSButton
+            type="button"
+            icon={CreditCard}
+            className="!bg-emerald-600 !text-white hover:!bg-emerald-700 border-none"
+            onClick={() => setIsVerifyPaymentModalOpen(true)}
+          >
+            Konfirmasi Pembayaran
+          </CMSButton>
+        )}
         {order.status === "IN PROGRESS" && order.id !== "NEW" && (
           <CMSButton
             type="button"
             className="!bg-purple-500 !text-white hover:!bg-purple-600 border-none"
-            onClick={() => onStatusUpdate(order.id, "REVIEWED")}
+            onClick={() => setIsReviewModalOpen(true)}
           >
             Send for Review
+          </CMSButton>
+        )}
+        {order.status === "REVISION" && order.id !== "NEW" && (
+          <CMSButton
+            type="button"
+            className="!bg-purple-500 !text-white hover:!bg-purple-600 border-none"
+            onClick={() => setIsReviewModalOpen(true)}
+          >
+            Kirim Hasil Revisi
           </CMSButton>
         )}
         {order.status === "REVIEWED" && order.id !== "NEW" && (
@@ -1366,14 +1600,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
             <CMSButton
               type="button"
               className="!bg-rose-500 !text-white hover:!bg-rose-600 border-none"
-              onClick={() => onStatusUpdate(order.id, "REVISION")}
+              onClick={() => setIsRevisionModalOpen(true)}
             >
               Revision
             </CMSButton>
             <CMSButton
               type="button"
               className="!bg-emerald-500 !text-white hover:!bg-emerald-600 border-none"
-              onClick={() => setIsSelesaiModalOpen(true)}
+              onClick={() => setCompleteMode("complete")}
             >
               Selesai
             </CMSButton>
@@ -1401,122 +1635,31 @@ const OrderForm: React.FC<OrderFormProps> = ({
         }
       />
 
-      {/* Verify payment */}
-      <CMSModal
-        isOpen={isVerifyPaymentModalOpen}
-        onClose={() => !confirmingStatus && setIsVerifyPaymentModalOpen(false)}
-        title="Verifikasi Pembayaran"
-        maxWidth="max-w-md"
-        footer={
-          <>
-            <CMSButton
-              variant="ghost"
-              type="button"
-              onClick={() => setIsVerifyPaymentModalOpen(false)}
-              disabled={confirmingStatus}
-            >
-              Batal
-            </CMSButton>
-            <CMSButton
-              type="button"
-              icon={CheckCircle2}
-              loading={confirmingStatus}
-              className="!bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600 hover:!border-emerald-700"
-              onClick={async () => {
-                setConfirmingStatus(true);
-                try {
-                  const success = await onStatusUpdate(order.id, "IN PROGRESS", {
-                    payment_method: verifyPaymentMethod,
-                    paid_amount: verifyPaidAmount,
-                    paid_at: new Date().toISOString(),
-                    is_sandbox: null,
-                  });
-                  if (success) setIsVerifyPaymentModalOpen(false);
-                } finally {
-                  setConfirmingStatus(false);
-                }
-              }}
-            >
-              Konfirmasi
-            </CMSButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-muted">
-            Status order akan berpindah ke <span className="font-semibold text-ink">IN PROGRESS</span>.
-          </p>
-          <CMSInput
-            label="Metode Pembayaran"
-            placeholder="Contoh: Transfer BCA, Cash, dll."
-            value={verifyPaymentMethod}
-            onChange={(e) => setVerifyPaymentMethod(e.target.value)}
-            autoFocus
-          />
-          <CMSInput
-            label="Nominal yang Dibayar"
-            type="number"
-            inputMode="numeric"
-            placeholder="0"
-            leftIcon={<span className="text-sm font-semibold">Rp</span>}
-            value={verifyPaidAmount}
-            onChange={(e) => setVerifyPaidAmount(Number(e.target.value))}
-          />
-        </div>
-      </CMSModal>
-
-      {/* Complete order */}
-      <CMSModal
-        isOpen={isSelesaiModalOpen}
-        onClose={() => !confirmingStatus && setIsSelesaiModalOpen(false)}
-        title="Selesaikan Pesanan"
-        maxWidth="max-w-md"
-        footer={
-          <>
-            <CMSButton
-              variant="ghost"
-              type="button"
-              onClick={() => setIsSelesaiModalOpen(false)}
-              disabled={confirmingStatus}
-            >
-              Batal
-            </CMSButton>
-            <CMSButton
-              type="button"
-              icon={CheckCircle2}
-              loading={confirmingStatus}
-              className="!bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600 hover:!border-emerald-700"
-              onClick={async () => {
-                setConfirmingStatus(true);
-                try {
-                  const success = await onStatusUpdate(order.id, "DONE", {
-                    deliverables_url: deliverablesInput,
-                  });
-                  if (success !== false) setIsSelesaiModalOpen(false);
-                } finally {
-                  setConfirmingStatus(false);
-                }
-              }}
-            >
-              Selesai
-            </CMSButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-muted">
-            Status order akan berpindah ke <span className="font-semibold text-ink">DONE</span>. Tambahkan link file final untuk klien.
-          </p>
-          <CMSInput
-            label="Link File Final"
-            type="url"
-            placeholder="https://drive.google.com/..."
-            value={deliverablesInput}
-            onChange={(e) => setDeliverablesInput(e.target.value)}
-            autoFocus
-          />
-        </div>
-      </CMSModal>
+      <VerifyPaymentModal
+        order={isVerifyPaymentModalOpen ? order : null}
+        onClose={() => setIsVerifyPaymentModalOpen(false)}
+        onStatusUpdate={onStatusUpdate}
+      />
+      <RequestRevisionModal
+        order={isRevisionModalOpen ? order : null}
+        quota={revisionQuota}
+        onClose={() => setIsRevisionModalOpen(false)}
+        onLogRevision={onLogRevision}
+      />
+      <SendForReviewModal
+        order={isReviewModalOpen ? order : null}
+        onClose={() => setIsReviewModalOpen(false)}
+        onStatusUpdate={onStatusUpdate}
+        onUpdate={onUpdate}
+      />
+      <CompleteOrderModal
+        order={completeMode ? order : null}
+        mode={completeMode || "complete"}
+        onClose={() => setCompleteMode(null)}
+        onStatusUpdate={onStatusUpdate}
+        onUpdate={onUpdate}
+      />
+      {confirmDialog}
 
       {/* Hidden Invoice Template for Image Generation */}
       {order.id !== "NEW" && (
