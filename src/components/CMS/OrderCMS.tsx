@@ -189,7 +189,7 @@ const OrderCMS: React.FC = () => {
       </CMSHeader>
 
       {loading && orders.length === 0 ? (
-        <div className="pt-6">
+        <div className="pt-6 pb-6">
           <CMSTableSkeleton rows={8} columns={6} label="Memuat data order..." />
         </div>
       ) : error ? (
@@ -223,7 +223,7 @@ const OrderCMS: React.FC = () => {
           }
         />
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col pt-6">
+        <div className={`flex-1 min-h-0 flex flex-col ${viewMode === "TIMELINE" ? "" : "pt-6 pb-6"}`}>
           {viewMode === "LIST" && (
             <OrderList
               orders={filteredOrders}

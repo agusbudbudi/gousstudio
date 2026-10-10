@@ -284,7 +284,7 @@ const CMSContent: React.FC<CMSContentProps> = ({ onLogout, children }) => {
         </aside>
 
         {/* Main Content (pages render their own fixed CMSHeader, 58px tall) */}
-        <main className="custom-scrollbar relative min-w-0 flex-1 overflow-y-auto bg-paper px-4 pb-6 pt-[58px] lg:px-6">
+        <main className="custom-scrollbar relative min-w-0 flex-1 overflow-y-auto bg-paper px-4 pt-[58px] lg:px-6">
           {children}
         </main>
       </div>

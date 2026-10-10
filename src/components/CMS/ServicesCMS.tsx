@@ -227,7 +227,7 @@ const ServicesCMS: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="pt-6">
+      <div className="pt-6 pb-6">
         {loading ? (
           <CMSTableSkeleton rows={6} columns={4} label="Memuat services..." />
         ) : error ? (

@@ -115,7 +115,7 @@ const TestimonialCMS: React.FC = () => {
         </CMSButton>
       </CMSHeader>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 pb-6">
         {loading ? (
           <CMSTableSkeleton rows={6} columns={4} label="Memuat data testimonial..." />
         ) : error ? (

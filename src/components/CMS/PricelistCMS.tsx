@@ -259,7 +259,7 @@ const PricelistCMS: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pt-6 pb-6">
         {/* Category Tabs */}
         <div
           role="tablist"

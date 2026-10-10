@@ -78,7 +78,7 @@ const VoucherCMS: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col pt-2">
+      <div className="flex-1 min-h-0 flex flex-col pt-2 pb-6">
         {isLoading ? (
           <CMSTableSkeleton rows={6} columns={4} label="Memuat data voucher..." />
         ) : error ? (
