@@ -116,37 +116,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, order: data });
       } catch (e) { return res.status(500).json({ message: e.message }); }
 
-    case 'list-referrals':
-      try {
-        const { data, error } = await supabase
-          .from('referral_codes')
-          .select('*, orders!order_id(order_number, full_name)')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          const usedReferralIds = data.filter(d => d.is_used).map(d => d.id);
-          if (usedReferralIds.length > 0) {
-            const { data: usedOrders } = await supabase
-              .from('orders')
-              .select('order_number, referral_id')
-              .in('referral_id', usedReferralIds);
-            
-            if (usedOrders) {
-              data.forEach(ref => {
-                if (ref.is_used) {
-                  const usedBy = usedOrders.find(o => o.referral_id === ref.id);
-                  if (usedBy) ref.used_on_order = usedBy.order_number;
-                }
-              });
-            }
-          }
-        }
-
-        return res.status(200).json({ success: true, data });
-      } catch (e) { return res.status(500).json({ message: e.message }); }
-
     case 'submit-feedback':
       if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
       try {
