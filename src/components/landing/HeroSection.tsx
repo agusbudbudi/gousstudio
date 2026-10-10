@@ -48,7 +48,7 @@ const MarqueeWork: React.FC<{ work: WorkItem; eager: boolean; hidden: boolean }>
   if (state === "error") return null;
   return (
     <li aria-hidden={hidden || undefined} className={`mr-4 h-full shrink-0 md:mr-5 ${state === "loading" ? "aspect-[4/5]" : ""}`}>
-      <figure className="relative h-full overflow-hidden rounded-[20px] bg-paper-200">
+      <figure className="relative h-full overflow-hidden rounded-[8px] md:rounded-[12px] bg-paper-200">
         <img
           src={work.src}
           alt={hidden ? "" : work.imgAlt || `${work.title} — karya Gous Studio`}
@@ -90,7 +90,7 @@ const HeroSection: React.FC = () => {
           {[0, 1].map((copy) =>
             isLoading
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <li key={`${copy}-sk-${i}`} aria-hidden className={`mr-4 h-full shrink-0 animate-pulse rounded-[20px] md:mr-5 bg-paper-300/60 ${i % 3 === 1 ? "aspect-[16/10]" : "aspect-[4/5]"}`} />
+                  <li key={`${copy}-sk-${i}`} aria-hidden className={`mr-4 h-full shrink-0 animate-pulse rounded-[8px] md:rounded-[12px] md:mr-5 bg-paper-300/60 ${i % 3 === 1 ? "aspect-[16/10]" : "aspect-[4/5]"}`} />
                 ))
               : marqueeWorks.length
                 ? marqueeWorks.map((work, i) => (
@@ -100,7 +100,7 @@ const HeroSection: React.FC = () => {
                     <li
                       key={`${copy}-${t.word}`}
                       aria-hidden={copy === 1 || undefined}
-                      className={`gs-grain mr-4 flex aspect-[4/5] h-full shrink-0 flex-col md:mr-5 justify-between overflow-hidden rounded-[20px] p-5 ${t.className}`}
+                      className={`gs-grain mr-4 flex aspect-[4/5] h-full shrink-0 flex-col md:mr-5 justify-between overflow-hidden rounded-[8px] md:rounded-[12px] p-5 ${t.className}`}
                     >
                       <span className="gs-label opacity-70">{t.label}</span>
                       <span className="gs-display text-[clamp(2.25rem,4vw,3.5rem)] font-extrabold">{t.word}</span>

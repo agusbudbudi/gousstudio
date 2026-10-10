@@ -377,7 +377,7 @@ const PricelistDetailPage = () => {
               {visibleWorks.map((w, i) => (
                 <Reveal as="li" key={w.id || i} delay={(i % 4) * 0.05}>
                   <button type="button" onClick={() => setLightboxIndex(i)} className="group block w-full text-left" aria-label={`Lihat ${w.title}`}>
-                    <div className="relative isolate aspect-[4/5] overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
+                    <div className="relative isolate aspect-[4/5] overflow-hidden rounded-[12px] md:rounded-[16px] bg-paper-200 [transform:translateZ(0)]">
                       <WorkImage
                         src={w.src}
                         alt={w.imgAlt || `${w.title} oleh Gous Studio`}
@@ -388,7 +388,7 @@ const PricelistDetailPage = () => {
                       />
                     </div>
                     <div className="mt-3">
-                      <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{w.title}</p>
+                      <p className="line-clamp-2 text-sm font-semibold leading-snug text-ink md:text-[15px]">{w.title}</p>
                       <span className="gs-label mt-1 hidden text-muted sm:block">{workGroup(w).title}</span>
                     </div>
                   </button>

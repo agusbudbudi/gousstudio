@@ -59,7 +59,7 @@ const FastworkStrip: React.FC = () => {
                       rel="noopener noreferrer"
                       className="group flex h-full flex-col"
                     >
-                      <div className="relative isolate aspect-video w-full overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
+                      <div className="relative isolate aspect-video w-full overflow-hidden rounded-[12px] md:rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
                         <img
                           src={item.image}
                           alt={item.title}
