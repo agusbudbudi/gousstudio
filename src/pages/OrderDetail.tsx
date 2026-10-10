@@ -24,6 +24,7 @@ import {
   Star,
   Gift,
   Copy,
+  Eye,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { InvoiceTemplate } from "../components/Invoice/InvoiceTemplate";
@@ -42,6 +43,7 @@ import {
   getOrderStatus,
 } from "../components/landing/clientPage";
 import CMSModal from "../components/CMS/Common/CMSModal";
+import { getRevisionQuota } from "../utils/orderFlow";
 import CMSInput from "../components/CMS/Common/CMSInput";
 
 const OrderDetail = () => {
@@ -60,6 +62,11 @@ const OrderDetail = () => {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isRevisionOpen, setIsRevisionOpen] = useState(false);
+  const [revisionText, setRevisionText] = useState("");
+  const [submittingRevision, setSubmittingRevision] = useState(false);
+  const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -135,8 +142,17 @@ const OrderDetail = () => {
       return;
     }
 
+    let uploadedPath: string | null = null;
     try {
       setUploading(true);
+
+      // Proof is only accepted while payment is pending. Check first so a stale page (admin
+      // already confirmed) doesn't leave an unreferenced file in storage.
+      const statusRes = await fetch(`/api/orders?action=status&order_id=${encodeURIComponent(order.order_number)}`);
+      const statusData = await statusRes.json().catch(() => ({}));
+      if (statusRes.ok && statusData.orderStatus && statusData.orderStatus !== "WAITING FOR PAYMENT") {
+        throw new Error("Bukti bayar hanya bisa diupload saat order menunggu pembayaran. Muat ulang halaman.");
+      }
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${orderNumber}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -147,6 +163,7 @@ const OrderDetail = () => {
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
+      uploadedPath = filePath;
 
       const {
         data: { publicUrl },
@@ -165,14 +182,20 @@ const OrderDetail = () => {
       });
 
       if (!updateRes.ok) {
-        throw new Error("Gagal memperbarui data order di database");
+        const result = await updateRes.json().catch(() => ({}));
+        throw new Error(result.message || "Gagal memperbarui data order di database");
       }
 
+      uploadedPath = null;
       setOrder((prev: any) => ({ ...prev, payment_proof_url: publicUrl }));
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 5000);
     } catch (err: any) {
       console.error("Upload error:", err);
+      // Best effort: drop the file the order never got to reference
+      if (uploadedPath) {
+        await supabase.storage.from("payment-proofs").remove([uploadedPath]).catch(() => {});
+      }
       addToast(`Gagal upload bukti bayar: ${err.message}`, "error");
     } finally {
       setUploading(false);
@@ -250,6 +273,53 @@ const OrderDetail = () => {
     }
   };
 
+  const handleSubmitRevision = async () => {
+    const notes = revisionText.trim();
+    if (notes.length < 10 || !order) return;
+
+    try {
+      setSubmittingRevision(true);
+      const res = await fetch("/api/orders?action=request-revision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumber: order.order_number, notes }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.message || "Gagal mengirim revisi");
+
+      setOrder(result.order as OrderItem);
+      setIsRevisionOpen(false);
+      setRevisionText("");
+      addToast("Permintaan revisi terkirim. Kami segera mengerjakannya.", "success");
+    } catch (err: any) {
+      addToast(err.message || "Gagal mengirim revisi", "error");
+    } finally {
+      setSubmittingRevision(false);
+    }
+  };
+
+  const handleApproveDraft = async () => {
+    if (!order) return;
+    try {
+      setApproving(true);
+      const res = await fetch("/api/orders?action=approve-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumber: order.order_number }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.message || "Gagal menyetujui draft");
+
+      setOrder(result.order as OrderItem);
+      setIsApproveOpen(false);
+      addToast("Draft disetujui. Kami siapkan file final-nya.", "success");
+    } catch (err: any) {
+      addToast(err.message || "Gagal menyetujui draft", "error");
+    } finally {
+      setApproving(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -299,6 +369,17 @@ const OrderDetail = () => {
   };
   const isLate = (calculateDaysLeft(order.deadline || undefined) ?? 0) < 0;
   const isWaitingPayment = order.status === "WAITING FOR PAYMENT";
+  const reviewUrl = order.status === "REVIEWED" ? order.review_url : null;
+  const revisionCount = order.revision_count ?? 0;
+  const revisionQuota = getRevisionQuota(packageData);
+  const nextRevisionIsExtra = revisionQuota !== null && revisionCount + 1 > revisionQuota;
+  const revisionsLeft =
+    revisionQuota === null || revisionQuota === Infinity ? null : Math.max(revisionQuota - revisionCount, 0);
+  const revisionNotes = order.revision_notes ?? [];
+  const latestRevision =
+    order.status === "REVISION" ? revisionNotes[revisionNotes.length - 1] ?? null : null;
+  // Admin-logged entries carry internal summaries (the API blanks them); never show them as the client's
+  const latestRevisionNotes = latestRevision?.source === "admin" ? "" : latestRevision?.notes;
   const isProforma = ["DRAFT", "WAITING FOR PAYMENT"].includes(order.status);
   const discountAmount =
     packageData && Number(packageData.discount_value) > 0
@@ -356,8 +437,127 @@ const OrderDetail = () => {
       </header>
 
       {/* Primary action for the current status */}
-      {(order.deliverables_url || (isWaitingPayment && !order.payment_proof_url)) && (
+      {(order.deliverables_url || reviewUrl || latestRevision || (isWaitingPayment && !order.payment_proof_url)) && (
         <div className="mt-10 space-y-4">
+          {latestRevision && (
+            <Panel className="p-6 md:p-8">
+              <div className="flex flex-wrap items-center gap-2">
+                <PanelLabel icon={RefreshCw}>Revisi ke-{latestRevision.round}</PanelLabel>
+                <span className="text-xs text-muted">
+                  dikirim{" "}
+                  {new Date(latestRevision.created_at).toLocaleString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <h2 className="gs-display mt-3 text-[clamp(1.5rem,3vw,2rem)] font-extrabold text-ink">
+                Revisi sedang kami kerjakan.
+              </h2>
+              <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-muted">
+                Kami akan kabari begitu hasil revisinya siap direview.
+                {latestRevisionNotes && " Catatan yang kamu kirim:"}
+              </p>
+              {latestRevisionNotes && (
+                <p className="mt-4 whitespace-pre-wrap break-words rounded-[14px] border border-ink/10 bg-paper p-4 text-[15px] leading-relaxed text-ink/80">
+                  {latestRevisionNotes}
+                </p>
+              )}
+              {latestRevision.review_url && (
+                <a
+                  href={latestRevision.review_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700 hover:underline"
+                >
+                  <Eye size={14} aria-hidden /> Lihat draft yang kamu review
+                  <ExternalLink size={13} aria-hidden />
+                </a>
+              )}
+            </Panel>
+          )}
+          {reviewUrl && order.approved_at && (
+            <Panel className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:p-8">
+              <div>
+                <PanelLabel icon={CheckCircle2}>Draft Disetujui</PanelLabel>
+                <h2 className="gs-display mt-3 text-[clamp(1.5rem,3vw,2rem)] font-extrabold text-ink">
+                  Terima kasih, draft sudah kamu setujui.
+                </h2>
+                <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-muted">
+                  Kami sedang menyiapkan file final. Link file akan muncul di halaman ini begitu siap.
+                </p>
+              </div>
+              <a
+                href={reviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${buttonClass("outline", "lg")} w-full md:w-auto`}
+              >
+                <Eye size={18} /> Lihat Draft
+              </a>
+            </Panel>
+          )}
+          {reviewUrl && !order.approved_at && (
+            <Panel className="flex flex-col gap-5 p-6 md:p-8">
+              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PanelLabel icon={Eye}>Draft Desain</PanelLabel>
+                    {revisionCount > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                        <RefreshCw size={12} aria-hidden /> Revisi ke-{revisionCount}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="gs-display mt-3 text-[clamp(1.5rem,3vw,2rem)] font-extrabold text-ink">
+                    {revisionCount > 0 ? "Hasil revisi siap kamu review." : "Draft siap kamu review."}
+                  </h2>
+                  <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-muted">
+                    {revisionCount > 0
+                      ? `Kami sudah menerapkan feedback-mu (revisi ke-${revisionCount}). Sudah oke? Setujui draft. Masih ada yang perlu diubah? Minta revisi.`
+                      : "Cek draft desainnya. Sudah oke? Setujui draft. Ada yang perlu diubah? Minta revisi."}
+                  </p>
+                </div>
+                <a
+                  href={reviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${buttonClass("primary", "lg")} w-full md:w-auto`}
+                >
+                  <Eye size={18} /> Lihat Draft
+                </a>
+              </div>
+              <div className="flex flex-col gap-3 border-t border-ink/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted">
+                  {revisionQuota === Infinity
+                    ? "Revisi unlimited untuk paket ini."
+                    : revisionsLeft !== null
+                      ? revisionsLeft > 0
+                        ? `Sisa jatah revisi: ${revisionsLeft} dari ${revisionQuota}.`
+                        : "Jatah revisi paket sudah terpakai semua."
+                      : null}
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => setIsRevisionOpen(true)}
+                    className={`${buttonClass("outline")} w-full sm:w-auto`}
+                  >
+                    <RefreshCw size={16} /> Minta Revisi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsApproveOpen(true)}
+                    className={`${buttonClass("primary")} w-full sm:w-auto`}
+                  >
+                    <CheckCircle2 size={16} /> Setujui Draft
+                  </button>
+                </div>
+              </div>
+            </Panel>
+          )}
           {order.deliverables_url && (
             <Panel tone="dark" className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:p-8">
               <div>
@@ -366,7 +566,7 @@ const OrderDetail = () => {
                 </p>
                 <h2 className="gs-display mt-3 text-[clamp(1.5rem,3vw,2rem)] font-extrabold">File final sudah siap.</h2>
                 <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-paper/60">
-                  Seluruh file final telah kami siapkan di folder cloud storage.
+                  Seluruh file final sudah kami siapkan. Buka linknya untuk melihat dan mengunduh file.
                 </p>
               </div>
               <a
@@ -375,7 +575,7 @@ const OrderDetail = () => {
                 rel="noopener noreferrer"
                 className={`${buttonClass("light", "lg")} w-full md:w-auto`}
               >
-                Buka Google Drive
+                Buka File Final
                 <ExternalLink size={18} className="transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px" />
               </a>
             </Panel>
@@ -727,6 +927,86 @@ const OrderDetail = () => {
             />
           </div>
         )}
+      </CMSModal>
+
+      <CMSModal
+        isOpen={isApproveOpen}
+        onClose={() => !approving && setIsApproveOpen(false)}
+        title="Setujui draft ini?"
+        maxWidth="max-w-md"
+        footer={
+          <div className="flex w-full flex-col gap-2 sm:flex-row-reverse">
+            <button
+              type="button"
+              onClick={handleApproveDraft}
+              disabled={approving}
+              className={`${buttonClass("primary")} w-full disabled:opacity-50 sm:w-auto`}
+            >
+              {approving ? <Loader2 size={16} className="motion-safe:animate-spin" /> : <CheckCircle2 size={16} />}
+              {approving ? "Menyimpan..." : "Ya, Setujui"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsApproveOpen(false)}
+              disabled={approving}
+              className={`${buttonClass("outline")} w-full sm:w-auto`}
+            >
+              Kembali
+            </button>
+          </div>
+        }
+      >
+        <p className="text-sm leading-relaxed text-muted">
+          Setelah disetujui, kami langsung menyiapkan file final dan draft ini tidak bisa direvisi lagi lewat
+          halaman ini. Pastikan semuanya sudah sesuai.
+        </p>
+      </CMSModal>
+
+      <CMSModal
+        isOpen={isRevisionOpen}
+        onClose={() => !submittingRevision && setIsRevisionOpen(false)}
+        title={`Minta Revisi ke-${revisionCount + 1}`}
+        maxWidth="max-w-lg"
+        footer={
+          <button
+            type="button"
+            onClick={handleSubmitRevision}
+            disabled={revisionText.trim().length < 10 || submittingRevision}
+            className={`${buttonClass("primary")} w-full disabled:opacity-50`}
+          >
+            {submittingRevision ? <Loader2 size={16} className="motion-safe:animate-spin" /> : <RefreshCw size={16} />}
+            {submittingRevision ? "Mengirim..." : "Kirim Revisi"}
+          </button>
+        }
+      >
+        <div className="space-y-4">
+          {nextRevisionIsExtra && (
+            <p className="rounded-[14px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+              Jatah revisi paketmu ({revisionQuota}x) sudah terpakai. Revisi ini terhitung sebagai{" "}
+              <span className="font-semibold">revisi tambahan</span> dan mungkin dikenakan biaya — kami akan
+              konfirmasi dulu sebelum mengerjakannya.
+            </p>
+          )}
+          <p className="text-sm leading-relaxed text-muted">
+            Tulis bagian mana saja yang perlu diubah. Makin detail, makin cepat kami kerjakan — misalnya warna,
+            teks, posisi elemen, atau referensi (boleh link).
+          </p>
+          <CMSInput
+            isTextArea
+            rows={6}
+            label="Catatan revisi"
+            placeholder={"Contoh:\n1. Warna background diganti krem\n2. Logo diperbesar sedikit\n3. Nomor WA diganti 0812…"}
+            value={revisionText}
+            maxLength={3000}
+            onChange={(e) => setRevisionText(e.target.value)}
+            autoFocus
+          />
+          <p className="text-xs text-muted">
+            {revisionText.trim().length < 10
+              ? "Minimal 10 karakter."
+              : `${revisionText.length}/3000 karakter`}
+          </p>
+        </div>
       </CMSModal>
 
       {/* Hidden invoice template for image capture */}

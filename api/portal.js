@@ -35,7 +35,7 @@ export default async function handler(req, res) {
           .select(`
             id, order_number, design_category, selected_package, 
             status, price, final_price, created_at, 
-            payment_proof_url, deliverables_url
+            payment_proof_url, deliverables_url, review_url
           `)
           .eq('client_id', client.id)
           .order('created_at', { ascending: false });

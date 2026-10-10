@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { AlertCircle, ArrowLeft, CheckCircle2, Clock, FileText, LucideIcon, RefreshCw, Zap } from "lucide-react";
+import { AlertCircle, ArrowLeft, Ban, CheckCircle2, Clock, FileText, LucideIcon, RefreshCw, Zap } from "lucide-react";
 import LandingNavbar from "./LandingNavbar";
 import LandingFooter from "./LandingFooter";
 import { buttonClass, Eyebrow, Skeleton } from "./primitives";
@@ -87,6 +87,13 @@ export const ORDER_STEPS = ["Diterima", "Pembayaran", "Pengerjaan", "Review", "S
 type StatusMeta = { label: string; desc: string; step: number; icon: LucideIcon; tone: string };
 
 const STATUS: Record<string, StatusMeta> = {
+  CANCELLED: {
+    label: "Dibatalkan",
+    desc: "Pesanan ini telah dibatalkan. Hubungi kami jika ada pertanyaan.",
+    step: -1,
+    icon: Ban,
+    tone: "border-ink/15 bg-ink/5 text-ink/60",
+  },
   DONE: {
     label: "Selesai",
     desc: "Pesanan telah selesai dan file final telah diserahkan.",

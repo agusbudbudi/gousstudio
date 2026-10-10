@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   ShoppingBag,
@@ -13,6 +13,12 @@ import CMSBadge from "../Common/CMSBadge";
 import CMSEmptyState from "../Common/CMSEmptyState";
 import CMSCard from "../Common/CMSCard";
 import CMSButton from "../Common/CMSButton";
+import AdminActionBadge from "./AdminActionBadge";
+import {
+  CompleteOrderModal,
+  SendForReviewModal,
+  VerifyPaymentModal,
+} from "./OrderStatusModals";
 
 const STATUS_COLUMNS = [
   "DRAFT",
@@ -21,13 +27,36 @@ const STATUS_COLUMNS = [
   "REVISION",
   "REVIEWED",
   "DONE",
+  "CANCELLED",
 ];
+
+// REVISION is a side loop off REVIEWED, so the happy path skips it.
+// WAITING FOR PAYMENT → IN PROGRESS and REVIEWED → DONE go through the same modals as
+// Order Detail, so payment data, the review draft link and the deliverables link are never skipped.
+const NEXT_STATUS: Record<string, string> = {
+  DRAFT: "WAITING FOR PAYMENT",
+  "WAITING FOR PAYMENT": "IN PROGRESS",
+  "IN PROGRESS": "REVIEWED",
+  REVISION: "REVIEWED",
+  REVIEWED: "DONE",
+};
+
+const NEXT_LABEL: Record<string, string> = {
+  "WAITING FOR PAYMENT": "Konfirmasi Bayar",
+  "IN PROGRESS": "Kirim Review",
+  REVISION: "Kirim Revisi",
+  REVIEWED: "Selesai",
+};
 
 interface OrderKanbanProps {
   orders: OrderItem[];
   updatingId: string | null;
   onSelectOrder: (orderNumber: string) => void;
-  onStatusUpdate: (id: string, newStatus: string) => Promise<boolean>;
+  onStatusUpdate: (
+    id: string,
+    newStatus: string,
+    additionalUpdates?: Record<string, unknown>,
+  ) => Promise<boolean>;
 }
 
 const KanbanCard = ({
@@ -38,10 +67,10 @@ const KanbanCard = ({
 }: {
   order: OrderItem;
   onSelect: (num: string) => void;
-  onMove: (id: string, nextStatus: string) => void;
+  onMove: (order: OrderItem, nextStatus: string) => void;
   loading: boolean;
 }) => {
-  const nextStatus = STATUS_COLUMNS[STATUS_COLUMNS.indexOf(order.status) + 1];
+  const nextStatus = NEXT_STATUS[order.status];
 
   return (
     <CMSCard
@@ -62,6 +91,7 @@ const KanbanCard = ({
       </div>
 
       <div className="space-y-4 mb-3">
+        <AdminActionBadge order={order} className="-mt-1" />
         <div className="truncate text-sm font-semibold text-ink">
           {order.selected_package}
         </div>
@@ -106,13 +136,13 @@ const KanbanCard = ({
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              onMove(order.id, nextStatus);
+              onMove(order, nextStatus);
             }}
             loading={loading}
             className="!p-0 !h-auto !text-ink/45 hover:!text-violet-700 hover:!bg-transparent group/btn"
           >
             <div className="gs-label flex items-center gap-1.5 text-[10px]">
-              {loading ? "..." : "Next Step"}
+              {loading ? "..." : NEXT_LABEL[order.status] || "Next Step"}
               <ChevronRight
                 size={12}
                 className="group-hover/btn:translate-x-0.5 transition-transform"
@@ -131,6 +161,17 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({
   onSelectOrder,
   onStatusUpdate,
 }) => {
+  const [verifying, setVerifying] = useState<OrderItem | null>(null);
+  const [completing, setCompleting] = useState<OrderItem | null>(null);
+  const [reviewing, setReviewing] = useState<OrderItem | null>(null);
+
+  const handleMove = (order: OrderItem, nextStatus: string) => {
+    if (order.status === "WAITING FOR PAYMENT") return setVerifying(order);
+    if (nextStatus === "REVIEWED") return setReviewing(order);
+    if (nextStatus === "DONE") return setCompleting(order);
+    onStatusUpdate(order.id, nextStatus);
+  };
+
   if (orders.length === 0) {
     return (
       <CMSEmptyState
@@ -171,7 +212,7 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({
                           key={order.id}
                           order={order}
                           onSelect={onSelectOrder}
-                          onMove={onStatusUpdate}
+                          onMove={handleMove}
                           loading={updatingId === order.id}
                         />
                       ))}
@@ -189,6 +230,22 @@ const OrderKanban: React.FC<OrderKanbanProps> = ({
           );
         })}
       </div>
+
+      <VerifyPaymentModal
+        order={verifying}
+        onClose={() => setVerifying(null)}
+        onStatusUpdate={onStatusUpdate}
+      />
+      <SendForReviewModal
+        order={reviewing}
+        onClose={() => setReviewing(null)}
+        onStatusUpdate={onStatusUpdate}
+      />
+      <CompleteOrderModal
+        order={completing}
+        onClose={() => setCompleting(null)}
+        onStatusUpdate={onStatusUpdate}
+      />
     </div>
   );
 };

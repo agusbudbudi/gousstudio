@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Check, Loader2, X } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppStore } from "../store/useAppStore";
 import { orderSchema, OrderFormData } from "../utils/formSchemas";
@@ -11,6 +11,7 @@ import { formatRupiah, OTHER_GROUP, usePackages } from "../components/landing/us
 import { parsePackageName } from "../components/landing/PackageCard";
 import { WhatsAppIcon } from "../components/landing/primitives";
 import PackageCombobox, { CUSTOM_PACKAGE } from "./PackageCombobox";
+import DatePicker from "./DatePicker";
 
 const CUSTOM_DURATION_DAYS = 7;
 
@@ -63,6 +64,7 @@ const OrderModal = () => {
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -343,13 +345,20 @@ const OrderModal = () => {
                     error={errors.deadline?.message}
                     hint={selectedPkg?.duration ? `Diisi otomatis sesuai durasi paket (${selectedPkg.duration} hari kerja). Boleh diubah.` : undefined}
                   >
-                    <input
-                      id="order-deadline"
-                      type="date"
-                      min={isoDateIn(1)}
-                      aria-invalid={Boolean(errors.deadline)}
-                      className={`${inputClass(Boolean(errors.deadline))} h-12 [color-scheme:light]`}
-                      {...register("deadline")}
+                    <Controller
+                      name="deadline"
+                      control={control}
+                      render={({ field }) => (
+                        <DatePicker
+                          id="order-deadline"
+                          value={field.value}
+                          onChange={field.onChange}
+                          min={isoDateIn(1)}
+                          invalid={Boolean(errors.deadline)}
+                          describedBy={errors.deadline ? "order-deadline-error" : undefined}
+                          className="h-12 rounded-2xl px-4 text-[15px] font-medium"
+                        />
+                      )}
                     />
                   </Field>
 

@@ -21,9 +21,10 @@ import { compressAndCropImageRect } from "../../utils/imageUtils";
 
 const clientSchema = z.object({
   full_name: z.string().min(2, "Nama minimal 2 karakter"),
-  phone_number: z.string().optional(),
-  company: z.string().optional(),
-  notes: z.string().optional(),
+  // DB returns null for empty optional columns
+  phone_number: z.string().nullish(),
+  company: z.string().nullish(),
+  notes: z.string().nullish(),
 });
 
 interface ClientModalProps {
@@ -145,6 +146,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
         if (issue.path[0]) errors[issue.path[0].toString()] = issue.message;
       });
       setValidationErrors(errors);
+      addToast(result.error.issues[0]?.message || "Data tidak valid", "error");
       return;
     }
 

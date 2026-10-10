@@ -18,7 +18,7 @@ const VoucherCMS: React.FC = () => {
   const { data: referrals = [], isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["referrals"],
     queryFn: async () => {
-      const res = await fetch("/api/orders?action=list-referrals");
+      const res = await fetch("/api/cms/orders?action=list-referrals");
       if (!res.ok) throw new Error("Failed to fetch referrals");
       const result = await res.json();
       return (result.data as ReferralCode[]) || [];
@@ -78,7 +78,7 @@ const VoucherCMS: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col pt-2">
+      <div className="flex-1 min-h-0 flex flex-col pt-2 pb-6">
         {isLoading ? (
           <CMSTableSkeleton rows={6} columns={4} label="Memuat data voucher..." />
         ) : error ? (

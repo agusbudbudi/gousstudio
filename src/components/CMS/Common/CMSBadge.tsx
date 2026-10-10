@@ -25,6 +25,8 @@ const CMSBadge: React.FC<CMSBadgeProps> = ({
         return "bg-purple-50 text-purple-700 border-purple-200";
       case "REVISION":
         return "bg-rose-50 text-rose-500 border-rose-200";
+      case "CANCELLED":
+        return "bg-ink/5 text-ink/50 border-ink/15 line-through";
       default:
         return "bg-paper text-ink/70 border-ink/10";
     }

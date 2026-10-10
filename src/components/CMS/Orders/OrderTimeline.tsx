@@ -33,7 +33,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
   };
 
   orders.forEach((order) => {
-    if (order.status === "DONE") return;
+    if (order.status === "DONE" || order.status === "CANCELLED") return;
 
     if (!order.deadline) {
       groups.noDeadline.push(order);
@@ -155,7 +155,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-10">
+    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pt-6 pb-10">
       {renderSection(
         "🔴 Overdue Projects",
         groups.overdue,

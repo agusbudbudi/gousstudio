@@ -275,7 +275,9 @@ const ClientCMS: React.FC = () => {
         )}
       </CMSHeader>
 
-      <div className="flex-1 min-h-0 flex flex-col pt-6">
+      <div
+        className={`flex-1 min-h-0 flex flex-col ${viewMode === "DETAILS" && selectedClient && !loading && !error ? "" : "pt-6 pb-6"}`}
+      >
         {loading ? (
           <CMSTableSkeleton rows={8} columns={5} label="Memuat data client..." />
         ) : error ? (
@@ -291,14 +293,41 @@ const ClientCMS: React.FC = () => {
             }
           />
         ) : viewMode === "DETAILS" && selectedClient ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full min-h-0 overflow-hidden pb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start h-full min-h-0 overflow-y-auto custom-scrollbar pt-6 pb-6">
             {/* Left Panel: Client Info */}
-            <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar pr-1">
-              <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col relative shrink-0">
-                {/* Header Action Buttons (Edit/Delete) */}
-                <div className="absolute top-6 right-6 flex items-center gap-1">
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0">
+                {/* Top: Avatar, Name & Actions */}
+                <div className="p-5 flex items-center gap-3 border-b border-ink/[0.06] shrink-0">
+                  <div className="w-12 h-12 shrink-0 rounded-[14px] overflow-hidden bg-violet-600/10 border border-ink/[0.06] flex items-center justify-center">
+                    {selectedClient.photo_url ? (
+                      <img
+                        src={selectedClient.photo_url}
+                        alt={selectedClient.full_name}
+                        className="w-full h-full object-contain bg-white"
+                      />
+                    ) : (
+                      <span className="text-violet-600 font-bold text-lg leading-none">
+                        {selectedClient.full_name?.charAt(0).toUpperCase() ||
+                          "?"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-base font-bold text-ink leading-tight truncate">
+                      {selectedClient.full_name}
+                    </h2>
+                    <p className="text-[11px] text-muted font-medium mt-1 flex items-center gap-1">
+                      <Calendar size={10} />
+                      Client sejak{" "}
+                      {new Date(selectedClient.created_at).toLocaleDateString(
+                        "id-ID",
+                        { day: "numeric", month: "short", year: "numeric" },
+                      )}
+                    </p>
+                  </div>
                   {!isNew && (
-                    <>
+                    <div className="flex items-center gap-1 shrink-0">
                       <CMSButton
                         variant="ghost"
                         onClick={handleOpenEditModal}
@@ -314,73 +343,40 @@ const ClientCMS: React.FC = () => {
                             selectedClient.full_name,
                           )
                         }
+                        loading={deletingId === selectedClient.id}
                         icon={Trash2}
                         iconSize={14}
                         aria-label="Hapus Client" title="Hapus Client"
                       />
-                    </>
+                    </div>
                   )}
                 </div>
 
-                <div className="p-6">
-                  {/* Top: Avatar & Name */}
-                  <div className="flex items-center gap-4 mb-4 pr-20">
-                    <div className="shrink-0">
-                      {selectedClient.photo_url ? (
-                        <div
-                          className="rounded-[10px] overflow-hidden"
-                          style={{ width: 88, height: 40 }}
-                        >
-                          <img
-                            src={selectedClient.photo_url}
-                            alt={selectedClient.full_name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-[42px] h-[42px] rounded-full bg-violet-600/10 flex items-center justify-center">
-                          <span className="text-violet-600 font-bold text-lg leading-none">
-                            {selectedClient.full_name
-                              ?.charAt(0)
-                              .toUpperCase() || "?"}
-                          </span>
-                        </div>
+                {/* List Data */}
+                <div className="px-5 py-2 shrink-0">
+                  <CMSViewItem
+                    label="Phone Number"
+                    value={selectedClient.phone_number || "—"}
+                    icon={Phone}
+                  />
+                  <CMSViewItem
+                    label="Company"
+                    value={selectedClient.company || "—"}
+                    icon={Building2}
+                  />
+                </div>
+
+                {/* Notes */}
+                <div className="px-5 pb-5">
+                  <div className="flex flex-col gap-2 p-4 bg-paper/80 rounded-[14px] border border-ink/[0.03]">
+                    <label className="gs-label text-[10px] text-muted flex items-center gap-1.5">
+                      <FileText size={12} className="text-ink/45" />
+                      Customer Notes
+                    </label>
+                    <div className="text-[13px] font-medium text-ink leading-relaxed whitespace-pre-wrap break-words">
+                      {selectedClient.notes || (
+                        <span className="text-ink/45 italic">Tidak ada catatan</span>
                       )}
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-ink mb-1 leading-tight">
-                        {selectedClient.full_name}
-                      </h2>
-                    </div>
-                  </div>
-
-                  {/* List Data */}
-                  <div className="flex flex-col mt-4 border-t border-ink/[0.06] pt-2 pb-2">
-                    <CMSViewItem
-                      label="Phone Number"
-                      value={selectedClient.phone_number || "—"}
-                      icon={Phone}
-                    />
-                    <CMSViewItem
-                      label="Company"
-                      value={selectedClient.company || "—"}
-                      icon={Building2}
-                      className="!border-0"
-                    />
-                  </div>
-
-                  {/* Notes Section - Auto Height */}
-                  <div className="mt-2">
-                    <div className="flex flex-col gap-2 p-4 bg-paper/80 rounded-[14px] border border-ink/[0.03]">
-                      <label className="gs-label text-[10px] text-muted flex items-center gap-1.5">
-                        <FileText size={12} className="text-ink/45" />
-                        Customer Notes
-                      </label>
-                      <div className="text-[13px] font-medium text-ink leading-relaxed whitespace-pre-wrap break-words">
-                        {selectedClient.notes || (
-                          <span className="text-ink/45 italic">Tidak ada catatan</span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -388,60 +384,55 @@ const ClientCMS: React.FC = () => {
 
               {/* Customer Value Card */}
               {(() => {
+                const paidOrders = clientOrders.filter(
+                  (order) => order.status !== "CANCELLED",
+                );
                 const totalTransactions = clientOrders.length;
-                const totalSpend = clientOrders.reduce(
+                const totalSpend = paidOrders.reduce(
                   (sum, order) => sum + (order.final_price ?? order.price ?? 0),
                   0,
                 );
                 const averageSpend =
-                  totalTransactions > 0 ? totalSpend / totalTransactions : 0;
+                  paidOrders.length > 0 ? totalSpend / paidOrders.length : 0;
+                const formatIDR = (n: number) =>
+                  new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                  }).format(n);
 
                 return (
                   <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0">
                     <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center gap-2">
                       <ShoppingBag size={12} className="text-ink/45" />
-                      <h3 className="gs-label text-ink">
-                        Customer Value
-                      </h3>
+                      <h3 className="gs-label text-ink">Customer Value</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 p-5 border-b border-ink/[0.06] relative bg-white gap-4">
-                      {/* Vertical divider */}
-                      <div className="absolute left-1/2 top-5 bottom-5 w-px bg-ink/5 hidden sm:block"></div>
-
-                      <div className="pr-2">
-                        <span className="text-sm font-medium text-ink/70 block mb-1">
+                    <div className="grid grid-cols-2 divide-x divide-ink/[0.06] border-b border-ink/[0.06]">
+                      <div className="px-5 py-4 min-w-0">
+                        <span className="text-xs font-medium text-muted block mb-1">
                           Total Transactions
                         </span>
                         <span className="text-lg font-bold text-ink">
                           {totalTransactions}
                         </span>
                       </div>
-
-                      <div className="sm:pl-4">
-                        <span className="text-sm font-medium text-ink/70 block mb-1">
+                      <div className="px-5 py-4 min-w-0">
+                        <span className="text-xs font-medium text-muted block mb-1">
                           Total Spend
                         </span>
-                        <span className="text-lg font-bold text-ink">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                            maximumFractionDigits: 0,
-                          }).format(totalSpend)}
+                        <span className="text-lg font-bold text-ink truncate block">
+                          {formatIDR(totalSpend)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="p-5 bg-paper/20">
-                      <span className="text-sm font-medium text-ink/70 block mb-1">
+                    <div className="px-5 py-4">
+                      <span className="text-xs font-medium text-muted block mb-1">
                         Average Spend per Purchase
                       </span>
                       <span className="text-lg font-bold text-ink">
-                        {new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          maximumFractionDigits: 0,
-                        }).format(averageSpend)}
+                        {formatIDR(averageSpend)}
                       </span>
                     </div>
                   </div>
@@ -450,12 +441,10 @@ const ClientCMS: React.FC = () => {
 
               {/* Portal Magic Link Card */}
               {!isNew && (
-                <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0 mt-4">
-                  <div className="px-6 py-4 border-b border-ink/[0.06] bg-violet-50 flex items-center gap-2">
-                    <Link size={12} className="text-violet-600" />
-                    <h3 className="gs-label text-violet-900">
-                      Client Portal Link
-                    </h3>
+                <div className="bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col shrink-0">
+                  <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center gap-2">
+                    <Link size={12} className="text-ink/45" />
+                    <h3 className="gs-label text-ink">Client Portal Link</h3>
                   </div>
                   <div className="p-5 flex flex-col gap-3">
                     <p className="text-xs text-muted font-medium">
@@ -482,15 +471,20 @@ const ClientCMS: React.FC = () => {
             </div>
 
             {/* Right Panel: Order History */}
-            <div className="lg:col-span-8 flex-1 min-w-0 bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col h-full">
+            <div className="lg:col-span-8 min-w-0 bg-white border border-ink/10 rounded-[20px] overflow-hidden flex flex-col">
               <div className="px-6 py-4 border-b border-ink/[0.06] bg-paper/50 flex items-center justify-between">
                 <h3 className="gs-label text-ink flex items-center gap-2">
                   <Clock size={12} className="text-ink/45" />
                   History Order
                 </h3>
+                {!loadingOrders && clientOrders.length > 0 && (
+                  <span className="text-[11px] font-semibold text-muted">
+                    {clientOrders.length} order
+                  </span>
+                )}
               </div>
 
-              <div className="flex-1 overflow-auto custom-scrollbar p-6">
+              <div className="overflow-x-auto p-6">
                 {loadingOrders ? (
                   <div className="space-y-3" role="status" aria-label="Memuat history order">
                     {[0, 1, 2].map((i) => (

@@ -133,7 +133,7 @@ const SelectedWork: React.FC = () => {
                           className="group block w-full text-left"
                           aria-label={`Lihat ${work.title}`}
                         >
-                          <div className="relative isolate overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
+                          <div className="relative isolate overflow-hidden rounded-[12px] md:rounded-[16px] bg-paper-200 [transform:translateZ(0)]">
                             <WorkImage
                               src={work.src}
                               alt={work.imgAlt || `${work.title} — ${workGroup(work).title} oleh Gous Studio`}
@@ -146,7 +146,7 @@ const SelectedWork: React.FC = () => {
                             </span>
                           </div>
                           <div className="mt-3">
-                            <h3 className="text-base font-semibold leading-snug text-ink transition-transform duration-300 group-hover:translate-x-1">
+                            <h3 className="text-sm font-semibold leading-snug text-ink transition-transform md:text-base duration-300 group-hover:translate-x-1">
                               {work.title}
                             </h3>
                             <span className="gs-label mt-1 hidden text-muted sm:block">

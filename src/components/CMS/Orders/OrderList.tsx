@@ -3,6 +3,7 @@ import { ShoppingBag, ChevronLeft, ChevronRight, Calendar, ImageIcon, Trash2 } f
 import { OrderItem } from "../../../types";
 import CMSEmptyState from "../Common/CMSEmptyState";
 import CMSBadge from "../Common/CMSBadge";
+import AdminActionBadge from "./AdminActionBadge";
 import CMSButton from "../Common/CMSButton";
 import {
   CMSTableContainer,
@@ -134,9 +135,12 @@ const OrderList: React.FC<OrderListProps> = ({
                 )}
               </CMSTableCell>
               <CMSTableCell>
-                <CMSBadge variant="status" status={order.status}>
-                  {order.status}
-                </CMSBadge>
+                <div className="flex flex-col items-start gap-1">
+                  <CMSBadge variant="status" status={order.status}>
+                    {order.status}
+                  </CMSBadge>
+                  <AdminActionBadge order={order} />
+                </div>
               </CMSTableCell>
               <CMSTableCell align="right">
                 <CMSButton

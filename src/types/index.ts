@@ -38,6 +38,19 @@ export interface PricelistItem {
   service?: { id: number; slug: string; title: string } | null;
 }
 
+/** A revision request the client sent from the order page. */
+export interface RevisionNote {
+  round: number;
+  /** Empty when the revision was logged by an admin from the CMS. */
+  notes: string;
+  created_at: string;
+  /** Snapshot of the draft link the client reviewed before asking for this revision. */
+  review_url?: string | null;
+  source?: "client" | "admin";
+  /** Beyond the package's included revisions (may be charged). */
+  extra?: boolean;
+}
+
 export interface OrderItem {
   id: string;
   order_number: string;
@@ -51,9 +64,13 @@ export interface OrderItem {
   discount_value?: number | null;
   discount_type?: 'fixed' | 'percentage' | null;
   final_price?: number | null;
-  status: 'DRAFT' | 'WAITING FOR PAYMENT' | 'IN PROGRESS' | 'REVISION' | 'REVIEWED' | 'DONE';
+  status: 'DRAFT' | 'WAITING FOR PAYMENT' | 'IN PROGRESS' | 'REVISION' | 'REVIEWED' | 'DONE' | 'CANCELLED';
   payment_proof_url?: string | null;
   deliverables_url?: string | null;
+  review_url?: string | null;
+  revision_count?: number | null;
+  revision_notes?: RevisionNote[] | null;
+  approved_at?: string | null;
   internal_notes?: string | null;
   created_at: string;
   source_order?: string | null;

@@ -28,7 +28,7 @@ const isCanva = (item: WorkItem) => Boolean(item.linkUrl?.includes('canva.com/de
 
 const WorkCard: React.FC<{ item: WorkItem; onOpen: () => void; onError?: () => void }> = ({ item, onOpen, onError }) => (
   <button type="button" onClick={onOpen} className="group block w-full text-left" aria-label={`Lihat ${item.title}`}>
-    <div className="relative isolate overflow-hidden rounded-[20px] bg-paper-200 [transform:translateZ(0)]">
+    <div className="relative isolate overflow-hidden rounded-[12px] md:rounded-[16px] bg-paper-200 [transform:translateZ(0)]">
       {item.src ? (
         <WorkImage
           src={item.src}
@@ -51,7 +51,7 @@ const WorkCard: React.FC<{ item: WorkItem; onOpen: () => void; onError?: () => v
       </span>
     </div>
     <div className="mt-3">
-      <h2 className="font-semibold leading-snug text-ink transition-transform duration-300 group-hover:translate-x-1">
+      <h2 className="text-sm font-semibold leading-snug text-ink transition-transform md:text-base duration-300 group-hover:translate-x-1">
         {item.title}
       </h2>
       <span className="gs-label mt-1 hidden text-muted sm:block">{workGroup(item).title}</span>
